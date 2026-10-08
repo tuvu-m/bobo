@@ -41,6 +41,17 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 ## Host
 Game được host trên GitHub Pages ở https://tuvu-m.github.io/bobo/ (repo `tuvu-m/bobo`, nhánh `main`). `index.html` chỉ chuyển hướng sang `tiem-tra-sua.html`. File game phải giữ `<!doctype>` và thẻ `<meta name="viewport">` ở đầu, nếu không điện thoại sẽ hiển thị game như trang desktop.
 
+## Hiệu năng (đỡ tốn pin)
+- Vòng lặp `frame`: cảnh tiệm 20 hình/giây, quầy 30 khi đang rót/kéo/đóng gói; màn hình không có hình động thì ngủ (kiểm tra 4 lần/giây). `ECO` (tiết kiệm pin, localStorage `tt_eco`) hạ hình/giây và độ nét.
+- Quầy chỉ vẽ lại khi `stationSig` đổi; lớp tĩnh (mặt quầy, các món, viền) lưu trong `C.st` qua `stationStatic`, mỗi khung chỉ vẽ lớp động (ly, dòng nước, món đang kéo). Thêm thứ gì vẽ trên quầy thì nhớ đưa trạng thái của nó vào chữ ký tương ứng.
+- Cảnh tiệm: tường, sàn, thảm lưu sẵn ở `C.bg`; đèn và bảng neon tỏa sáng vẽ sẵn (`offLayer`), tránh `shadowBlur` mỗi khung hình.
+- `layoutShop` chỉ chạy lại khi kích thước đổi; chữ trên thanh trên cùng ghi qua `setText` (chỉ ghi khi đổi).
+
+## Tính năng vui (chỉ trang trí, không đổi cách chơi)
+- Hai bé mèo Chub (cam) và Bim (trắng, nơ hồng; ảnh trắng tô lại từ `f_meo`) nằm trước quầy, chạm để vuốt (`drawCats`, `petCat`). Chạm khách để nghe họ nói (`CHAT`).
+- Combo 5★ liên tiếp, pháo giấy (`confetti`), huy hiệu `ACH` (thống kê ở `S.stat`, đã mở ở `S.ach`, xem trong tab Đánh giá; gọi `checkAch()` sau các sự kiện liên quan).
+- Chụp ảnh tiệm (`takePhoto`): điện thoại mở bảng chia sẻ, máy tính tải PNG. Thời tiết trong ô kính cửa sổ (`weatherFX`). Âm thanh tổng hợp bằng Web Audio (`sfx`, bật/tắt bằng localStorage `tt_snd`).
+
 ## Cấp tiệm và tiền
 - `SHOP` có 5 cấp, mỗi cấp quy định trần số khách/ngày và số nhân viên tối đa (`staffMax()`). Cuối ngày `shopUp()` tự lên cấp khi đủ số review 5★ (`S.five`) và tổng doanh thu (`lifeRev`: tiền bán món + tip).
 - Hình theo cấp: `lvSpr('k_quay')` lấy `k_quay_N` (N = cấp 1..5), cấp nào chưa có hình thì dùng hình chung. Tương tự với `k_maihien`, `k_san`; ảnh tiệm `tiem_N` hiện ở tab Trang trí. Cả 5 cấp đã có hình. Tâm và bề rộng bảng tên trống trên từng ảnh quầy nằm trong `SIGNPOS`. Prompt vẽ nằm trong `prompt-art.md`.
