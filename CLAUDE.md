@@ -50,6 +50,10 @@ Game được host trên GitHub Pages ở https://tuvu-m.github.io/bobo/ (repo `
 ## Tính năng vui (chỉ trang trí, không đổi cách chơi)
 - Hai bé mèo Chub (cam) và Bim (trắng, nơ hồng; ảnh trắng tô lại từ `f_meo`) nằm trước quầy, chạm để vuốt (`drawCats`, `petCat`). Chạm khách để nghe họ nói (`CHAT`).
 - Combo 5★ liên tiếp, pháo giấy (`confetti`), huy hiệu `ACH` (thống kê ở `S.stat`, đã mở ở `S.ach`, xem trong tab Đánh giá; gọi `checkAch()` sau các sự kiện liên quan).
+- Nhạc nền tự soạn bằng Web Audio, đổi theo thời tiết của ngày (`MOODS`, `musicTick`; bật/tắt bằng localStorage `tt_bgm`); chuông cửa khi khách vào (`sfx('bell')`).
+- Trả lời review (`replyReview`, `repHTML`): Cảm ơn / Xin lỗi / Cà khịa / tự viết (`toneOf` đoán giọng). Khách đáp lại; lịch sự với review chê thì có thể sửa lên 1★, cà khịa thì có thể hạ 1★ (review và điểm nổi tiếng liên kết qua `id`).
+- Tạm dừng (`pauseGame`, tự tạm dừng khi chuyển app) và đóng cửa sớm (`closeEarly`; kho hết hàng thì tự hỏi qua `OOS_EV`). Thời gian game `now` chỉ chạy khi không tạm dừng.
+- Ô gõ chữ trong các tab không được gọi `renderPrep()` ở sự kiện `change`, nếu không cú chạm vào nút kế tiếp sẽ bị nuốt.
 - Chụp ảnh tiệm (`takePhoto`): điện thoại mở bảng chia sẻ, máy tính tải PNG. Thời tiết trong ô kính cửa sổ (`weatherFX`). Âm thanh tổng hợp bằng Web Audio (`sfx`, bật/tắt bằng localStorage `tt_snd`).
 
 ## Cấp tiệm và tiền
