@@ -9,7 +9,7 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 - Không cho phóng to khi chơi (viewport `user-scalable=no`, `touch-action`, chặn cử chỉ `gesturestart`).
 - Lúc bán: pha xong thì chạm máy đóng gói, ly tự chạy vào máy và giao. Không kéo ly.
 - Máy đóng gói chỉ giao ly khớp đơn (`cupMiss`). Sai không sửa được (sai size, rót quá vạch, thừa đồ, dư đường/đá) thì phải bỏ ly; còn thiếu (chưa tới vạch, thiếu nước/siro/topping/kem/đường/đá) thì bỏ thêm là giao được. Ly hỏng (`cup.broken`: nhân viên pha sai hoặc tràn ly) cũng bị từ chối. Ly hỏng chỉ báo bằng thông báo; người chơi phải bỏ ly và tự làm lại (`it.redo`, nhân viên không phụ ly làm lại).
-- Trên quầy, đồ còn thiếu cho đơn đang phục vụ có viền vàng nhấp nháy (`orderNeeds`); phiếu order tô vàng các mục chưa làm.
+- Mỗi món trên quầy có khung viền xám. Lúc bán, đồ còn thiếu cho đơn đang phục vụ có viền cam đậm, nền cam nhạt, không nhấp nháy (`orderNeeds`). Khi phải bỏ ly thì thùng rác viền đỏ. Phiếu order tô cam các mục chưa làm.
 - Nhân viên Pha chế không pha ly riêng mà phụ cùng ly trên bàn pha (`staffTick`, trạng thái `D.as`), làm theo trình tự `ASTEPS`: lấy ly > nước > đường > đá > topping > kem. Một ly khoảng 3 giây (`cupTime`), càng nhiều Pha chế càng nhanh. Bước người chơi đã làm đủ thì bỏ qua; đường/đá chưa đủ thì bù cho đủ. Mỗi bước có xác suất pha hỏng `errP` theo Khéo tay. Càng nhiều nhân viên đi làm càng đông khách.
 - Chữ hướng dẫn mặc định ẩn. Nút (?) bật lên (class `sub`/`hint`, `body.help`).
 

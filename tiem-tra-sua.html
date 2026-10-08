@@ -57,7 +57,7 @@ html,body{touch-action:pan-x pan-y}
 .tk .ord{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:3px}
 .pill{font-size:11.5px;font-weight:700;border:2px solid var(--line);border-radius:999px;padding:1px 8px;background:#fff;display:inline-flex;gap:4px;align-items:center}
 .pill.ok{border-color:var(--good);background:#e6f4ec;color:#3d8a63}
-.tk .ord .pill.need{border-color:#f5c542;background:#fff8dc}
+.tk .ord .pill.need{border-color:#ee7a1f;background:#ffe8d2}
 .pill.hotp{border-color:var(--accent);color:var(--accent)}
 .pill.bad{border-color:var(--bad);color:var(--bad);background:#fde6e3}
 .pairs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:11.5px;color:var(--muted);margin:2px 0}
@@ -872,7 +872,7 @@ function drawSealer(t,hd,busy,R=SEAL){const {x,y,w,h}=R,ready=!busy&&R===SEAL&&c
   if(SPR.maydonggoi){const r=sealerImgRect(R);drawSprite(SPR.maydonggoi,r.x,r.y+hd*1.4,r.w,r.h)}
   else{const cx=x+w/2,mw=Math.min(w-8,34);RR(cx-mw/2,y+5,mw,6,3,'#fff',LINE,.45);RR(cx-mw/2,y+12,mw,h-17,3,'#9fcdb4',LINE,.5);RR(cx-mw/2+4,y+16+hd*5,mw-8,2.6,1.2,'#e6eaed',LINE,.4);RR(cx-mw/2+3,y+h-9,mw-6,2.2,1,'#e6eaed',LINE,.4)}
   EL(x+w-4.5,y+4.5,1.7,1.7,busy?'#ffcf5a':'#7ed3a5',LINE,.35);
-  if(ready){const a=.55+.35*Math.sin(t*6);AL(a,()=>RR(x+1,y+1,w-2,h-2,5,null,'#e2617f',1.2));const bw=Math.min(w-6,34),bx=x+(w-bw)/2,by=y+h/2-5;RR(bx,by,bw,10,5,'#e2617f','#fff',.8);T('CHẠM',bx+bw/2,by+3.4,3.2,'#fff','center',800);T('ĐỂ GIAO',bx+bw/2,by+7.2,3,'#fff','center',800)}}
+  if(ready){RR(x+1,y+1,w-2,h-2,5,null,'#e2617f',1.4);const bw=Math.min(w-6,34),bx=x+(w-bw)/2,by=y+h/2-5;RR(bx,by,bw,10,5,'#e2617f','#fff',.8);T('CHẠM',bx+bw/2,by+3.4,3.2,'#fff','center',800);T('ĐỂ GIAO',bx+bw/2,by+7.2,3,'#fff','center',800)}}
 function drawWork(W){const c=K.ctx;RR(W.x,W.y,W.w,W.h,4,LG(0,W.y,0,W.y+W.h,[[0,'#f0cfa6'],[1,'#e3b98d']]),LINE,.6);
   for(let i=0;i<5;i++){const yy=W.y+8+i*8;if(yy>W.y+W.h-3)break;c.beginPath();c.moveTo(W.x+3,yy);c.bezierCurveTo(W.x+20,yy-2,W.x+40,yy+3,W.x+W.w-3,yy);c.strokeStyle='rgba(170,120,80,.25)';c.lineWidth=.4;c.stroke()}
   RR(W.x+2.4,W.y+2.2,19,4.8,2.4,'#fffaf5',LINE,.4);T('BÀN PHA',W.x+11.9,W.y+4.7,2.6,'#7a5646','center',800)}
@@ -895,10 +895,12 @@ function drawStation(C,t,edit){
   if(edit){const m=gridOcc(g,dragging?[drag.o]:null);for(let r=0;r<ROWS;r++)for(let q=0;q<COLS;q++)if(!m[r][q])dashRR(q*CW+1.6,r*CH+1.6,CW-3.2,CH-3.2,2.4,placeSel||sel?'rgba(79,154,114,.7)':'rgba(122,86,70,.35)')}
   const sp=sealing?clamp((now-sealing.t0)/(sealing.d||.95),0,1):0;const hd=!sealing?0:sp<.35?0:sp<.6?(sp-.35)/.25:sp<.75?1-(sp-.6)/.15:0;
   const NEED=edit?menuNeed():null;
-  g.forEach(o=>{if(dragging&&drag.o===o)return;const r=objRect(o),k=objKind(o.id);drawObj(o.id,r,t,hd,!!sealing,k==='seal');
+  const N=edit?null:orderNeeds(),boxed=k=>k!=='work'&&k!=='seal';
+  g.forEach(o=>{if(dragging&&drag.o===o)return;const r=objRect(o),k=objKind(o.id);if(boxed(k)){const hi=N&&N.has(o.id);RR(r.x,r.y,r.w,r.h,3,hi?(o.id==='trash'?'#fde3e0':'#ffe8d2'):'rgba(255,255,255,.55)',null)}drawObj(o.id,r,t,hd,!!sealing,k==='seal');
     if(NEED&&storable(o.id)&&k!=='top'&&!NEED.has(o.id)){EL(r.x+r.w-3.4,r.y+r.h-15,2.6,2.6,'#f0a83a',LINE,.4);T('!',r.x+r.w-3.4,r.y+r.h-14.8,3.4,'#fff','center',800)}
     const pr=press&&press.id===o.id&&(performance.now()-press.t<170||(k==='tea'&&pouring===o.id));if(pr||(sel&&sel===o))selBox(r)});
-  if(!edit){const N=orderNeeds();if(N){const a=.45+.45*Math.sin(t*6);g.forEach(o=>{if(!N.has(o.id))return;const r=objRect(o);AL(a,()=>{RR(r.x-.8,r.y-.8,r.w+1.6,r.h+1.6,3.6,'rgba(255,224,110,.22)','#f5b82e',1.3)})})}}
+  g.forEach(o=>{if(dragging&&drag.o===o)return;const k=objKind(o.id);if(!boxed(k))return;const r=objRect(o),hi=N&&N.has(o.id);
+    if(hi)RR(r.x-.3,r.y-.3,r.w+.6,r.h+.6,3.2,null,o.id==='trash'?'#d9534f':'#ee7a1f',1.7);else RR(r.x,r.y,r.w,r.h,3,null,'#c9bdb5',.55)});
   const W=WORK,cx=cupX();
   if(edit){if(!(dragging&&drag.o.id==='work')){T('Kéo hoặc chạm đồ',W.x+W.w/2,W.y+23,3.4,INK,'center',800);T('đặt đâu cũng được',W.x+W.w/2,W.y+28,3,'#9a7d6c','center',600)}}
   else if(sealing){const a=clamp(sp/.35,0,1),e=a*a*(3-2*a);const fx=sealing.fx??cx,fy=sealing.fy??CUPY,sl=sealSlot(),tx=sl.x,ty=sl.y;
