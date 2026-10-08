@@ -25,6 +25,9 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px sol
 button:disabled{cursor:not-allowed;opacity:.45}
 select,textarea{font:inherit;border:2px solid var(--line);border-radius:10px;padding:4px 8px;background:var(--paper);color:var(--ink)}
 canvas{display:block;touch-action:none}
+/* giữ ngón tay để kéo/rót: không cho iOS bôi đen chữ, hiện kính lúp hay menu Copy */
+#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app input,#app textarea{-webkit-user-select:text;user-select:text}
 
 #app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
 .hud{flex:none;display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--counter);color:#fff;border-bottom:3px solid var(--counter-d)}
@@ -794,11 +797,12 @@ function drawStation(C,t,edit){
   RR(W.x+2.4,W.y+2.2,19,4.8,2.4,'#fffaf5',LINE,.4);T('BÀN PHA',W.x+11.9,W.y+4.7,2.6,'#7a5646','center',800);
   const sp=sealing?clamp((now-sealing.t0)/.95,0,1):0;const hd=!sealing?0:sp<.35?0:sp<.6?(sp-.35)/.25:sp<.75?1-(sp-.6)/.15:0;
   drawSealer(t,hd,!!sealing);
-  if(edit)Object.entries(ZONES).forEach(([z,Z])=>{const valid=(drag&&drag.z===z)||(placeSel&&placeSel.z===z);Z.slots.forEach((s,i)=>{AL(valid?.35:.16,()=>RR(s.x,s.y,s.w,s.h,3,valid?'#7ed3a5':'#e98aa2',null));if(!S.layout[z][i]||(drag&&drag.z===z&&drag.i===i))dashRR(s.x+.4,s.y+.4,s.w-.8,s.h-.8,3,valid?'#4f9a72':'rgba(122,86,70,.5)')})});
-  const LY=edit?S.layout:LAY(),NEED=edit?menuNeed():null;Object.entries(ZONES).forEach(([z,Z])=>Z.slots.forEach((s,i)=>{const id=LY[z][i];if(!id||(drag&&drag.z===z&&drag.i===i))return;
-    drawItem(z,id,s);if(NEED&&ZN[z]&&z!=='top'&&!NEED.has(id)){EL(s.x+s.w-3.4,s.y+s.h-15,2.6,2.6,'#f0a83a',LINE,.4);T('!',s.x+s.w-3.4,s.y+s.h-14.8,3.4,'#fff','center',800)}const pr=press&&press.z===z&&press.i===i&&(performance.now()-press.t<170||(z==='tea'&&pouring===id));if(pr)selBox(s)}));
+  const dragging=drag&&drag.moved;
+  if(edit)Object.entries(ZONES).forEach(([z,Z])=>{const valid=(dragging&&drag.z===z)||(placeSel&&placeSel.z===z)||(edSel&&edSel.z===z);Z.slots.forEach((s,i)=>{AL(valid?.35:.16,()=>RR(s.x,s.y,s.w,s.h,3,valid?'#7ed3a5':'#e98aa2',null));if(!S.layout[z][i]||(dragging&&drag.z===z&&drag.i===i))dashRR(s.x+.4,s.y+.4,s.w-.8,s.h-.8,3,valid?'#4f9a72':'rgba(122,86,70,.5)')})});
+  const LY=edit?S.layout:LAY(),NEED=edit?menuNeed():null;Object.entries(ZONES).forEach(([z,Z])=>Z.slots.forEach((s,i)=>{const id=LY[z][i];if(!id||(dragging&&drag.z===z&&drag.i===i))return;
+    drawItem(z,id,s);if(NEED&&ZN[z]&&z!=='top'&&!NEED.has(id)){EL(s.x+s.w-3.4,s.y+s.h-15,2.6,2.6,'#f0a83a',LINE,.4);T('!',s.x+s.w-3.4,s.y+s.h-14.8,3.4,'#fff','center',800)}const pr=press&&press.z===z&&press.i===i&&(performance.now()-press.t<170||(z==='tea'&&pouring===id));if(pr||(edit&&edSel&&edSel.z===z&&edSel.i===i))selBox(s)}));
   if(edit){Object.entries(ZONES).forEach(([z,Z])=>{const s=Z.slots[0],lbl=Z.l.toUpperCase(),w=TW(lbl,2.8,800)+4;const ly=z==='tea'?s.y-1.6:s.y-2.4;RR(s.x,Math.max(.4,ly),w,4.4,2.2,'#5a3e32',null);T(lbl,s.x+w/2,Math.max(.4,ly)+2.3,2.8,'#fff','center',800)});
-    T('Kéo đồ để đổi chỗ',W.x+W.w/2,W.y+23,3.4,INK,'center',800);T('trong cùng một khu',W.x+W.w/2,W.y+28,3,'#9a7d6c','center',600)}
+    T('Kéo hoặc chạm đồ',W.x+W.w/2,W.y+23,3.4,INK,'center',800);T('để đổi chỗ trong khu',W.x+W.w/2,W.y+28,3,'#9a7d6c','center',600)}
   else if(sealing){const a=clamp(sp/.35,0,1),e=a*a*(3-2*a);const fx=sealing.fx??82,fy=sealing.fy??CUPY;drawCup(fx+((SPR.maydonggoi?137:141)-fx)*e,fy+((SPR.maydonggoi?SEAL.y+36:SEAL.y+37.4)-fy)*e,.82+(.45-.82)*e,{...cup,sealed:sp>.62},false);
     if(sp>.75)AL(clamp((sp-.75)/.1,0,1),()=>{RR(SEAL.x+12,SEAL.y+24,18,7,3.5,'#fffaf5',LINE,.5);T('Xong!',SEAL.x+21,SEAL.y+27.6,3.8,'#e2617f','center',800)})}
   else if(cup&&cdrag){drawCup(cdrag.x,cdrag.y+14,.82,cup,false);if(inR(cdrag,SEAL))AL(.6,()=>RR(SEAL.x+1,SEAL.y+1,SEAL.w-2,SEAL.h-2,5,null,'#4f9a72',1.4))}
@@ -808,7 +812,9 @@ function drawStation(C,t,edit){
     if(S.day>=3){T(`Đường ${cup.sugar}`,109,iy+10,2.6,'#9a7d6c','center',700);T(`Đá ${cup.ice}`,109,iy+14,2.6,'#9a7d6c','center',700)}
     tn.slice(0,5).forEach((n,i)=>T(n,63,W.y+10+i*3.6,2.6,INK,'center',800))}
   else{T('Chạm Ly M hoặc L',W.x+W.w/2,W.y+23,3.4,INK,'center',800);T('để bắt đầu pha',W.x+W.w/2,W.y+28,3,'#9a7d6c','center',600)}
-  if(drag){const s=ZONES[drag.z].slots[drag.i];AL(.88,()=>{const r={x:drag.x-s.w/2,y:drag.y-s.h/2,w:s.w,h:s.h};drawItem(drag.z,drag.id,r);selBox(r)})}
+  if(dragging){const s=ZONES[drag.z].slots[drag.i],a=dragAim(drag),ti=drag.out?-1:dragTarget(drag);
+    if(ti>=0){const g=ZONES[drag.z].slots[ti];RR(g.x-.6,g.y-.6,g.w+1.2,g.h+1.2,3.4,'rgba(126,211,165,.45)','#3f8f66',1.2)}
+    AL(.92,()=>{const w=s.w*1.12,h=s.h*1.12,r={x:a.x-w/2,y:a.y-h/2,w,h};drawItem(drag.z,drag.id,r);selBox(r)})}
 }
 
 /* ======================= PREP UI ======================= */
@@ -823,7 +829,7 @@ const moodCol=m=>m<30?'var(--bad)':m<60?'var(--gold)':'var(--good)';
 function unlockState(it){if(it.five)return{ok:S.five>=it.five,txt:`Cần ${it.five} review 5★ (có ${S.five})`,btn:'Mở khóa'};return{ok:ownMoney()>=(it.cost||0),txt:fmt(it.cost||0)+(S.loanCash&&S.money>=(it.cost||0)&&ownMoney()<(it.cost||0)?' · tiền vay không dùng để mua đồ trang trí':''),btn:`Mua ${fk(it.cost||0)}`}}
 
 function renderPrep(){
-  prepDay();hud('Chuẩn bị');show('prep');
+  prepDay();hud('Chuẩn bị');show('prep');edSel=null;
   {const em=emergencyNeeded();$('#openBtn').textContent=em?'Mở cửa bán trà đá, trà nóng (2.000đ/ly)':'Mở cửa'}
   $('#pTitle').textContent=`Ngày ${S.day} · Chuẩn bị`;
   const E=EVENTS[S.ev];$('#pEvt').innerHTML=`<b>${E.l}:</b> ${E.d}<span class="hint"> Nguyên liệu hot tuần này: <b>${S.trend.ids.map(k=>ITEM(k).name).join(' và ')}</b>. Món có nguyên liệu hot được tăng hệ số giá và khách gọi nhiều hơn.</span>`;
@@ -849,7 +855,7 @@ const menuNeed=()=>{const n=new Set();activeMenu().forEach(r=>recIds(r).forEach(
 function quayHTML(){const need=menuNeed();
   const off=Object.keys(ZN).flatMap(z=>(S[OWNK[z]]||[]).filter(k=>!S.layout[z].includes(k)).map(k=>{const q=qty(k);return `<button class="kchip" data-psel="${z}:${k}" aria-pressed="${!!placeSel&&placeSel.id===k}" ${q?'':'disabled'}><span class="kdot" style="background:${ITEM(k).col}"></span>${ITEM(k).sh} · ${q?q:'hết'}${need.has(k)&&q?' <b class="warn">!</b>':''}</button>`})).join('');
   const miss=[...need].filter(k=>!S.layout[zoneOf(k)].includes(k)),extra=Object.keys(ZN).filter(z=>z!=='top').flatMap(z=>S.layout[z].filter(k=>k&&!need.has(k)));
-  return `<p class="sub">Kéo đồ để đổi chỗ trong cùng một khu. Kéo đồ ra ngoài quầy để cất vào kho, kéo đồ từ kho vào một ô cùng khu để bày lên (hoặc chạm tên rồi chạm ô). Đồ hết hàng không bày lên quầy được. Dấu ! là đồ đang bày nhưng không có món nào trên thực đơn dùng tới.</p>
+  return `<p class="sub">Kéo đồ để đổi chỗ trong cùng một khu, ô sắp thả vào sẽ sáng xanh. Kéo đồ lên ô Kho để cất, kéo đồ từ kho vào một ô cùng khu để bày lên. Không muốn kéo thì chạm một món (trên quầy hoặc trong Kho) rồi chạm ô mới; món trên quầy thì chạm Kho để cất. Đồ hết hàng không bày lên quầy được. Dấu ! là đồ đang bày nhưng không có món nào trên thực đơn dùng tới.</p>
    ${miss.length?`<div class="notice bad" style="margin-bottom:8px">Thực đơn cần ${miss.map(k=>ITEM(k).name+(qty(k)?'':' (hết hàng)')).join(', ')} nhưng chưa có trên quầy.</div>`:''}
    ${extra.length?`<p class="meta" style="margin:0 0 6px"><b class="warn" style="color:#d9862a">(!)</b> ${extra.length} đồ trên quầy không dùng cho món nào đang bán</p>`:''}
    ${placeSel?`<div class="notice" style="margin-bottom:8px">Chạm một ô trong khu ${ZN[placeSel.z]} để bày ${ITEM(placeSel.id).name}.</div>`:''}
@@ -1015,6 +1021,7 @@ function saveCode(){try{return 'TTGP3.'+btoa(unescape(encodeURIComponent(JSON.st
 
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;resetArm=false;S.notice=[];$('#tbody').scrollTop=0;renderPrep()});
 $('#tbody').addEventListener('click',e=>{
+  if(edSel&&e.target.closest('#khoBox')&&!e.target.closest('.kchip')){const s=edSel;edSel=null;storeItem(s.z,s.i);return}
   const t=e.target.closest('button');if(!t)return;const d=t.dataset;if(suppressClick&&d.psel)return;
   if(t.id==='copyBtn'){const ta=$('#codeOut');const done=()=>toast('Đã sao chép mã lưu');const fb=()=>{ta.focus();ta.select();toast('Mã đã được chọn, hãy bấm Sao chép')};
     try{navigator.clipboard.writeText(ta.value).then(done,fb)}catch(_){fb()}return}
@@ -1081,18 +1088,40 @@ const inR=(p,r)=>p.x>=r.x&&p.x<r.x+r.w&&p.y>=r.y&&p.y<r.y+r.h;
 function overKho(e){const k=$('#khoBox');if(!k)return false;const r=k.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom}
 function khoHi(on,over){const k=$('#khoBox');if(!k)return;k.classList.toggle('drop',!!on);k.classList.toggle('over',!!(on&&over))}
 const storable=z=>z!=='cup'&&z!=='tool';
+const zoneName=z=>ZONES[z].l.replace(/^Khu /,'').toLowerCase();
+const slotName=(z,id)=>z==='cup'?'Ly '+id:z==='tool'?{sugar:'Đường',ice:'Đá',trash:'Bỏ ly'}[id]:ITEM(id).sh;
+/* ô để thả: ô gần nhất trong đúng khu, miễn điểm thả nằm trong khu (nới thêm 8 đơn vị); -1 nếu ngoài khu */
+function dropSlot(z,x,y){const sl=ZONES[z].slots,M=8;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,b=-1,bd=1e9;
+  sl.forEach(s=>{x0=Math.min(x0,s.x);y0=Math.min(y0,s.y);x1=Math.max(x1,s.x+s.w);y1=Math.max(y1,s.y+s.h)});
+  if(x<x0-M||x>x1+M||y<y0-M||y>y1+M)return -1;
+  sl.forEach((s,i)=>{const d=Math.hypot(s.x+s.w/2-x,s.y+s.h/2-y);if(d<bd){bd=d;b=i}});return b}
+/* món đang kéo được nhấc lên trên ngón tay cho khỏi bị che (không vượt mép trên quầy); điểm nhắm là tâm món đang nhấc */
+const dragAim=dg=>{const h=ZONES[dg.z].slots[dg.i].h;return{x:dg.x,y:Math.max(h*.56,dg.y-h/2-6)}};
+/* ô sẽ thả vào: theo tâm món đang nhấc, nếu lệch khỏi khu thì theo ngón tay */
+function dragTarget(dg){const a=dragAim(dg),ti=dropSlot(dg.z,a.x,a.y);return ti>=0?ti:dropSlot(dg.z,dg.x,dg.y)}
+/* cất vào kho khi ngón tay nằm trên ô Kho hoặc ra ngoài quầy */
+function dragOut(e){const r=edC.getBoundingClientRect();return overKho(e)||e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom}
+function swapSlots(z,a,b){const L=S.layout[z];[L[a],L[b]]=[L[b],L[a]];save()}
+/* chạm một món để chọn (edSel), rồi chạm ô khác cùng khu để đổi chỗ, hoặc chạm Kho để cất */
+let edSel=null;
 function bindEdit(){
   edC.onpointerdown=e=>{const p=canPt(ED,e),h=hitSlot(p.x,p.y);
     if(placeSel){if(!h)return;if(h.z!==placeSel.z)return toast(`Chỉ đặt được trong khu ${ZN[placeSel.z]}`);const ps=placeSel;placeSel=null;placeItem(h.z,h.i,ps.id);return}
+    if(edSel){const s=edSel;if(h&&h.z===s.z&&h.i!==s.i){edSel=null;khoHi(false);swapSlots(s.z,s.i,h.i);return}if(!h||!h.id){edSel=null;khoHi(false)}}
     /* chạm chỗ trống trên quầy rồi vuốt thì cuộn tab, vì canvas chặn cuộn mặc định của trình duyệt */
     if(!h||!h.id){epan={y:e.clientY,st:$('#tbody').scrollTop};try{edC.setPointerCapture(e.pointerId)}catch(_){}return}
-    e.preventDefault();drag={z:h.z,i:h.i,id:h.id,x:p.x,y:p.y};khoHi(storable(h.z));try{edC.setPointerCapture(e.pointerId)}catch(_){}};
-  edC.onpointermove=e=>{if(epan){$('#tbody').scrollTop=epan.st-(e.clientY-epan.y);return}if(!drag)return;const p=canPt(ED,e);drag.x=p.x;drag.y=p.y;khoHi(storable(drag.z),overKho(e))};
-  edC.onpointerup=e=>{epan=null;if(!drag)return;khoHi(false);const r=edC.getBoundingClientRect(),out=overKho(e)||e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
-    const p=canPt(ED,e),h=out?null:hitSlot(p.x,p.y),dg=drag;drag=null;
-    if(out){storeItem(dg.z,dg.i);return}
-    if(h&&h.z===dg.z){if(h.i!==dg.i){const L=S.layout[dg.z];[L[dg.i],L[h.i]]=[L[h.i],L[dg.i]];save()}}
-    else toast(`Món này chỉ đặt được trong ${ZONES[dg.z].l.toLowerCase()}, kéo ra ngoài quầy để cất vào kho`)};
+    e.preventDefault();drag={z:h.z,i:h.i,id:h.id,x:p.x,y:p.y,x0:p.x,y0:p.y,moved:false,out:false};try{edC.setPointerCapture(e.pointerId)}catch(_){}};
+  edC.onpointermove=e=>{if(epan){$('#tbody').scrollTop=epan.st-(e.clientY-epan.y);return}if(!drag)return;const p=canPt(ED,e);drag.x=p.x;drag.y=p.y;
+    if(!drag.moved&&Math.hypot(p.x-drag.x0,p.y-drag.y0)>3){drag.moved=true;edSel=null}
+    if(drag.moved){drag.out=dragOut(e);khoHi(storable(drag.z),drag.out)}};
+  edC.onpointerup=e=>{epan=null;if(!drag)return;const dg=drag;drag=null;khoHi(false);
+    if(!dg.moved){edSel=edSel&&edSel.i===dg.i&&edSel.z===dg.z?null:{z:dg.z,i:dg.i,id:dg.id};
+      if(edSel){khoHi(storable(dg.z));toast(`${slotName(dg.z,dg.id)}: chạm ô khác trong khu ${zoneName(dg.z)} để đổi chỗ${storable(dg.z)?', hoặc chạm Kho để cất':''}`)}return}
+    const p=canPt(ED,e);dg.x=p.x;dg.y=p.y;
+    if(dragOut(e)){storeItem(dg.z,dg.i);return}
+    const ti=dragTarget(dg);
+    if(ti<0)return toast(`${slotName(dg.z,dg.id)} chỉ đặt được trong khu ${zoneName(dg.z)}${storable(dg.z)?', kéo lên Kho để cất':''}`);
+    if(ti!==dg.i)swapSlots(dg.z,dg.i,ti)};
   edC.onpointercancel=()=>{drag=null;epan=null;khoHi(false)}}
 let epan=null;
 /* kéo đồ từ kho (chip) vào quầy */
@@ -1102,7 +1131,8 @@ window.addEventListener('pointermove',e=>{if(!kdrag)return;if(!kdrag.moved&&Math
   if(kdrag.el){kdrag.el.style.left=e.clientX+'px';kdrag.el.style.top=e.clientY+'px';e.preventDefault()}},{passive:false});
 window.addEventListener('pointerup',e=>{if(!kdrag)return;const k=kdrag;kdrag=null;if(!k.moved)return;k.el&&k.el.remove();suppressClick=true;setTimeout(()=>suppressClick=false,50);
   if(!edC||overKho(e))return;const r=edC.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;
-  const p=canPt(ED,e),h=hitSlot(p.x,p.y);if(!h)return;if(h.z!==k.z)return toast(`${ITEM(k.id).sh} chỉ bày được ở khu ${ZN[k.z]}`);placeItem(h.z,h.i,k.id)});
+  const p=canPt(ED,e),ti=dropSlot(k.z,p.x,p.y);if(ti<0)return toast(`${ITEM(k.id).sh} chỉ bày được ở khu ${ZN[k.z]}`);placeItem(k.z,ti,k.id)});
+window.addEventListener('pointercancel',()=>{if(!kdrag)return;kdrag.el&&kdrag.el.remove();kdrag=null});
 let suppressClick=false;
 
 /* ======================= DAY ======================= */
