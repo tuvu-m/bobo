@@ -16,13 +16,17 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - `pairScore` = cosine của hai vector vị + `ruleScore` + `SPECIAL`.
   - `inspect()` kiểm định món và tính hệ số. Giá trị món tính bằng `recValue`.
 - Công thức: `{bs, ss, ts, fs}` ứng với trà/sữa, siro/bột, topping, kem. `basic:true` là món cơ bản, do `syncBasics()` tạo.
+- Topping là món thêm, không nằm trong công thức: `r.ts` của công thức luôn rỗng. Khi gọi món, khách tự chọn topping đang bày trên quầy (`pickTops`, lưu vào `o.ts` của đơn) và trả thêm `topPrice`.
 - Quầy:
   - Toạ độ trong khung logic `SW` × `SH` (180×237). Vị trí các ô nằm trong `ZONES`, bàn pha là `WORK`, máy đóng gói là `SEAL`.
-  - `S.layout` lưu đồ đang bày, `S.stored` lưu đồ cất trong kho.
+  - `S.layout` lưu đồ đang bày, `S.stored` lưu đồ cất trong kho. Ô Kho (`#khoBox`) ở tab Quầy luôn hiện và dính ở đầu tab; kéo đồ từ quầy thả vào đó để cất.
   - Đồ hết hàng không được bày lên quầy.
 - Cảnh tiệm có kích thước 160×62. Hàm vẽ là `drawScene`, đồ trang trí vẽ qua `drawDecor` với các vị trí trong `DSLOT`.
-- Lưu game: biến state `S` lưu vào localStorage `tiemtra3`. Hàm `migrate()` chuyển save cũ sang dạng mới, trong đó `toRaw()` chuyển công thức cũ sang nguyên liệu thô.
+- Lưu game: biến state `S` lưu vào localStorage `tiemtra3`. Hàm `migrate()` chuyển save cũ sang dạng mới, trong đó `toRaw()` chuyển công thức cũ sang nguyên liệu thô, còn khối `s.addon` bỏ topping khỏi công thức cũ.
 - Lưu đám mây dùng `window.claude.use('db')`. Tính năng này chỉ chạy khi file được mở như artifact trên claude.ai.
+
+## Host
+Game được host trên GitHub Pages ở https://tuvu-m.github.io/bobo/ (repo `tuvu-m/bobo`, nhánh `main`). `index.html` chỉ chuyển hướng sang `tiem-tra-sua.html`. File game phải giữ `<!doctype>` và thẻ `<meta name="viewport">` ở đầu, nếu không điện thoại sẽ hiển thị game như trang desktop.
 
 ## Thêm hình mới
 Cắt ảnh sprite sheet (nền trong suốt) thành từng món, thu nhỏ còn khoảng 200px, đổi sang webp base64, rồi thêm vào `SPRSRC` với key là mã món, ví dụ `hongtra` hay `ly_den`.

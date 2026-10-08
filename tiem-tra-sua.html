@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tiệm Trà Góc Phố</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
 <style>
@@ -79,7 +82,8 @@ canvas{display:block;touch-action:none}
 .btn.sm{padding:5px 10px;font-size:12px;border-radius:10px}
 .btn.red{background:var(--bad);box-shadow:0 2px 0 #9e3330}
 .btn.wide{flex:1;font-size:17px;font-family:var(--f-display)}
-.sub,.kchip{touch-action:none}.khobox{margin:0 0 8px;padding:6px 8px;border:2px dashed var(--line);border-radius:14px;background:var(--paper);display:flex;align-items:center;gap:8px;min-width:0}.khol{flex:none;font-size:13px}.krow{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;min-width:0}.krow::-webkit-scrollbar{display:none}
+.sub,.kchip{touch-action:none}.khobox{position:sticky;top:0;z-index:5;min-height:40px;margin:0 0 8px;padding:6px 8px;border:2px dashed var(--line);border-radius:14px;background:var(--paper);display:flex;align-items:center;gap:8px;min-width:0;transition:background .15s,border-color .15s}
+.khobox.drop{border-color:var(--counter);background:#fff3f6}.khobox.over{border-style:solid;background:var(--counter-2)}.khol{flex:none;font-size:13px}.krow{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;min-width:0}.krow::-webkit-scrollbar{display:none}
 .kchip{flex:none;padding:4px 10px;border-radius:999px;border:2px solid var(--line);font-weight:800;font-size:12px;background:#fff;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.kchip[aria-pressed="true"]{border-color:var(--counter);background:var(--counter-2)}.kdot{width:9px;height:9px;border-radius:50%;border:1px solid rgba(122,86,70,.4)}
 .kghost{position:fixed;z-index:60;transform:translate(-50%,-120%);background:var(--counter);color:#fff;font-weight:800;font-size:13px;padding:4px 10px;border-radius:999px;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.2)}
 .basics summary{cursor:pointer;margin:14px 0 6px}
@@ -294,6 +298,13 @@ const canOpenNormal=()=>activeMenu().some(r=>r.bs.every(k=>qty(k)>0));
 function cheapestRestock(){const need=new Set();activeMenu().forEach(r=>r.bs.forEach(k=>{if(!qty(k))need.add(k)}));let m=Infinity;need.forEach(k=>m=Math.min(m,ITEM(k).cost));return m}
 const LAY=()=>D&&D.emerg?{...S.layout,tea:S.layout.tea.map((x,i)=>i===0?'traman':null)}:S.layout;
 const activeMenu=()=>S.recipes.filter(r=>r.on&&r.status==='ok');
+/* topping là món thêm: không nằm trong công thức (r.ts luôn rỗng), khách tự chọn khi gọi (o.ts) và trả thêm topPrice */
+const topPrice=k=>Math.max(5000,r1k(TOPS[k].c*2));
+function pickTops(r){if(r.id<0)return [];const lay=LAY().top,pool=S.tops.filter(k=>lay.includes(k)&&qty(k)>0),ids=recIds(r),out=[];
+  let n=Math.random()<(S.day<2?.6:.35)?0:S.day>=2&&Math.random()<.25?2:1;
+  while(n-->0&&pool.length){const ws=pool.map(k=>Math.max(.15,1+.5*ids.reduce((a,b)=>a+pairScore(k,b),0)/ids.length+(isHot(k)?.8:0)+(isRare(k)?.4:0)));
+    let x=Math.random()*ws.reduce((a,b)=>a+b,0),i=0;while(i<pool.length-1&&(x-=ws[i])>0)i++;out.push(pool.splice(i,1)[0])}
+  return out}
 function autoName(bs,ts,fs,ss=[]){const teas=bs.filter(k=>BASES[k].kind==='tea'),milks=bs.filter(k=>BASES[k].kind==='milk');
   let n=teas.map(k=>BASES[k].sh).join(' & ');if(milks.length)n+=teas.length?(milks.length===1&&milks[0]!=='suatuoi'?' '+BASES[milks[0]].sh.toLowerCase():' sữa'):milks.map(k=>BASES[k].sh).join(' & ');
   if(ss.length)n+=' '+ss.map(k=>SYRUPS[k].sh.toLowerCase()).join(', ');if(ts.length)n+=' '+ts.map(k=>TOPS[k].name.toLowerCase()).join(', ');if(fs.length)n+=' '+fs.map(k=>FOAMS[k].name.toLowerCase()).join(', ');n=n.trim();return n.charAt(0).toUpperCase()+n.slice(1,48)}
@@ -403,13 +414,13 @@ function makeLook(type,dis){
 /* ======================= SAVE ======================= */
 const LS='tiemtra3';
 function fresh(){return{v:3,day:1,money:500000,uid:1,savedAt:0,
-  stock:{hongtra:[{q:8,e:4}],suadac:[{q:8,e:6}],s_duongden:[{q:10,e:10}],den:[{q:4,e:1}],trang:[{q:4,e:3}]},raw:1,
+  stock:{hongtra:[{q:8,e:4}],suadac:[{q:8,e:6}],s_duongden:[{q:10,e:10}],den:[{q:4,e:1}],trang:[{q:4,e:3}]},raw:1,addon:1,
   drinks:['hongtra','suadac'],syrups:['s_duongden'],tops:['den','trang'],foams:[],staff:[],cands:[],candDay:0,
   reviews:[],ratings:[],debts:[],spent:0,five:0,recipes:[defaultRecipe()],ruid:2,trend:null,
   layout:{tea:['hongtra','suadac'],syrup:['s_duongden'],top:['den','trang'],foam:[],cup:['M','L'],tool:['sugar','ice','trash']},
   owned:['wp_kem','w_ke','o_xanh'],decor:{wallpaper:'wp_kem',W1:'w_ke',W2:null,F1:null,F2:null,C1:null,R:null},outfit:{me:'o_xanh',staff:'o_xanh'},
   me:{look:makeLook('staff')},hot:null,ev:'binhthuong',evDay:0,
-  notice:[{t:'Chào chủ tiệm! Thực đơn mới chỉ có Trà sữa (hồng trà pha sữa đặc). Vào tab Công thức để tự chế món mới và gửi kiểm định, rồi sang tab Thực đơn để đặt giá và đưa món lên bán.'}]}}
+  notice:[{t:'Chào chủ tiệm! Thực đơn mới chỉ có Trà sữa (hồng trà pha sữa đặc). Vào tab Công thức để tự chế món mới và gửi kiểm định, rồi sang tab Thực đơn để đặt giá và đưa món lên bán. Topping là món thêm: khách tự chọn khi gọi và trả tiền riêng.'}]}}
 function normRec(r){if(!r.bs){r.bs=[r.b];r.ts=r.t?[r.t]:[];r.fs=r.f?[r.f]:[];delete r.b;delete r.t;delete r.f}if(!r.ss)r.ss=[];return r}
 function defaultRecipe(){return{id:1,name:'Trà sữa',bs:['hongtra','suadac'],ss:[],ts:[],fs:[],status:'ok',mult:2.6,grade:'C',price:15000,on:true,until:null}}
 const OLDMAP={trasua:[['hongtra','suadac'],[]],matcha:[['suatuoi'],['b_matcha']],hongtra:[['hongtra','suatuoi'],[]],luctra:[['luctra'],[]],tradao:[['hongtra'],['s_dao']],travai:[['luctra'],['s_vai']],olong:[['olong','suatuoi'],[]],socola:[['suatuoi'],['b_cacao']],khoaimon:[['suatuoi'],['b_khoaimon']],trathai:[['trathai','suadac'],[]],duongden:[['suatuoi'],['s_duongden']]};
@@ -424,7 +435,13 @@ function toRaw(s){if(s.raw)return;s.raw=1;const bs=new Set(['hongtra','suadac'])
 function migrate(s){if(!s.foams)s.foams=[];if(!s.recipes){s.recipes=[defaultRecipe()];s.ruid=2}if(!s.ruid)s.ruid=2;s.recipes.forEach(normRec);if(!s.life&&s.ledger&&s.ledger.length){s.life=aggOf(s.ledger);s.life.from=s.ledger[0].d}delete s.pl;delete s.hot;
   if(s.tops.includes('cheese')){s.tops=s.tops.filter(k=>k!=='cheese');if(!s.foams.includes('f_cheese'))s.foams.push('f_cheese');if(s.stock.cheese){s.stock.f_cheese=s.stock.cheese;delete s.stock.cheese}}
   toRaw(s);if(!s.syrups)s.syrups=[];s.tops=s.tops.filter(k=>TOPS[k]);s.drinks=s.drinks.filter(k=>BASES[k]&&!BASES[k].free);s.syrups=s.syrups.filter(k=>SYRUPS[k]);s.foams=s.foams.filter(k=>FOAMS[k]);
-  if(!s.layout.foam)s.layout.foam=[];if(!s.layout.syrup)s.layout.syrup=[];return s}
+  if(!s.layout.foam)s.layout.foam=[];if(!s.layout.syrup)s.layout.syrup=[];
+  /* topping thành món thêm: bỏ topping khỏi công thức cũ, giảm giá bán theo tỉ lệ giá vốn, đổi tên tự đặt */
+  if(!s.addon){s.addon=1;const cost=ids=>ids.filter(k=>ITEM(k)).reduce((a,k)=>a+ITEM(k).c,0);let n=0;
+    s.recipes.forEach(r=>{if(!r.ts||!r.ts.length)return;const c0=cost(recIds(r));let auto=false;try{auto=r.name===autoName(r.bs,r.ts,r.fs,r.ss)}catch(e){}
+      r.ts=[];if(r.price&&c0)r.price=Math.max(5000,r1k(r.price*cost(recIds(r))/c0));if(auto)try{r.name=autoName(r.bs,[],r.fs,r.ss)}catch(e){}n++});
+    if(n)s.notice=(s.notice||[]).concat([{t:`Topping giờ là món thêm: khách tự chọn topping khi gọi và trả tiền riêng. ${n} công thức có topping đã được bỏ topping ra và giảm giá bán tương ứng.`}])}
+  return s}
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 if(!S||S.v!==3)S=fresh();S=migrate(S);
 const CL={ref:null,state:'local',last:'',timer:0};
@@ -779,7 +796,7 @@ function drawStation(C,t,edit){
   drawSealer(t,hd,!!sealing);
   if(edit)Object.entries(ZONES).forEach(([z,Z])=>{const valid=(drag&&drag.z===z)||(placeSel&&placeSel.z===z);Z.slots.forEach((s,i)=>{AL(valid?.35:.16,()=>RR(s.x,s.y,s.w,s.h,3,valid?'#7ed3a5':'#e98aa2',null));if(!S.layout[z][i]||(drag&&drag.z===z&&drag.i===i))dashRR(s.x+.4,s.y+.4,s.w-.8,s.h-.8,3,valid?'#4f9a72':'rgba(122,86,70,.5)')})});
   const LY=edit?S.layout:LAY(),NEED=edit?menuNeed():null;Object.entries(ZONES).forEach(([z,Z])=>Z.slots.forEach((s,i)=>{const id=LY[z][i];if(!id||(drag&&drag.z===z&&drag.i===i))return;
-    drawItem(z,id,s);if(NEED&&ZN[z]&&!NEED.has(id)){EL(s.x+s.w-3.4,s.y+s.h-15,2.6,2.6,'#f0a83a',LINE,.4);T('!',s.x+s.w-3.4,s.y+s.h-14.8,3.4,'#fff','center',800)}const pr=press&&press.z===z&&press.i===i&&(performance.now()-press.t<170||(z==='tea'&&pouring===id));if(pr)selBox(s)}));
+    drawItem(z,id,s);if(NEED&&ZN[z]&&z!=='top'&&!NEED.has(id)){EL(s.x+s.w-3.4,s.y+s.h-15,2.6,2.6,'#f0a83a',LINE,.4);T('!',s.x+s.w-3.4,s.y+s.h-14.8,3.4,'#fff','center',800)}const pr=press&&press.z===z&&press.i===i&&(performance.now()-press.t<170||(z==='tea'&&pouring===id));if(pr)selBox(s)}));
   if(edit){Object.entries(ZONES).forEach(([z,Z])=>{const s=Z.slots[0],lbl=Z.l.toUpperCase(),w=TW(lbl,2.8,800)+4;const ly=z==='tea'?s.y-1.6:s.y-2.4;RR(s.x,Math.max(.4,ly),w,4.4,2.2,'#5a3e32',null);T(lbl,s.x+w/2,Math.max(.4,ly)+2.3,2.8,'#fff','center',800)});
     T('Kéo đồ để đổi chỗ',W.x+W.w/2,W.y+23,3.4,INK,'center',800);T('trong cùng một khu',W.x+W.w/2,W.y+28,3,'#9a7d6c','center',600)}
   else if(sealing){const a=clamp(sp/.35,0,1),e=a*a*(3-2*a);const fx=sealing.fx??82,fy=sealing.fy??CUPY;drawCup(fx+((SPR.maydonggoi?137:141)-fx)*e,fy+((SPR.maydonggoi?SEAL.y+36:SEAL.y+37.4)-fy)*e,.82+(.45-.82)*e,{...cup,sealed:sp>.62},false);
@@ -830,16 +847,16 @@ const ZN={tea:'Trà & sữa',syrup:'Siro & bột',top:'Topping',foam:'Kem & foam
 const menuNeed=()=>{const n=new Set();activeMenu().forEach(r=>recIds(r).forEach(k=>n.add(k)));return n};
 function quayHTML(){const need=menuNeed();
   const off=Object.keys(ZN).flatMap(z=>(S[OWNK[z]]||[]).filter(k=>!S.layout[z].includes(k)).map(k=>{const q=qty(k);return `<button class="kchip" data-psel="${z}:${k}" aria-pressed="${!!placeSel&&placeSel.id===k}" ${q?'':'disabled'}><span class="kdot" style="background:${ITEM(k).col}"></span>${ITEM(k).sh} · ${q?q:'hết'}${need.has(k)&&q?' <b class="warn">!</b>':''}</button>`})).join('');
-  const miss=[...need].filter(k=>!S.layout[zoneOf(k)].includes(k)),extra=Object.keys(ZN).flatMap(z=>S.layout[z].filter(k=>k&&!need.has(k)));
+  const miss=[...need].filter(k=>!S.layout[zoneOf(k)].includes(k)),extra=Object.keys(ZN).filter(z=>z!=='top').flatMap(z=>S.layout[z].filter(k=>k&&!need.has(k)));
   return `<p class="sub">Kéo đồ để đổi chỗ trong cùng một khu. Kéo đồ ra ngoài quầy để cất vào kho, kéo đồ từ kho vào một ô cùng khu để bày lên (hoặc chạm tên rồi chạm ô). Đồ hết hàng không bày lên quầy được. Dấu ! là đồ đang bày nhưng không có món nào trên thực đơn dùng tới.</p>
    ${miss.length?`<div class="notice bad" style="margin-bottom:8px">Thực đơn cần ${miss.map(k=>ITEM(k).name+(qty(k)?'':' (hết hàng)')).join(', ')} nhưng chưa có trên quầy.</div>`:''}
    ${extra.length?`<p class="meta" style="margin:0 0 6px"><b class="warn" style="color:#d9862a">(!)</b> ${extra.length} đồ trên quầy không dùng cho món nào đang bán</p>`:''}
    ${placeSel?`<div class="notice" style="margin-bottom:8px">Chạm một ô trong khu ${ZN[placeSel.z]} để bày ${ITEM(placeSel.id).name}.</div>`:''}
-   <div id="khoBox" class="khobox"><b class="khol">Kho</b>${off?`<div class="krow">${off}</div>`:'<span class="meta">Mọi thứ đều đang bày trên quầy</span>'}</div><div class="canbox" id="edBox"><canvas id="ed" aria-label="Sắp xếp quầy pha chế"></canvas></div>`}
+   <div id="khoBox" class="khobox"><b class="khol">Kho</b>${off?`<div class="krow">${off}</div>`:'<span class="meta">Kho trống · kéo đồ trên quầy vào đây để cất</span>'}</div><div class="canbox" id="edBox"><canvas id="ed" aria-label="Sắp xếp quầy pha chế"></canvas></div>`}
 function placeItem(z,i,id){if(!qty(id))return toast(`${ITEM(id).name} đã hết hàng, nhập thêm rồi mới bày lên quầy được`);const L=S.layout[z],old=L[i];L[i]=id;S.stored=(S.stored||[]).filter(k=>k!==id);if(old){S.stored.push(old)}
   const need=menuNeed();let msg=old?`Đã bày ${ITEM(id).sh}, cất ${ITEM(old).sh} vào kho`:`Đã bày ${ITEM(id).sh} lên quầy`;
-  if(!need.has(id))msg=`(!) ${ITEM(id).sh} không có trong món nào trên thực đơn`;else if(old&&need.has(old))msg=`Thực đơn cần ${ITEM(old).sh}, giờ nó nằm trong kho`;toast(msg);save();renderPrep()}
-function storeItem(z,i){const L=S.layout[z],id=L[i];if(!id||z==='cup'||z==='tool')return;L[i]=null;S.stored=[...(S.stored||[]).filter(k=>k!==id),id];
+  if(!need.has(id)&&!TOPS[id])msg=`(!) ${ITEM(id).sh} không có trong món nào trên thực đơn`;else if(old&&need.has(old))msg=`Thực đơn cần ${ITEM(old).sh}, giờ nó nằm trong kho`;toast(msg);save();renderPrep()}
+function storeItem(z,i){const L=S.layout[z],id=L[i];if(!id)return;if(z==='cup'||z==='tool')return toast('Ly và dụng cụ luôn để trên quầy');L[i]=null;S.stored=[...(S.stored||[]).filter(k=>k!==id),id];
   toast(menuNeed().has(id)?`Thực đơn cần ${ITEM(id).sh}, cất vào kho thì không pha được`:`Đã cất ${ITEM(id).sh} vào kho`);save();renderPrep()}
 function decoHTML(){
   const chips=Object.entries(DSLOT).map(([k,s])=>`<button data-dsel="${k}" aria-pressed="${decSel===k}">${s.l}</button>`).join('')+`<button data-dsel="outfit" aria-pressed="${decSel==='outfit'}">Đồng phục</button>`;
@@ -876,10 +893,10 @@ function menuHTML(){
     :`<p class="meta" style="margin:0 0 10px">Thỉnh thoảng có lô hàng hiếm từ Nhật, Hàn, Trung Quốc, Đài Loan về, chỉ bán trong 2 ngày. Nhớ ghé tab này mỗi sáng.</p>`;
   return `<p class="sub">Nhập thêm hàng bằng nút +, hoặc mở khóa nguyên liệu mới để chế món ở tab Công thức. Nguyên liệu quá hạn bị bỏ cuối ngày. Nguyên liệu mới tự lên quầy nếu còn ô trống, không thì nằm trong kho và bạn đặt lên ở tab Quầy.</p>${rare}
    <div class="h3" style="margin-top:0">Trà</div><div class="list">${sec(BASES,S.drinks,s=>s.kind==='tea')}</div><div class="h3">Sữa</div><div class="list">${sec(BASES,S.drinks,s=>s.kind==='milk')}</div>
-   <div class="h3">Siro & bột</div><div class="list">${sec(SYRUPS,S.syrups,()=>true)}</div><div class="h3">Topping</div><div class="list">${sec(TOPS,S.tops,()=>true)}</div><div class="h3">Kem & foam</div><div class="list">${sec(FOAMS,S.foams,()=>true)}</div>`}
+   <div class="h3">Siro & bột</div><div class="list">${sec(SYRUPS,S.syrups,()=>true)}</div><div class="h3">Topping</div><p class="meta hint" style="margin:-2px 0 6px">Topping là món thêm, khách tự chọn khi gọi và trả tiền riêng. Topping bày trên quầy mới được khách gọi.</p><div class="list">${sec(TOPS,S.tops,()=>true)}</div><div class="h3">Kem & foam</div><div class="list">${sec(FOAMS,S.foams,()=>true)}</div>`}
 let lab={bs:['hongtra'],ss:[],ts:[],fs:[],name:''},recDel=null;
 function labHTML(){
-  lab.bs=lab.bs.filter(k=>S.drinks.includes(k));if(!lab.bs.length)lab.bs=[S.drinks[0]];lab.ss=(lab.ss||[]).filter(k=>S.syrups.includes(k));lab.ts=lab.ts.filter(k=>S.tops.includes(k));lab.fs=lab.fs.filter(k=>S.foams.includes(k));
+  lab.bs=lab.bs.filter(k=>S.drinks.includes(k));if(!lab.bs.length)lab.bs=[S.drinks[0]];lab.ss=(lab.ss||[]).filter(k=>S.syrups.includes(k));lab.ts=[];lab.fs=lab.fs.filter(k=>S.foams.includes(k));
   const ids=[...lab.bs,...lab.ss,...lab.ts,...lab.fs],ci=comboInfo(ids),hc=ids.filter(isHot).length;
   const chip=(attr,k,on,txt)=>`<button data-${attr}="${k}" aria-pressed="${on}">${txt}${k&&isHot(k)?' '+FLAME:''}</button>`;
   const dup=S.recipes.find(r=>!r.basic&&r.status!=='fail'&&sameSet(r.bs,lab.bs)&&sameSet(r.ss||[],lab.ss)&&sameSet(r.ts,lab.ts)&&sameSet(r.fs,lab.fs));
@@ -889,10 +906,9 @@ function labHTML(){
      <div class="meta">${ids.length} nguyên liệu · Giá vốn <b style="color:var(--ink)">${fmt(ci.cost)}</b> / ly</div>
      <div class="meta hint">Độ hợp vị: <b style="color:var(--ink)">chưa rõ</b>, chỉ biết sau khi kiểm định.</div>
      ${hc?`<div class="meta" style="color:var(--accent);font-weight:700">Có ${hc} nguyên liệu hot tuần này</div>`:''}
-     <div class="meta hint">Chọn được nhiều thứ ở mỗi lớp, tối đa 8 nguyên liệu. Trà pha với sữa sẽ hòa thành màu trà sữa.</div></div></div>
+     <div class="meta hint">Chọn được nhiều thứ ở mỗi lớp, tối đa 8 nguyên liệu. Trà pha với sữa sẽ hòa thành màu trà sữa. Topping không nằm trong công thức: khách tự chọn thêm khi gọi món.</div></div></div>
    <div class="meta lb">Trà & sữa (chọn ít nhất 1)</div><div class="seg">${S.drinks.map(k=>chip('lb',k,lab.bs.includes(k),BASES[k].sh)).join('')}</div>
    <div class="meta lb">Siro & bột</div><div class="seg">${chip('ls','',!lab.ss.length,'Không')}${S.syrups.map(k=>chip('ls',k,lab.ss.includes(k),SYRUPS[k].sh)).join('')}</div>
-   <div class="meta lb">Topping</div><div class="seg">${chip('lt','',!lab.ts.length,'Không')}${S.tops.map(k=>chip('lt',k,lab.ts.includes(k),TOPS[k].sh)).join('')}</div>
    <div class="meta lb">Kem phủ</div><div class="seg">${chip('lf','',!lab.fs.length,'Không')}${S.foams.map(k=>chip('lf',k,lab.fs.includes(k),FOAMS[k].sh)).join('')}</div>
    <div class="meta lb">Tên món</div><input id="labName" maxlength="40" value="${(lab.name||'').replace(/"/g,'&quot;')}" placeholder="${autoName(lab.bs,lab.ts,lab.fs,lab.ss)}" aria-label="Tên món">
    ${dup?`<p class="meta warn" style="margin-top:6px">Công thức này đã có trong sổ: “${dup.name}”.</p>`:`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn sm pink" id="labSubmit" ${ownMoney()<50000?'disabled':''}>Gửi kiểm định 50k (có kết quả sáng mai)</button><button class="btn sm ghost" id="labFast" ${ownMoney()<150000?'disabled':''}>Kiểm định nhanh 150k</button></div>`}</div>
@@ -900,6 +916,7 @@ function labHTML(){
 function thucdonHTML(){const menu=activeMenu(),ok=S.recipes.filter(r=>r.status==='ok'&&!r.basic),bas=S.recipes.filter(r=>r.basic),pend=S.recipes.filter(r=>r.status==='pending').length;
   return `<p class="sub">Đặt giá từng món và chọn món lên bán. Không giới hạn số món, miễn là nguyên liệu của món có trên quầy. Món tự chế ở tab Công thức. Món cơ bản (như matcha sữa, trà đào) có sẵn từ nguyên liệu bạn đang có, không cần kiểm định nhưng hệ số giá thấp hơn.</p>
    <div class="h3" style="margin-top:0">Đang bán (${menu.length})</div>${menu.length?`<div class="mgrid">${menu.map(r=>`<div class="mcard"><img src="${drinkPicR(r)}" alt=""><b>${r.name}</b><span>${fmt(r.price)}${r.until?` · còn ${r.until-S.day+1} ngày`:''}</span>${hotCount(r)?`<i class="fli">${FLAME}</i>`:''}</div>`).join('')}</div>`:'<p class="meta warn">Thực đơn đang trống, chưa mở cửa được.</p>'}
+   ${S.tops.length?`<div class="h3">Topping thêm</div><p class="meta" style="margin:0">Khách tự chọn topping khi gọi món, mỗi phần trả thêm: ${S.tops.map(k=>`${TOPS[k].sh} <b style="color:var(--ink)">+${fk(topPrice(k))}</b>`).join(' · ')}</p>`:''}
    <div class="h3">Món tự chế</div><div class="list">${ok.slice().sort((a,b)=>(b.on?1:0)-(a.on?1:0)).map(r=>recCard(r,'menu')).join('')||'<p class="meta">Chưa có món tự chế nào đạt kiểm định.</p>'}</div>
    ${pend?`<p class="meta" style="margin-top:8px">Có ${pend} món đang chờ kết quả kiểm định.</p>`:''}
    <details class="basics" ${bas.some(r=>r.on)?'open':''}><summary class="h3">Món cơ bản (${bas.filter(r=>r.on).length}/${bas.length} đang bán)</summary><div class="list">${bas.slice().sort((a,b)=>(b.on?1:0)-(a.on?1:0)).map(r=>recCard(r,'menu')).join('')}</div></details>`}
@@ -1017,7 +1034,7 @@ $('#tbody').addEventListener('click',e=>{
     S.money-=L.amt;S.loanOutToday=(S.loanOutToday||0)+L.amt;S.loan=null;S.loanCash=0;S.credit=(S.credit||0)+1;loanArm=null;toast('Đã trả hết nợ ngân hàng');save();renderPrep();return}
   if(d.dsel){decSel=d.dsel;renderPrep();return}
   if(d.psel){const [z,id]=d.psel.split(':');placeSel=placeSel&&placeSel.id===id?null:{z,id};renderPrep();return}
-  if(d.lb!==undefined||d.ls!==undefined||d.lt!==undefined||d.lf!==undefined){const key=d.lb!==undefined?'bs':d.ls!==undefined?'ss':d.lt!==undefined?'ts':'fs',k=d.lb??d.ls??d.lt??d.lf,L=lab[key];
+  if(d.lb!==undefined||d.ls!==undefined||d.lf!==undefined){const key=d.lb!==undefined?'bs':d.ls!==undefined?'ss':'fs',k=d.lb??d.ls??d.lf,L=lab[key];
     if(!k)lab[key]=[];else if(L.includes(k)){if(key==='bs'&&L.length===1)return toast('Món cần ít nhất một loại trà hoặc sữa');lab[key]=L.filter(x=>x!==k)}
     else{if(lab.bs.length+lab.ss.length+lab.ts.length+lab.fs.length>=8)return toast('Tối đa 8 nguyên liệu mỗi món');lab[key]=[...L,k]}
     renderPrep();return}
@@ -1059,24 +1076,28 @@ $('#openBtn').onclick=()=>{
 function canPt(C,e){const r=C.cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*C.LW,y:(e.clientY-r.top)/r.height*C.LH}}
 function hitSlot(x,y){for(const z in ZONES){const sl=ZONES[z].slots;for(let i=0;i<sl.length;i++){const s=sl[i];if(x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h)return{z,i,id:(D?LAY():S.layout)[z][i]}}}return null}
 const inR=(p,r)=>p.x>=r.x&&p.x<r.x+r.w&&p.y>=r.y&&p.y<r.y+r.h;
+/* ô Kho dính ở đầu tab Quầy, có thể nằm đè lên quầy khi cuộn nên phải xét trước */
+function overKho(e){const k=$('#khoBox');if(!k)return false;const r=k.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom}
+function khoHi(on,over){const k=$('#khoBox');if(!k)return;k.classList.toggle('drop',!!on);k.classList.toggle('over',!!(on&&over))}
+const storable=z=>z!=='cup'&&z!=='tool';
 function bindEdit(){
   edC.onpointerdown=e=>{const p=canPt(ED,e),h=hitSlot(p.x,p.y);
     if(placeSel){if(!h)return;if(h.z!==placeSel.z)return toast(`Chỉ đặt được trong khu ${ZN[placeSel.z]}`);const ps=placeSel;placeSel=null;placeItem(h.z,h.i,ps.id);return}
-    if(!h||!h.id)return;e.preventDefault();drag={z:h.z,i:h.i,id:h.id,x:p.x,y:p.y};try{edC.setPointerCapture(e.pointerId)}catch(_){}};
-  edC.onpointermove=e=>{if(!drag)return;const p=canPt(ED,e);drag.x=p.x;drag.y=p.y};
-  edC.onpointerup=e=>{if(!drag)return;const r=edC.getBoundingClientRect(),out=e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
+    if(!h||!h.id)return;e.preventDefault();drag={z:h.z,i:h.i,id:h.id,x:p.x,y:p.y};khoHi(storable(h.z));try{edC.setPointerCapture(e.pointerId)}catch(_){}};
+  edC.onpointermove=e=>{if(!drag)return;const p=canPt(ED,e);drag.x=p.x;drag.y=p.y;khoHi(storable(drag.z),overKho(e))};
+  edC.onpointerup=e=>{if(!drag)return;khoHi(false);const r=edC.getBoundingClientRect(),out=overKho(e)||e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
     const p=canPt(ED,e),h=out?null:hitSlot(p.x,p.y),dg=drag;drag=null;
     if(out){storeItem(dg.z,dg.i);return}
     if(h&&h.z===dg.z){if(h.i!==dg.i){const L=S.layout[dg.z];[L[dg.i],L[h.i]]=[L[h.i],L[dg.i]];save()}}
     else toast(`Món này chỉ đặt được trong ${ZONES[dg.z].l.toLowerCase()}, kéo ra ngoài quầy để cất vào kho`)};
-  edC.onpointercancel=()=>{drag=null}}
+  edC.onpointercancel=()=>{drag=null;khoHi(false)}}
 /* kéo đồ từ kho (chip) vào quầy */
 let kdrag=null;
 $('#tbody').addEventListener('pointerdown',e=>{const b=e.target.closest('.kchip');if(!b||b.disabled)return;const [z,id]=b.dataset.psel.split(':');kdrag={z,id,x0:e.clientX,y0:e.clientY,moved:false,el:null}});
 window.addEventListener('pointermove',e=>{if(!kdrag)return;if(!kdrag.moved&&Math.hypot(e.clientX-kdrag.x0,e.clientY-kdrag.y0)>8){kdrag.moved=true;const g=document.createElement('div');g.className='kghost';g.textContent=ITEM(kdrag.id).sh;document.body.appendChild(g);kdrag.el=g}
   if(kdrag.el){kdrag.el.style.left=e.clientX+'px';kdrag.el.style.top=e.clientY+'px';e.preventDefault()}},{passive:false});
 window.addEventListener('pointerup',e=>{if(!kdrag)return;const k=kdrag;kdrag=null;if(!k.moved)return;k.el&&k.el.remove();suppressClick=true;setTimeout(()=>suppressClick=false,50);
-  if(!edC)return;const r=edC.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;
+  if(!edC||overKho(e))return;const r=edC.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;
   const p=canPt(ED,e),h=hitSlot(p.x,p.y);if(!h)return;if(h.z!==k.z)return toast(`${ITEM(k.id).sh} chỉ bày được ở khu ${ZN[k.z]}`);placeItem(h.z,h.i,k.id)});
 let suppressClick=false;
 
@@ -1084,14 +1105,14 @@ let suppressClick=false;
 let D=null,cup=null,pouring=null;
 const working=()=>S.staff.filter(s=>!s.rest);
 const hasRole=r=>working().filter(s=>s.role===r);
-function priceOf(o){const r=recById(o.r);if(r&&r.id<0)return r.price;return (r?r.price:16000)+(o.size==='L'?5000:0)}
+function priceOf(o){const r=recById(o.r);if(r&&r.id<0)return r.price;return (r?r.price:16000)+(o.size==='L'?5000:0)+o.ts.reduce((a,k)=>a+topPrice(k),0)}
 function ratioOf(o){const r=recById(o.r);return r&&r.id>0?r.price/Math.max(1000,recValue(r)):1}
 function priceF(r){return clamp(Math.exp(-(r.price/Math.max(1000,recValue(r))-1)*2.2),.15,2.2)}
 function pickType(){const pool=Object.entries(TYPES).filter(([,t])=>t.day<=S.day);let r=Math.random()*pool.reduce((a,[,t])=>a+t.w,0);for(const [k,t] of pool){r-=t.w;if(r<=0)return k}return 'thuong'}
 function pickRecipe(){if(D&&D.emerg)return pick(EMERG);const m=activeMenu();const ws=m.map(r=>{const ci=comboInfo(recIds(r));return Math.max(.05,(1+.25*ci.avg+.6*hotCount(r)+.4*rareCount(r)+(r.until?.5:0))*priceF(r)*(r.basic?.6:1))});
   let x=Math.random()*ws.reduce((a,b)=>a+b,0);for(let i=0;i<m.length;i++){x-=ws[i];if(x<=0)return m[i]}return m[0]}
 function makeOrder(){const r=pickRecipe();
-  const o={r:r.id,name:r.name,bs:r.bs,ss:r.ss||[],ts:r.ts,fs:r.fs,b:r.bs[0],size:Math.random()<.45?'L':'M'};
+  const o={r:r.id,name:r.name,bs:r.bs,ss:r.ss||[],ts:pickTops(r),fs:r.fs,b:r.bs[0],size:Math.random()<.45?'L':'M'};
   if(r.id<0){o.size='M';o.ice=r.ice;return o}
   if(S.day>=3){o.sugar=pick([30,50,70,100]);o.ice=S.ev==='nangnong'?pick(['it','thuong']):pick(['none','it','thuong'])}return o}
 function spawn(){const type=pickType(),TT=TYPES[type],n=TT.g?ri(TT.g[0],TT.g[1]):1,items=[...Array(n)].map(makeOrder),dis=type==='quyt'&&Math.random()<.35,o=items[0];
@@ -1100,7 +1121,7 @@ function spawn(){const type=pickType(),TT=TYPES[type],n=TT.g?ri(TT.g[0],TT.g[1])
     friends:[...Array(Math.min(n,3)-1)].map(()=>makeLook(type==='vanphong'?'voi':'thuong')),pay:type==='hocsinh'?'Tiền lẻ':pick(PAYS),no:++D.spawned,x:168,tx:168,mood:2};
   const g=/^(Chị|Cô|Em|Bé)/.test(c.name)?[1,3,4,6]:/^(Anh|Chú|Ông)/.test(c.name)?[2,5,7,8]:[1,2,3,4,5,6,7,8];
   const kt=(pool)=>SPR.kt1?'kt'+pick(pool):null;c.spr=(type==='quyt'&&dis)||!SPR['k_'+type]?kt(g):'k_'+type;c.friends.forEach(f=>{const used=[c.spr,...c.friends.map(x=>x.spr)];const pool=[1,2,3,4,5,6,7,8].filter(i=>!used.includes('kt'+i));f.spr=kt(pool.length?pool:[1,2,3,4,5,6,7,8])});
-  D.queue.push(c);layoutQ();say(c,n>1?`Cho ${n} ly nha!`:pick([`${o.name} ${o.size} nha!`,'Chào tiệm ơi!']),2200)}
+  D.queue.push(c);layoutQ();say(c,n>1?`Cho ${n} ly nha!`:pick([`${o.name} ${o.size}${o.ts.length?' thêm '+o.ts.map(k=>TOPS[k].sh).join(', '):''} nha!`,'Chào tiệm ơi!']),2200)}
 function startDay(emerg){
   prepDay();const pop=popularity();
   const am=emerg?EMERG:activeMenu(),tf=emerg?1.1:clamp(am.reduce((a,r)=>a+priceF(r),0)/am.length,.55,1.45);
@@ -1227,7 +1248,7 @@ function review(c,s,notes=[]){let t=pick(RV[s]);if(notes.length&&s<=3)t=NOTE_T[n
 function checks(o){const k=cup||{},has=!!cup,teas=has?[...new Set(k.pours.map(p=>p.k))]:[];
   const L=[[`${o.bs.map(x=>BASES[x].sh).join(' + ')} ${o.size}`,has&&k.size===o.size&&sameSet(teas,o.bs)&&!k.spill&&Math.abs(k.fill-TARGET)<=.08,recIds(o).some(isHot)]];
   o.ss.forEach(x=>L.push([SYRUPS[x].sh,has&&(k.syrups||[]).includes(x)]));
-  if(o.ts.length)o.ts.forEach(x=>L.push([TOPS[x].sh,has&&k.tops.includes(x)]));else L.push(['Không topping',has&&!k.tops.length]);
+  if(o.ts.length)o.ts.forEach(x=>L.push(['+ '+TOPS[x].sh,has&&k.tops.includes(x)]));else L.push(['Không topping',has&&!k.tops.length]);
   o.fs.forEach(x=>L.push([FOAMS[x].sh,has&&k.foams.includes(x)]));
   if(o.sugar)L.push([`${o.sugar}% đường`,has&&k.sugar===SUGAR[o.sugar]]);if(o.ice)L.push([ICE[o.ice][0],has&&k.ice===ICE[o.ice][1]]);
   const extra=has?[...teas.filter(x=>!o.bs.includes(x)),...(k.syrups||[]).filter(x=>!o.ss.includes(x)),...k.tops.filter(x=>!o.ts.includes(x)),...k.foams.filter(x=>!o.fs.includes(x))]:[];
