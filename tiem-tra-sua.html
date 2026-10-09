@@ -94,7 +94,7 @@ html,body{touch-action:pan-x pan-y}
 .qt{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;margin-top:-2px}
 .qd{flex:1;min-height:0;display:flex;align-items:center;gap:4px}.qd img{height:58px;width:auto;flex:none}.qd span{display:flex;flex-direction:column;gap:3px;min-width:0}
 .qd b{font-size:12px;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.qd .sz{font-style:normal;align-self:flex-start;font-size:11px;font-weight:800;padding:0 7px;border-radius:999px;background:#fff1e3;border:1.5px solid #ee7a1f;color:#7a3f0e}
-.qtp{font-size:11px;font-weight:700;color:#7a3f0e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qslv{font-size:10.5px;font-weight:800;color:#fff;background:var(--c1);border-radius:6px;padding:0 5px;align-self:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.qtp{font-size:11px;font-weight:700;color:#7a3f0e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qs{font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qc .pbar{display:block;flex:none;height:5px;border-radius:99px;background:#d6eee1;overflow:hidden}.qc .pbar i{display:block;height:100%;width:0;background:#4f9a72}
 .qc.nx{border-color:#ee7a1f;background:#fff6ec;box-shadow:0 2px 0 #f2b37a}.qc.nx .qs{color:#c25a00}
@@ -661,6 +661,13 @@ for(const k in CUPSKIN){const c_=CUPSKIN[k];c_.sh='Bọc '+c_.n.replace(/^Ly /,'
 const inSeason=id=>{const k=CUPSKIN[id];return !!(k&&k.mo.includes(new Date().getMonth()+1))};
 const seasonCups=()=>Object.keys(CUPSKIN).filter(id=>S.owned.includes(id)&&inSeason(id));
 const cupUp=cp=>cp&&cp.skin&&CUPSKIN[cp.skin]?CUPSKIN[cp.skin].up:0;
+/* khách tự gọi ly bọc giấy mùa (o.sk, giá đã tính trong priceOf) khi xấp giấy đang bày trên quầy; học sinh, chú xe ôm chê mắc nên không gọi, hot girl sống ảo rất thích */
+const SK_P={songao:.75,sigai:.5,hocsinh:0,xeom:0};
+function orderSkin(items,type){if(D.emerg)return;const sk=seasonCups().filter(onCounter);if(!sk.length)return;const p=SK_P[type]!=null?SK_P[type]:.3;
+  items.forEach(o=>{const r=recById(o.r);if(r&&r.id>=0&&Math.random()<p)o.sk=pick(sk)})}
+const skUp=o=>o.sk&&CUPSKIN[o.sk]?CUPSKIN[o.sk].up:0;
+/* tiền giấy bọc khách không gọi mà mình tự bọc (khách gọi rồi thì đã nằm trong giá order) */
+const cupExtra=(cp,o)=>o&&o.sk&&cp&&cp.skin===o.sk?0:cupUp(cp);
 const OUTFITS={
   o_xanh:{n:'Tạp dề xanh',cost:0,ch:0,shirt:'#fbf7f2',apron:'#7cc2a6'},
   o_hong:{n:'Tạp dề hồng, khăn trùm',cost:60000,ch:1,shirt:'#fbf7f2',apron:'#f39bb2',hat:'bandana',hatc:'#f39bb2'},
@@ -1183,7 +1190,7 @@ function orderNeeds(){const c=D&&target();if(!c||sealing||D.away>now)return null
   const poured=new Set(cup.pours.filter(p=>p.amt>.001).map(p=>p.k));o.bs.forEach(k=>{if(!poured.has(k)||cup.fill<TARGET-POUR_TOL)n.add(k)});
   (o.ss||[]).forEach(k=>{if(!cup.syrups.includes(k))n.add(k)});
   if(o.sugar&&cup.sugar<SUGAR[o.sugar])n.add('sugar');if(o.ice&&cup.ice<ICE[o.ice][1])n.add('ice');
-  o.ts.forEach(k=>{if(!cup.tops.includes(k))n.add(k)});o.fs.forEach(k=>{if(!cup.foams.includes(k))n.add(k)});return n}
+  o.ts.forEach(k=>{if(!cup.tops.includes(k))n.add(k)});o.fs.forEach(k=>{if(!cup.foams.includes(k))n.add(k)});if(o.sk&&cup.skin!==o.sk)n.add(o.sk);return n}
 /* chữ ký trạng thái quầy: giống lần vẽ trước thì khỏi vẽ lại; đang rót, đóng gói, kéo món thì luôn vẽ */
 function stationSig(C,edit,g){const c=target&&D?target():null;
   return JSON.stringify([C.cv.width,C.cv.height,SW,edit,Object.keys(SPR).length,g.map(o=>o.id+':'+o.c+','+o.r+':'+(BASES[o.id]&&BASES[o.id].free?'':qty(o.id))),
@@ -1258,7 +1265,7 @@ function qCard(c,i,st,nx,first){const it=c.items[i],sp=c.type!=='thuong'&&c.type
   const foot=st.k==='me'?'Bạn đang pha':st.k==='bad'?`${st.s.name} hỏng · Bỏ ly`:st.k==='lz'?`${st.s.name} lướt điện thoại…`:st.k==='sf'?`<span data-qst="${st.s.id}">${st.s.name} · ${ASTEP_L[st.s.w.steps[st.s.w.i]]}</span>`:st.k==='oos'?`Hết ${st.m.map(k=>ITEM(k).sh).join(', ')} · Đổi món`:nx?'Tiếp theo':'Chờ';
   return `<div class="qc ${st.k}${nx?' nx':''}" role="button" tabindex="0" data-qc="${c.id}:${i}" data-k="${qKey(c,i,st,nx,first)}"><i class="qpat"><i data-pat="${c.id}"></i></i>
    <div class="qch"><img src="${qPic(c)}" alt=""><b>${c.name}</b>${c.items.length>1?`<small>${i+1}/${c.items.length}</small>`:''}${first&&(st.k==='wait'||st.k==='oos')?`<button class="qx${refArm===c.id?' arm':''}" data-qref="${c.id}" aria-label="Từ chối">${refArm===c.id?'Chắc?':'✕'}</button>`:''}</div>
-   ${sp?`<div class="qt">${sp}</div>`:''}<div class="qd"><img src="${drinkPicR(it,it.size)}" alt=""><span><b>${it.name}</b><i class="sz">${it.size}</i></span></div>${it.ts.length?`<div class="qtp">+${it.ts.map(k=>TOPS[k].sh).join(', ')}</div>`:''}
+   ${sp?`<div class="qt">${sp}</div>`:''}<div class="qd"><img src="${drinkPicR(it,it.size)}" alt=""><span><b>${it.name}</b><i class="sz">${it.size}</i></span></div>${it.ts.length?`<div class="qtp">+${it.ts.map(k=>TOPS[k].sh).join(', ')}</div>`:''}${it.sk&&CUPSKIN[it.sk]?`<div class="qslv" style="--c1:${CUPSKIN[it.sk].c1}">${CUPSKIN[it.sk].sh}</div>`:''}
    <div class="qs">${foot}</div>${st.k==='sf'||st.k==='lz'?`<i class="pbar"><i data-qp="${st.s.id}"></i></i>`:''}</div>`}
 const qKey=(c,i,st,nx,first)=>[c.id,i,st.k,st.s&&st.s.id,st.m&&st.m.join(),nx,first&&refArm===c.id,c.items[i].name,c.items[i].size].join(',');
 function renderQ(){const el=$('#qrow');if(!el||!D)return;const L=[],nx=nextIt();
@@ -1458,7 +1465,7 @@ function decoHTML(){
   const chips=Object.entries(DSLOT).map(([k,s])=>`<button data-dsel="${k}" aria-pressed="${decSel===k}">${s.l}</button>`).join('')+`<button data-dsel="outfit" aria-pressed="${decSel==='outfit'}">Đồng phục</button><button data-dsel="cup" aria-pressed="${decSel==='cup'}">Giấy bọc ly</button>`;
   let list='';
   if(decSel==='cup'){
-    list=`<p class="meta hint" style="margin:0 0 6px">Mua một lần, tới mùa thì xấp giấy bọc hiện trên quầy. Pha xong chạm giấy bọc để bọc ly, khách trả thêm tiền; học sinh và chú xe ôm chê mắc.</p>`+Object.entries(CUPSKIN).map(([id,k])=>{const own=S.owned.includes(id),u=unlockState(k),ss=inSeason(id);
+    list=`<p class="meta hint" style="margin:0 0 6px">Mua một lần, tới mùa thì xấp giấy bọc hiện trên quầy. Khách sẽ gọi ly bọc giấy (trả thêm tiền), pha xong chạm giấy bọc để bọc. Tự bọc cho khách không gọi thì họ cũng trả thêm; học sinh và chú xe ôm chê mắc.</p>`+Object.entries(CUPSKIN).map(([id,k])=>{const own=S.owned.includes(id),u=unlockState(k),ss=inSeason(id);
       return `<div class="drow${own&&ss?' on':''}"><img src="${cupPic('L',id)}" alt=""><div><div style="font-weight:800">${k.n}${ss?' <span class="mtag">Đang mùa</span>':''}</div><div class="meta">${[own?'':u.txt,`📅 T${k.mo.join(', T')}`,`<b style="color:var(--good)">+${fk(k.up)}/ly</b>`].filter(Boolean).join(' · ')}</div></div>
         <div class="acts">${own?`<span class="meta">${ss?'✓ Trên quầy':'Chờ mùa'}</span>`:`<button class="btn sm pink" data-unlock="${id}" ${u.ok?'':'disabled'}>${u.btn}</button>`}</div></div>`}).join('');
   }else if(decSel==='outfit'){
@@ -1859,7 +1866,7 @@ let suppressClick=false;
 let D=null,cup=null,pouring=null;
 const working=()=>S.staff.filter(s=>!s.rest);
 const hasRole=r=>working().filter(s=>s.role===r);
-function priceOf(o){const r=recById(o.r);if(r&&r.id<0)return r.price;const p=(r?r.price:16000)+(o.size==='L'?5000:0)+o.ts.reduce((a,k)=>a+topPrice(k),0)+(o.xf?foamAdd(o.xf):0);return o.disc?Math.max(1000,r1k(p*(1-o.disc))):p}
+function priceOf(o){const r=recById(o.r);if(r&&r.id<0)return r.price;const p=(r?r.price:16000)+(o.size==='L'?5000:0)+o.ts.reduce((a,k)=>a+topPrice(k),0)+(o.xf?foamAdd(o.xf):0)+skUp(o);return o.disc?Math.max(1000,r1k(p*(1-o.disc))):p}
 function ratioOf(o){const r=recById(o.r);if(!(r&&r.id>0))return 1;const ts=o.ts||[];const xf=o.xf?foamAdd(o.xf):0;return (r.price+ts.reduce((a,k)=>a+topPrice(k),0)+xf)/Math.max(1000,recValue(r)+ts.reduce((a,k)=>a+topBase(k),0)+xf)}
 function priceF(r){return clamp(Math.exp(-(r.price/Math.max(1000,recValue(r))-1)*2.2),.15,2.2)}
 function pickType(){const pool=Object.entries(TYPES).filter(([,t])=>t.day<=S.day),wt=t=>t.w*(t.g?1+.25*fancy():1);let r=Math.random()*pool.reduce((a,[,t])=>a+wt(t),0);for(const [k,t] of pool){r-=wt(t);if(r<=0)return k}return 'thuong'}
@@ -1898,7 +1905,7 @@ function typeOrders(type,n){const m=activeMenu().filter(makeable),all=()=>[...Ar
   if(type==='songao'){/* món đẹp: có kem phủ hoặc nhiều topping */const pretty=m.filter(r=>r.fs.length||hotCount(r));const o=makeOrder(pretty.length?pick(pretty):pick(m));if(o.ts.length<2)extraTop(o);if(o.ts.length<2)extraTop(o);return [o]}
   return all()}
 function spawn(ft){const R=!ft&&!D.emerg&&Math.random()<.2?pick((S.regs||[]).filter(r=>r.last!==S.day)):null;
-  const type=R?'quen':ft||pickType(),TT=TYPES[type],n=TT.g?ri(TT.g[0],TT.g[1]+(TT.g[1]>=3?Math.min(2,fancy()>>1):0)):1,items=R?[makeOrder(favOrder(R))]:typeOrders(type,n),dis=type==='quyt'&&Math.random()<.35,o=items[0];
+  const type=R?'quen':ft||pickType(),TT=TYPES[type],n=TT.g?ri(TT.g[0],TT.g[1]+(TT.g[1]>=3?Math.min(2,fancy()>>1):0)):1,items=R?[makeOrder(favOrder(R))]:typeOrders(type,n),dis=type==='quyt'&&Math.random()<.35,o=items[0];orderSkin(items,type);
   const max=(Math.max(24,40-S.day*.8)+o.ts.length*2+o.ss.length*1.5+o.fs.length*3+(o.bs.length-1)*3+(o.sugar?6:0)+(n-1)*16)*TT.pat;
   const P=type==='quyt'&&dis?{a:{teen:30,tre:70}}:TPROF[type]||TPROF.thuong,age=wpick(P.a),sex=P.s||pick(['f','m']);
   const c={id:++D.cid,name:genName(age,sex,P.pre),age,sex,type,dis,items,o,cur:0,res:[],price:items.reduce((a,x)=>a+priceOf(x),0),p:max,max,look:makeLook(type,dis),
@@ -1964,7 +1971,7 @@ function tickDay(dt){
     /* giờ cao điểm mà hàng đã đầy: một số khách thấy đông quá nên đi tiệm khác, số còn lại đứng chờ ngoài cửa */
     else if(rushNow()&&Math.random()<.35){D.spawned++;D.left++;D.rushLost=(D.rushLost||0)+1;D.next=arrivalGap()/rushMul()*rnd(.7,1.3);if(now-(D.rushToast||-9)>6){D.rushToast=now;toast('Hàng dài quá, có khách bỏ đi tiệm khác',2200)}}
     else D.next=.5}
-  {const r=rushNow();if(r&&D.rush!==r){D.rush=r;toast(`⏰ Giờ cao điểm ${r==='trua'?'trưa':'chiều'}! Khách sắp ùa tới`,3000,1);sfx('chime')}else if(!r&&D.rush)D.rush=null}
+  {const r=rushNow();if(r&&D.rush!==r){D.rush=r;toast(`⏰ Giờ cao điểm ${r==='trua'?'trưa':'chiều'}! Khách sắp ùa tới`,3000,1);sfx('chime');rushMusic(true)}else if(!r&&D.rush){D.rush=null;rushMusic(false)}}
   const cash=hasRole('cashier');let pm=1-cash.reduce((a,s)=>a+s.charm*.05+(s.trait==='vuive'?.08:0),0)-(working().some(s=>s.trait==='vuive')?.05:0)-charm()*.012;pm=Math.max(.45,pm);
   D.queue.forEach(c=>{if(!c.by&&!c.dec&&!(sealing&&sealing.cid===c.id))c.p-=dt*pm*(c.items.some(x=>x.sj)?.5:1)*(rushNow()?1.4:1);const f=c.p/c.max;c.mood=c.dec||c.by?2:f>.55?2:f>.25?1:0});
   const gone=D.queue.filter(c=>c.p<=0);
@@ -1994,7 +2001,7 @@ function tickDay(dt){
    Mỗi người lo 1 ly: mỗi Pha chế tự nhận ly kế tiếp chưa ai làm (theo thứ tự khách), pha theo trình tự ASTEPS rồi đóng gói và giao.
    Người chơi pha ly tiếp theo còn trống (target). Nhân viên pha chậm hơn (khoảng STAFF_T giây/ly) nhưng làm song song.
    Mỗi bước có thể pha hỏng (theo Khéo tay); ly hỏng thì nhân viên dừng, chờ người chơi bấm Bỏ ly ở thẻ của họ rồi làm lại. */
-const ASTEPS=['ly','nuoc','duong','da','top','kem','goi'],ASTEP_L={ly:'lấy ly',nuoc:'rót nước',duong:'thêm đường',da:'thêm đá',top:'thêm topping',kem:'phủ kem',goi:'đóng gói'};
+const ASTEPS=['ly','nuoc','duong','da','top','kem','boc','goi'],ASTEP_L={ly:'lấy ly',nuoc:'rót nước',duong:'thêm đường',da:'thêm đá',top:'thêm topping',kem:'phủ kem',boc:'bọc giấy',goi:'đóng gói'};
 const STAFF_T=6,BRK_T=20,BRK_MOOD=15;
 const STAFF_MAX=6;
 /* đóng gói nhanh hơn khi đông Pha chế */
@@ -2009,7 +2016,7 @@ function arrivalGap(){const B=hasRole('barista'),pg=Math.max(3.2,9-S.day*.3-work
 /* thời gian một nhân viên tự pha một ly (gồm đóng gói): Nhanh tay càng cao càng nhanh, mệt thì chậm hơn */
 const tired=s=>s.mood<30,soloTime=s=>STAFF_T*(1.24-.08*s.spd)*(tired(s)?1.35:1);
 /* ly nhiều bước pha lâu hơn: mỗi bước một khoảng thời gian (nhiều loại trà, siro, topping, kem thì lâu hơn); ly thường (trà, đường, đá, 1 topping) khoảng soloTime */
-const stepDur=(st,it)=>st==='ly'?.6:st==='nuoc'?1.4+.4*(it.bs.length-1)+.3*(it.ss||[]).length:st==='duong'||st==='da'?.5:st==='top'?.8*it.ts.length:st==='kem'?1.1*(it.fs||[]).length:.9;
+const stepDur=(st,it)=>st==='ly'?.6:st==='nuoc'?1.4+.4*(it.bs.length-1)+.3*(it.ss||[]).length:st==='duong'||st==='da'?.5:st==='top'?.8*it.ts.length:st==='kem'?1.1*(it.fs||[]).length:st==='boc'?.6:.9;
 function wTime(s,w){const k=soloTime(s)/4.7;w.ds=w.steps.map(st=>stepDur(st,w.it)*k);w.T=w.ds.reduce((a,b)=>a+b,0);w.acc=0}
 const errP=s=>clamp(.08-s.skill*.014+(s.mood<30?.05:0)+(s.trait==='haudau'?.04:0),.01,.14);
 const iceN=o=>o.ice?ICE[o.ice][1]:0;
@@ -2026,7 +2033,7 @@ function staffPick(){for(const c of D.queue){if(c.by||c.dec)continue;for(let i=0
 function stepNeed(st,it,cp){if(st==='ly')return !cp.lyOk;if(st==='goi')return true;
   if(st==='nuoc'){const pd=new Set(cp.pours.filter(p=>p.amt>.001).map(p=>p.k));return it.bs.some(k=>!pd.has(k))||cp.fill<TARGET-POUR_TOL||(it.ss||[]).some(k=>!cp.syrups.includes(k))}
   if(st==='duong')return !!it.sugar&&cp.sugar<SUGAR[it.sugar];if(st==='da')return iceN(it)>0&&cp.ice<iceN(it);
-  if(st==='top')return it.ts.some(k=>!cp.tops.includes(k));if(st==='kem')return (it.fs||[]).some(k=>!cp.foams.includes(k));return false}
+  if(st==='top')return it.ts.some(k=>!cp.tops.includes(k));if(st==='kem')return (it.fs||[]).some(k=>!cp.foams.includes(k));if(st==='boc')return !!it.sk&&cp.skin!==it.sk;return false}
 const staffCup=(s,c,ix,it)=>Object.assign(newCup(it.size),{staff:s.id,cid:c.id,ix});
 /* bắt đầu rót: lấy trà/sữa còn thiếu (mỗi loại 1 phần mỗi ly) và siro, chia đều phần còn thiếu tới vạch */
 function staffPourStart(w){const cp=w.cup,it=w.it,pd=new Set(cp.pours.filter(p=>p.amt>.001).map(p=>p.k)),miss=it.bs.filter(k=>!pd.has(k)),to=miss.length?miss:it.bs;
@@ -2037,7 +2044,7 @@ function pourPart(cp,p,x){const add=Math.min(x,p.amt-p.done,Math.max(0,TARGET-cp
 /* xong một bước: bỏ đồ vào ly (topping, kem hết hàng thì trả false) */
 function staffStepEnd(w,st){const cp=w.cup,it=w.it;
   if(st==='ly')cp.lyOk=1;else if(st==='nuoc'){w.share.forEach(p=>pourPart(cp,p,p.amt));w.share=null;w.pk=null}
-  else if(st==='duong')cp.sugar=SUGAR[it.sugar];else if(st==='da')cp.ice=iceN(it);
+  else if(st==='duong')cp.sugar=SUGAR[it.sugar];else if(st==='da')cp.ice=iceN(it);else if(st==='boc')cp.skin=it.sk;
   else if(st==='top'||st==='kem'){const arr=st==='top'?cp.tops:cp.foams;for(const k of (st==='top'?it.ts:(it.fs||[])))if(!arr.includes(k)){if(!use(k))return false;arr.push(k)}}
   return true}
 const cupMissOf=(cp,o)=>{const g=cup;cup=cp;try{return cupMiss(o)}finally{cup=g}};
@@ -2054,7 +2061,7 @@ function staffTick(dt){
     if(!w){if(s.brkReq){s.brkReq=0;s.brkT=now+BRK_T;s.mood=Math.min(100,s.mood+BRK_MOOD);s.job=null;toast(`${s.name} nghỉ giải lao ${BRK_T} giây`);return}
       const p=staffPick();if(!p){s.job=null;return}
       const [c2,ix]=p,it=c2.items[ix];it.sj=s.id;
-      const steps=ASTEPS.filter(st=>st==='ly'||st==='nuoc'||st==='goi'||(st==='duong'&&it.sugar)||(st==='da'&&iceN(it)>0)||(st==='top'&&it.ts.length)||(st==='kem'&&it.fs.length));
+      const steps=ASTEPS.filter(st=>st==='ly'||st==='nuoc'||st==='goi'||(st==='duong'&&it.sugar)||(st==='da'&&iceN(it)>0)||(st==='top'&&it.ts.length)||(st==='kem'&&it.fs.length)||(st==='boc'&&it.sk));
       w=s.w={cid:c2.id,ix,it,steps,i:0,t:0,got:0,broken:null,cup:staffCup(s,c2,ix,it)};wTime(s,w);renderTicket();
       /* nhân viên lười: mỗi ly có 15% lướt điện thoại vài giây */
       if(s.trait==='luoi'&&Math.random()<.15){s.idle=rnd(2,4);s.job={t:0,T:w.T};return}}
@@ -2075,7 +2082,8 @@ function staffTick(dt){
 const errLog=(s,why)=>{const E=D.err[s.id]||(D.err[s.id]={name:s.name,cups:0,list:{}});E.cups++;if(why)E.list[why]=(E.list[why]||0)+1};
 /* pha sai ở một bước: ly thật bị hỏng theo kiểu lỗi đó */
 function staffErr(s,st){const w=s.w,cp=w.cup,it=w.it;let why='sai kem';
-  if(st==='ly'){cp.size=it.size==='L'?'M':'L';why='sai size'}
+  if(st==='boc'){cp.skin=null;why='làm rách giấy bọc'}
+  else if(st==='ly'){cp.size=it.size==='L'?'M':'L';why='sai size'}
   else if(st==='nuoc'){const r=Math.random();if(r<.4){cp.fill=1.04;cp.spill=true;why='tràn ly'}else if(r<.75||it.bs.length<2){cp.fill=TARGET+(Math.random()<.5?-.24:.2);why='rót lệch'}else{cp.pours.pop();why='pha thiếu trà'}}
   else if(st==='duong'){cp.sugar=Math.max(0,cp.sugar+(Math.random()<.5?-1:1));why='sai đường'}
   else if(st==='da'){cp.ice=Math.random()<.6?0:Math.min(3,cp.ice+1);why=cp.ice?'sai đá':'quên đá'}
@@ -2157,6 +2165,8 @@ function settle(c,s,payOverride,notes,why){
   if(c.type==='songao'&&s===5){const b=ri(2,4);S.buzz=Math.min(12,(S.buzz||0)+b);D.log.push(`${c.name} đăng story khen tiệm, mai sẽ có thêm khách.`);setTimeout(()=>{if(D)say(c,'Lên story liền!',1600)},300)}
   if(D.tipB&&D.tipB.n>0&&s>=3){tip+=D.tipB.amt;tw.push(D.tipB.why);D.tipB.n--}
   if(S.ev==='mua')tip*=2;
+  /* tip không vượt quá tiền order, kẻo khách trả gấp 2–3 lần */
+  tip=Math.min(tip,c.price);
   if(payOverride===0){tip=0;tw.length=0}
   {const base=pay,tot=c.items.reduce((a,it)=>a+priceOf(it),0)||1;c.items.forEach(it=>{const r=recById(it.r),k=it.r||0,e=D.sales[k]||(D.sales[k]={name:r?r.name:it.name,n:0,rev:0,cost:0});e.n++;e.rev+=base*priceOf(it)/tot;e.cost+=comboInfo(recIds(it)).cost})}
   D.tips+=tip;pay+=tip;S.money+=pay;D.rev+=pay;D.served++;D.stars.push(s);if(s>=3&&pay>0){qServe(c);qSet('rev',D.rev)}bump('cups',c.items.length);if(pay>0)sfx('coin');
@@ -2165,9 +2175,9 @@ function settle(c,s,payOverride,notes,why){
   D.queue=D.queue.filter(x=>x!==c);layoutQ();
   say(c,s>=4?pick(['Ngon quá!','Cảm ơn nha!','Chuẩn vị!']):s===3?'Cũng được.':s===2?'Sai rồi nè…':'Gì vậy trời!',1400);
   c.tx=c.x;c.leaving='wait';if(!D.walk.includes(c))D.walk.push(c);setTimeout(()=>{if(D)leave(c,'leave',s>=4?2:s===3?1:0)},600);
-  fx(pay?`+${fk(pay)}`:'0đ',pay?'#4f9a72':'#d9534f',c.x+6,28);if(tip)setTimeout(()=>{if(D)fx(`tip ${fk(tip)}`,'#e2617f',c.x+6,22)},350);
+  fx(pay?`+${fk(pay-tip)}`:'0đ',pay?'#4f9a72':'#d9534f',c.x+6,28);if(tip)setTimeout(()=>{if(D)fx(`tip ${fk(tip)}`,'#e2617f',c.x+6,22)},350);
   review(c,s,notes);const rg=regAfter(c,s);checkAch();
-  toast(`${c.name} ${'★'.repeat(s)}${'☆'.repeat(5-s)} +${fk(pay)}${why?' · '+why:notes.length?' · '+notes[0]:''}${rg}`,rg?3200:1800,rg?1:0);
+  toast(`${c.name} ${'★'.repeat(s)}${'☆'.repeat(5-s)} +${fk(pay-tip)}${tip?` · tip ${fk(tip)}${tw.length?' ('+tw[0]+')':''}`:''}${why?' · '+why:notes.length?' · '+notes[0]:''}${rg}`,rg||tip?3000:1800,rg?1:0);
   renderTicket()}
 function thief(c){
   D.queue=D.queue.filter(x=>x!==c);layoutQ();renderTicket();
@@ -2405,6 +2415,7 @@ function checks(o){const k=cup||{},has=!!cup,teas=has?[...new Set(k.pours.map(p=
   /* topping gộp một nhãn, chỉ ghi những cái còn thiếu */
   if(o.ts.length){const lt=o.ts.filter(x=>!(has&&k.tops.includes(x)));L.push(['+ '+(lt.length?lt:o.ts).map(x=>TOPS[x].sh).join(', '),!lt.length,o.ts.some(isHot)])}else L.push(['Không topping',has&&!k.tops.length,false,false,true]);
   o.fs.forEach(x=>L.push([FOAMS[x].sh,has&&k.foams.includes(x)]));
+  if(o.sk&&CUPSKIN[o.sk])L.push([CUPSKIN[o.sk].sh,has&&k.skin===o.sk]);
   if(o.sugar){const n=SUGAR[o.sugar];L.push([`Đường ${n}`,has&&k.sugar===n,false,has&&k.sugar>n])}
   if(o.ice){const n=ICE[o.ice][1];L.push([n?`Đá ${n}`:'Không đá',has&&k.ice===n,false,has&&k.ice>n])}
   /* đồ bỏ thừa: tô đỏ, gạch ngang */
@@ -2451,7 +2462,7 @@ function renderTicket(){renderTicket0();tkMore();renderOrd();renderSug()}
 /* màn pha: đơn của khách nằm bên trái ly (thay cho phiếu), chỉ ghi những gì còn phải làm; sai thì tô đỏ */
 function renderOrd(){const el=$('#ordp');if(!el||!D)return;const c=target();
   if(!c){const k='none|'+D.queue.length;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<div class="omsg">${D.queue.length?'Nhân viên đang pha':'Chưa có khách'}</div>`;return}
-  const o=c.items[c.cur],ch=checks(o),miss=D.emerg?[]:missingOf(o),up=cupUp(cup),left=ch.filter(x=>!x[1]),hint=S.day<=3&&cup&&!cup.pours.length&&!pouring;
+  const o=c.items[c.cur],ch=checks(o),miss=D.emerg?[]:missingOf(o),up=cupExtra(cup,o),left=ch.filter(x=>!x[1]),hint=S.day<=3&&cup&&!cup.pours.length&&!pouring;
   const key=[c.id,c.cur,ch.map(x=>(x[1]?1:0)+(x[3]?2:0)+x[0]).join(),miss.join(),up,hint].join('|');if(el.dataset.k===key)return;el.dataset.k=key;
   if(!c.pic)c.pic=(c.spr&&sprHead(c.spr,'#f8e7da'))||portrait(c.look,{mood:2},'#f8e7da');
   el.innerHTML=`<div class="ohd"><img src="${c.pic}" alt=""><b>${c.name}</b><span class="opr">${fk(c.price)}${up?`<small>+${fk(up)}</small>`:''}</span></div>
@@ -2474,7 +2485,7 @@ function renderTicket0(){const T_=$('#tk');if(!D)return;const p=D.pend[0];
   if(!c.pic)c.pic=(c.spr&&sprHead(c.spr,'#f8e7da'))||portrait(c.look,{mood:2},'#f8e7da');
   const ch=checks(c.items[c.cur]),miss=D.emerg?[]:missingOf(c.items[c.cur]);const key=c.id+'|'+c.cur+'|'+ch.map(x=>(x[1]?1:0)+x[0]).join('')+'|'+miss.join()+'|'+(D.sug===c.id)+'|'+c.items[c.cur].r+'|'+(refArm===c.id)+'|'+(cup&&cup.broken)+'|'+(cup&&cup.skin);if(key===tkKey)return;tkKey=key;
   T_.className='tk';
-  T_.innerHTML=`<img src="${c.pic}" alt=""${c.reg?' class="reg"':''}><div><div class="nm">${c.name}</div><div class="ty">${typeLabel(c)} · ${c.pay}</div></div><div class="prc"><div class="pr">${fk(c.price)}${cup&&cup.skin&&target()===c?`<small class="pup">+${fk(cupUp(cup))}</small>`:''}</div><button class="refuse${refArm===c.id?' arm':''}" data-refuse="${c.id}">${refArm===c.id?'Chắc chưa?':'Từ chối'}</button></div>
+  T_.innerHTML=`<img src="${c.pic}" alt=""${c.reg?' class="reg"':''}><div><div class="nm">${c.name}</div><div class="ty">${typeLabel(c)} · ${c.pay}</div></div><div class="prc"><div class="pr">${fk(c.price)}${cup&&target()===c&&cupExtra(cup,c.items[c.cur])?`<small class="pup">+${fk(cupExtra(cup,c.items[c.cur]))}</small>`:''}</div><button class="refuse${refArm===c.id?' arm':''}" data-refuse="${c.id}">${refArm===c.id?'Chắc chưa?':'Từ chối'}</button></div>
     ${`<div class="tkmid ord">${miss.length?`<div class="oos"><span>⚠ Hết <b>${miss.map(k=>ITEM(k).sh).join(', ')}</b></span><button class="btn sm pink" data-sug="${c.id}">Đổi món</button></div>`:''}${c.items.length>1?`<span class="pill cur">Ly ${c.cur+1}/${c.items.length}${c.cur?' · xong '+c.res.map(r=>r.s+'★').join(' '):''}</span>`:''}<img class="dpic" src="${drinkPicR(c.items[c.cur],c.items[c.cur].size)}" alt=""><b class="dname">${c.items[c.cur].name}</b>${(()=>{/* món đã bỏ đúng thì ẩn, chỉ còn những thứ cần làm */const left=ch.filter(x=>!x[1]);return left.length?left.map(([t,ok,hot,bad,info,x])=>`<span class="pill${hot?' hotp':''}${bad?' bad':''}${!bad&&!info?' need':''}${info?' info':''}${x?' strike':''}">${t}${hot?' '+FLAME:''}</span>`).join(''):'<span class="pill ok">✓ Đủ rồi</span>'})()}</div>`}`}
 $('#tk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!D)return;
   if(b.dataset.evy!==undefined){resolveEvent(b.dataset.evy==='1');return}
@@ -2540,16 +2551,16 @@ function cupMiss(o){const nm=k=>{const t=ITEM(k).sh;return /^[A-Z]{2}/.test(t)?t
   if(bad.length)return{fatal:true,msg:bad.join(', ')};
   const mb=o.bs.filter(k=>!poured.has(k));if(mb.length)need.push(mb.map(nm).join(', '));else if(cup.fill<TARGET-POUR_TOL)need.push('nước cho tới vạch');
   [...o.ss.filter(k=>!cup.syrups.includes(k)),...o.ts.filter(k=>!cup.tops.includes(k)),...o.fs.filter(k=>!cup.foams.includes(k))].forEach(k=>need.push(nm(k)));
-  if(ws!=null&&cup.sugar<ws)need.push(`${ws-cup.sugar} lần đường`);if(wi!=null&&cup.ice<wi)need.push(`${wi-cup.ice} lần đá`);
+  if(ws!=null&&cup.sugar<ws)need.push(`${ws-cup.sugar} lần đường`);if(wi!=null&&cup.ice<wi)need.push(`${wi-cup.ice} lần đá`);if(o.sk&&cup.skin!==o.sk)need.push('giấy bọc');
   return need.length?{fatal:false,msg:'còn thiếu '+need.join(', ')}:null}
 const curOrder=()=>{const c=D&&target();return c?c.items[c.cur]:null};
 function trySeal(){if(!target())return toast('Chưa có khách cần bạn pha');if(cup&&cup.broken){sfx('fail');return toast(`Máy từ chối: ly hỏng (${cup.broken})`,2600)}if(cup){const m=cupMiss(curOrder());if(m)return sfx('fail'),toast('Máy từ chối: '+m.msg.replace(/ \([^)]*\)/g,''),2600)}if(!cup||!cup.pours.length)return toast('Pha xong rồi chạm máy đóng gói để giao');stopPour();sfx('seal');sealing={cid:target().id,t0:now,d:sealDur(),fx:SEAL.x+SEAL.w/2,fy:-8}}
 function playerServe(cid){const c=cid!=null?D.queue.find(x=>x.id===cid):target();if(!c||!cup||!cup.pours.length){if(cup&&cid!=null)toast('Khách đã đi, ly này bỏ phí');cup=null;tkKey='';renderTicket();return}
   const ix=cup.cid===c.id&&cup.ix!=null&&c.items[cup.ix]&&!c.items[cup.ix].done?cup.ix:c.cur,cp=cup,hs=staffOf(cp);cup=null;if(hs){errLog(hs);cp.helpers=[hs.name];hs.w=null;hs.job=null}serveCup(c,ix,cp,null)}
 /* chấm một ly vừa giao (người chơi hoặc nhân viên by); đủ hết các ly thì khách tính tiền */
-function serveCup(c,ix,cup,by){
-  if(cupUp(cup)){c.cupUp=(c.cupUp||0)+cupUp(cup);c.cupN=(c.cupN||0)+1;bump('lyMua')}
-  const o=c.items[ix];let s=5;const notes=[];const teas=[...new Set(cup.pours.map(p=>p.k))];
+function serveCup(c,ix,cup,by){const o=c.items[ix];
+  if(cupUp(cup)){const x=cupExtra(cup,o);if(x)c.cupUp=(c.cupUp||0)+x;c.cupN=(c.cupN||0)+1;bump('lyMua')}
+  let s=5;const notes=[];if(o.sk&&cup.skin!==o.sk){s--;notes.push('thiếu giấy bọc')}const teas=[...new Set(cup.pours.map(p=>p.k))];
   if(!teas.some(x=>o.bs.includes(x))){s-=2;notes.push('sai món')}else if(!sameSet(teas,o.bs)){s--;notes.push(teas.length<o.bs.length?'pha thiếu trà':'thừa đồ')}
   if(cup.size!==o.size){s--;notes.push('sai size')}
   const d=cup.spill?1:Math.abs(cup.fill-TARGET);if(d>.18){s-=2;notes.push(cup.spill?'tràn ly':'rót lệch')}else if(d>.08){s--;notes.push('rót lệch')}
@@ -2566,7 +2577,7 @@ function serveCup(c,ix,cup,by){
 
 /* ======================= END OF DAY ======================= */
 function endDay(){
-  const day=S.day,log=[...D.log],notice=[];let wages=0;if(D.rushLost)log.push(`⏰ Giờ cao điểm: ${D.rushLost} khách thấy hàng dài nên đi tiệm khác.`);
+  rushMusic(false);const day=S.day,log=[...D.log],notice=[];let wages=0;if(D.rushLost)log.push(`⏰ Giờ cao điểm: ${D.rushLost} khách thấy hàng dài nên đi tiệm khác.`);
   for(const s of [...S.staff]){
     delete s.job;delete s.idle;delete s.w;delete s.brkT;delete s.brkReq;
     const E=D.err[s.id];s.last=E?{d:day,cups:E.cups,list:E.list}:null;
@@ -2651,14 +2662,16 @@ function note(m,t,d,type,v,dest){const o=AC.createOscillator(),g=AC.createGain()
 let VOLM=.8,VOLS=.8;try{const a=localStorage.getItem('tt_vbgm'),b=localStorage.getItem('tt_vsfx');if(a!=null&&!isNaN(+a))VOLM=+a;if(b!=null&&!isNaN(+b))VOLS=+b}catch(e){}
 /* tiếng hiệu ứng tổng hợp vốn rất nhỏ so với nhạc thu âm: khuếch đại lên rồi qua bộ nén để không bị rè */
 const SFX_BOOST=5;let SFXG=null;function sfxOut(){if(!SFXG||SFXG.context!==AC){SFXG=AC.createGain();const cp=AC.createDynamicsCompressor();cp.threshold.value=-10;cp.ratio.value=12;cp.attack.value=.002;SFXG.connect(cp);cp.connect(AC.destination)}SFXG.gain.value=VOLS*SFX_BOOST;return SFXG}
-function applyVol(){if(AC){const t=AC.currentTime;if(MUS.rg)MUS.rg.gain.setTargetAtTime(.75*VOLM,t,.05);if(MUS.gain&&MUS.on&&TRACK==='synth')MUS.gain.gain.setTargetAtTime(2.4*VOLM,t,.05);if(SFXG)SFXG.gain.value=VOLS*SFX_BOOST;if(SRG)SRG.gain.value=VOLS}if(MUS.el)MUS.el.volume=Math.min(1,.6*VOLM)}
+function applyVol(){if(AC){const t=AC.currentTime;if(MUS.rg)MUS.rg.gain.setTargetAtTime(.75*VOLM,t,.05);if(MUS.gain&&MUS.on&&synthMode())MUS.gain.gain.setTargetAtTime(2.4*VOLM,t,.05);if(SFXG)SFXG.gain.value=VOLS*SFX_BOOST;if(SRG)SRG.gain.value=VOLS}if(MUS.el)MUS.el.volume=Math.min(1,.6*VOLM)}
 function setVol(k,v){v=clamp(v,0,1);if(k==='m')VOLM=v;else VOLS=v;applyVol();try{localStorage.setItem(k==='m'?'tt_vbgm':'tt_vsfx',String(v))}catch(e){}
   document.querySelectorAll(`[data-vol="${k}"]`).forEach(x=>{if(+x.value!==Math.round(v*100))x.value=Math.round(v*100);const b=x.parentElement.querySelector('b');if(b)b.textContent=Math.round(v*100)+'%'})}
 const volRow=(k,ic,lbl)=>{const v=Math.round((k==='m'?VOLM:VOLS)*100);return `<label class="vrow"><span>${ic}</span><input type="range" min="0" max="100" step="5" value="${v}" data-vol="${k}" aria-label="${lbl}"><b>${v}%</b></label>`};
 const SFXF={bell:'sfx/bell.mp3',meow:'sfx/meow.mp3',chime:'sfx/chime.mp3',scratch:'sfx/scratch.mp3',coin:'sfx/cash.mp3',fanfare:'sfx/win.mp3',pour:'sfx/pour.mp3',ice:'sfx/ice.mp3',fail:'sfx/err.mp3'};
 const SFXV={bell:.8,meow:.75,chime:.6,scratch:.9,coin:.55,fanfare:.6,pour:.45,ice:.8,fail:.6};
-const SBUF={};let sbufReq=false,SRG=null,pourSrc=null;
-function sfxLoad(){if(sbufReq||!AC)return;sbufReq=true;for(const [k,u] of Object.entries(SFXF))fetch(u).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(ab=>new Promise((ok,no)=>{const x=AC.decodeAudioData(ab,ok,no);if(x&&x.then)x.then(ok,no)})).then(b=>{SBUF[k]=b}).catch(()=>{})}
+const SBUF={},SREQ={},SFAIL={};let SRG=null,pourSrc=null;
+/* nạp tiếng thu âm; tệp nào tải hỏng (mạng chập chờn) thì lần sau thử lại, tối đa 3 lần */
+function sfxLoad(){if(!AC)return;for(const [k,u] of Object.entries(SFXF)){if(SBUF[k]||SREQ[k]||(SFAIL[k]||0)>=3)continue;SREQ[k]=1;
+  fetch(u).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(ab=>new Promise((ok,no)=>{const x=AC.decodeAudioData(ab,ok,no);if(x&&x.then)x.then(ok,no)})).then(b=>{SBUF[k]=b},()=>{SFAIL[k]=(SFAIL[k]||0)+1}).then(()=>{SREQ[k]=0})}}
 function sfxRecOut(){if(!SRG||SRG.context!==AC){SRG=AC.createGain();SRG.connect(AC.destination)}SRG.gain.value=VOLS;return SRG}
 function sfxPlay(n,loop){const b=SBUF[n];if(!b)return null;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.loop=!!loop;g.gain.value=SFXV[n]||.7;s.connect(g);g.connect(sfxRecOut());s.start();return s}
 /* tiếng rót trà lặp lại khi đang giữ bình */
@@ -2687,7 +2700,7 @@ const MOODS={
   mua:{bpm:64,ch:[[45,52,60,64],[41,48,57,64],[48,55,64,67],[43,50,59,62]],mel:[69,72,74,76,79],den:.4,rain:1},
   cuoituan:{bpm:100,ch:[[41,48,57,65],[43,50,59,67],[40,47,55,64],[45,52,60,64]],mel:[72,74,76,79,81,84],den:.75,shake:1},
   hanhphuc:{bpm:88,ch:[[48,55,64,67],[41,48,57,65],[45,52,60,64],[43,50,59,67]],mel:[72,76,79,81,84],den:.65,spark:1}};
-const MUS={on:false,timer:0,next:0,step:0,gain:null,noise:null,rainSrc:null};
+const MUS={on:false,timer:0,next:0,step:0,gain:null,noise:null,rainSrc:null,fail:0};
 function noiseBuf(){if(MUS.noise)return MUS.noise;const b=AC.createBuffer(1,AC.sampleRate,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return MUS.noise=b}
 function hat(t){const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf();f.type='highpass';f.frequency.value=7000;g.gain.setValueAtTime(.025,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);s.connect(f);f.connect(g);g.connect(MUS.gain);s.start(t);s.stop(t+.06)}
 /* tiếng mưa: tiếng ồn trắng lọc trầm, rất nhỏ */
@@ -2712,7 +2725,7 @@ function myMusicPick(){const inp=document.createElement('input');inp.type='file'
 function setTrack(k){if(!TRACKS[k])return;stopMusic();TRACK=k;try{localStorage.setItem('tt_track',k)}catch(e){}if(!BGM){BGM=true;try{localStorage.setItem('tt_bgm','1')}catch(e){}}startMusic();if(!$('#prep').hidden)renderPrep();if(D)renderPause()}
 /* đổi bài vòng tròn (nút ở màn tạm dừng) */
 function nextTrack(){const ks=Object.keys(TRACKS).filter(k=>k!=='file'||MYM.name);setTrack(ks[(ks.indexOf(TRACK)+1)%ks.length])}
-function musicTick(){if(!MUS.on||!AC||TRACK!=='synth')return;if(AC.state!=='running'){try{AC.resume()}catch(e){}}if(MUS.next<AC.currentTime-.5)MUS.next=AC.currentTime+.1;let M=musicMood();
+function musicTick(){if(!MUS.on||!AC||!synthMode())return;if(AC.state!=='running'){try{AC.resume()}catch(e){}}if(MUS.next<AC.currentTime-.5)MUS.next=AC.currentTime+.1;let M=musicMood();
   while(MUS.next<AC.currentTime+.6){const night=D&&D.clock>=18,spb=60/(M.bpm*(night?.85:1))/2,t=MUS.next,st=MUS.step,beat=st%8;
     /* đổi kiểu nhạc ở đầu ô nhịp để không bị giật */
     if(beat===0){M=musicMood();MUS.mood=M;rainBed(!!M.rain)}else M=MUS.mood||M;
@@ -2723,41 +2736,54 @@ function musicTick(){if(!MUS.on||!AC||TRACK!=='synth')return;if(AC.state!=='runn
     if(Math.random()<(beat%2?.5:1)*M.den*(night?.6:1))note(pick([...ch.slice(1).map(m=>m+12),...M.mel]),t,spb*1.8,'triangle',.036,MUS.gain);
     if(M.spark&&beat===6&&Math.random()<.6)note(pick([88,91,93,96]),t,spb*3,'sine',.018,MUS.gain);
     MUS.next+=spb;MUS.step++}}
+/* đang phát nhạc điện tử: tự chọn, hoặc máy không nạp được nhạc thu âm */
+const synthMode=()=>TRACK==='synth'||(TRACK!=='file'&&MUS.noDec);
 function startMusic(){if(!BGM||MUS.on||document.hidden)return;
-  /* nhạc thu âm: nạp vào Web Audio rồi phát (như game mẫu), nên iPhone không hiện bảng điều khiển nhạc trên màn hình khoá;
-     máy nào không giải mã được thì mới phát bằng thẻ audio. Bài của bạn chọn từ máy thì phát bằng thẻ audio */
-  if(TRACK!=='synth'){MUS.on=true;const tk=TRACK;
-    if(tk!=='file'&&!MUS.noDec&&audio()){recPlay(tk==='auto'?(MUS.rk=MUS.rk||REC_KEYS[0]):tk);return}
-    const go=url=>{if(!MUS.on||TRACK!==tk)return;if(!url){MUS.on=false;return}
-      if(!MUS.el){MUS.el=new Audio();MUS.el.preload='auto';MUS.el.volume=Math.min(1,.6*VOLM);MUS.el.addEventListener('ended',()=>{if(MUS.on&&TRACK==='auto')recNext()})}
-      MUS.el.loop=tk!=='auto';if(MUS.src!==url){MUS.src=url;MUS.el.src=url}const p=MUS.el.play();if(p&&p.catch)p.catch(()=>{MUS.on=false})};
-    if(tk==='file')myMusicLoad().then(ok=>go(ok?MYM.url:null));else go(REC[tk==='auto'?(MUS.rk=MUS.rk||REC_KEYS[0]):tk].u);return}
-  if(!audio())return;MUS.on=true;if(!MUS.gain){MUS.gain=AC.createGain();const cp=AC.createDynamicsCompressor();cp.threshold.value=-20;cp.ratio.value=4;MUS.gain.connect(cp);cp.connect(AC.destination)}
+  /* bài của bạn chọn từ máy: phát bằng thẻ audio (iPhone sẽ hiện bảng điều khiển nhạc) */
+  if(TRACK==='file'){MUS.on=true;
+    myMusicLoad().then(ok=>{if(!MUS.on||TRACK!=='file')return;if(!ok){MUS.on=false;return}
+      if(!MUS.el){MUS.el=new Audio();MUS.el.preload='auto';MUS.el.loop=true;MUS.el.volume=Math.min(1,.6*VOLM)}
+      if(MUS.src!==MYM.url){MUS.src=MYM.url;MUS.el.src=MYM.url}const p=MUS.el.play();if(p&&p.catch)p.catch(()=>{MUS.on=false})});return}
+  if(!audio())return;
+  /* nhạc thu âm: nạp vào Web Audio rồi phát (như game mẫu), không dùng thẻ audio nên iPhone không hiện bảng điều khiển nhạc */
+  if(!synthMode()){MUS.on=true;recPlay(TRACK==='auto'?(MUS.rk=MUS.rk||REC_KEYS[0]):TRACK);return}
+  MUS.on=true;if(!MUS.gain||MUS.gain.context!==AC){MUS.gain=AC.createGain();const cp=AC.createDynamicsCompressor();cp.threshold.value=-20;cp.ratio.value=4;MUS.gain.connect(cp);cp.connect(AC.destination)}
   MUS.gain.gain.cancelScheduledValues(AC.currentTime);MUS.gain.gain.setTargetAtTime(2.4*VOLM,AC.currentTime,.4);MUS.next=AC.currentTime+.15;MUS.step=0;clearInterval(MUS.timer);MUS.timer=setInterval(musicTick,200);musicTick()}
 /* nạp một bài thu âm vào Web Audio (mỗi lúc chỉ giữ một bài cho đỡ tốn bộ nhớ) */
 const RBUF={};
 function recLoad(k){if(RBUF[k])return Promise.resolve(RBUF[k]);
   return fetch(REC[k].u).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(ab=>new Promise((ok,no)=>{const r=AC.decodeAudioData(ab,ok,no);if(r&&r.then)r.then(ok,no)}))
     .then(b=>{for(const x in RBUF)delete RBUF[x];RBUF[k]=b;return b})}
-function recPlay(k){const tk=TRACK;MUS.rk=k;recLoad(k).then(b=>{if(!MUS.on||TRACK!==tk||MUS.rk!==k)return;recStopSrc();
-    if(!MUS.rg){MUS.rg=AC.createGain();MUS.rg.gain.value=.75*VOLM;MUS.rg.connect(AC.destination)}
-    const s=AC.createBufferSource();s.buffer=b;s.loop=tk!=='auto';s.connect(MUS.rg);s.onended=()=>{if(MUS.rs===s&&MUS.on&&TRACK==='auto')recNext()};s.start();MUS.rs=s})
-  .catch(()=>{if(!MUS.on||TRACK!==tk)return;MUS.noDec=1;MUS.on=false;startMusic()})}
+function recPlay(k,loop){const tk=TRACK;MUS.rk=k;recLoad(k).then(b=>{if(!MUS.on||TRACK!==tk||MUS.rk!==k)return;recStopSrc();
+    try{if(!MUS.rg||MUS.rg.context!==AC){MUS.rg=AC.createGain();MUS.rg.gain.value=.75*VOLM;MUS.rg.connect(AC.destination)}
+      const s=AC.createBufferSource();s.buffer=b;s.loop=loop!=null?loop:tk!=='auto';s.connect(MUS.rg);s.onended=()=>{if(MUS.rs===s&&MUS.on&&TRACK==='auto')recNext()};s.start();MUS.rs=s;MUS.fail=0}
+    catch(e){MUS.on=false}},
+  ()=>{if(!MUS.on||TRACK!==tk)return;MUS.on=false;if(++MUS.fail>=2){MUS.noDec=1;startMusic()}})}
 function recStopSrc(){if(MUS.rs){const s=MUS.rs;MUS.rs=null;try{s.onended=null;s.stop()}catch(e){}}}
+/* đổi bài có nhỏ dần rồi to dần (dùng cho giờ cao điểm) */
+function recSwitch(k,loop){recLoad(k).then(()=>{if(!MUS.on||TRACK!=='auto')return;const g=MUS.rg;if(!g||g.context!==AC){recPlay(k,loop);return}
+  const t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+.8);
+  setTimeout(()=>{if(!MUS.on||TRACK!=='auto')return;recPlay(k,loop);const t2=AC.currentTime;g.gain.cancelScheduledValues(t2);g.gain.setValueAtTime(0,t2);g.gain.linearRampToValueAtTime(.75*VOLM,t2+1.2)},850)},()=>{})}
+/* giờ cao điểm: bài nhịp nhanh, chỉ khi đang để "Lần lượt" và phát qua Web Audio */
+const RUSH_TRACKS=['ukulele','cats','bossasunny','sunny'];
+function rushMusic(on){if(!on){if(!MUS.inRush)return;MUS.inRush=false;if(MUS.on&&TRACK==='auto'&&!synthMode()){MUS.rk=MUS.prk||MUS.rk;recSwitch(REC_KEYS[(REC_KEYS.indexOf(MUS.rk)+1)%REC_KEYS.length])}return}
+  if(MUS.inRush||!MUS.on||TRACK!=='auto'||synthMode()||!AC)return;MUS.inRush=true;MUS.prk=MUS.rk;recSwitch(pick(RUSH_TRACKS.filter(k=>REC[k]&&k!==MUS.rk)),true)}
 /* phát lần lượt: hết bài thì sang bài sau */
-function recNext(){MUS.rk=REC_KEYS[(REC_KEYS.indexOf(MUS.rk)+1)%REC_KEYS.length];if(!MUS.noDec&&AC&&TRACK!=='file'){recPlay(MUS.rk);return}MUS.src=REC[MUS.rk].u;MUS.el.src=MUS.src;const p=MUS.el.play();if(p&&p.catch)p.catch(()=>{})}
+function recNext(){MUS.rk=REC_KEYS[(REC_KEYS.indexOf(MUS.rk)+1)%REC_KEYS.length];if(!synthMode()&&AC)recPlay(MUS.rk)}
 function stopMusic(){if(!MUS.on)return;MUS.on=false;recStopSrc();if(MUS.el)MUS.el.pause();clearInterval(MUS.timer);if(MUS.gain&&AC)MUS.gain.gain.setTargetAtTime(0,AC.currentTime,.15);setTimeout(()=>{if(!MUS.on&&AC)rainBed(false)},600)}
 /* trình duyệt chỉ cho phát tiếng sau lần chạm đầu tiên */
 /* iPhone: sau khi chuyển app/khoá máy, âm thanh ở trạng thái "interrupted" và chỉ chạy lại khi có chạm thật (touchend/click),
    nên mỗi lần chạm đều đánh thức lại âm thanh và nhạc */
-function wakeAudio(){if(document.hidden)return;if(SND&&audio())sfxLoad();if(AC&&AC.state!=='running'&&(BGM||SND)){try{AC.resume()}catch(e){}
-    /* vẫn không chạy lại được thì bỏ AudioContext cũ, tạo cái mới (lần chạm sau sẽ bật được) */
-    setTimeout(()=>{if(!AC||AC.state==='running'||document.hidden)return;try{AC.close()}catch(e){}AC=null;MUS.gain=null;MUS.noise=null;MUS.rainSrc=null;clearInterval(MUS.timer);MUS.on=false;if(BGM)startMusic()},500)}
+function wakeAudio(e){if(document.hidden)return;const real=e&&/^(touchend|click|keydown)$/.test(e.type);
+  /* lần chạm trước không đánh thức được: bỏ bộ âm thanh cũ, tạo cái mới ngay trong cú chạm này (iPhone chỉ cho bật trong cú chạm) */
+  if(real&&MUS.dead&&AC){MUS.dead=0;try{AC.close()}catch(x){}AC=null;MUS.rs=null;MUS.rainSrc=null;pourSrc=null;clearInterval(MUS.timer);MUS.on=false}
+  if(SND&&audio())sfxLoad();if(AC&&AC.state!=='running'&&(BGM||SND)){try{AC.resume()}catch(x){}
+    if(real&&!MUS.chk){MUS.chk=1;setTimeout(()=>{MUS.chk=0;if(AC&&AC.state!=='running'&&!document.hidden)MUS.dead=1},1200)}}
   if(!BGM)return;
-  if(MUS.on&&(TRACK==='file'||MUS.noDec)&&MUS.el&&MUS.el.paused)MUS.el.play().catch(()=>{});if(!MUS.on)startMusic()}
+  if(MUS.on&&TRACK==='file'&&MUS.el&&MUS.el.paused)MUS.el.play().catch(()=>{});if(!MUS.on)startMusic()}
 ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev=>document.addEventListener(ev,wakeAudio,{passive:true,capture:true}));
 window.addEventListener('pageshow',()=>{if(BGM&&!document.hidden)startMusic()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){if(MUS.el)MUS.el.pause();if(TRACK==='synth')stopMusic();if(AC)AC.suspend().catch(()=>{})}else{if(AC)AC.resume().catch(()=>{});if(!BGM)return;if(MUS.on&&MUS.el&&(TRACK==='file'||MUS.noDec))MUS.el.play().catch(()=>{});if(!MUS.on)startMusic()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(MUS.el)MUS.el.pause();if(synthMode())stopMusic();if(AC)AC.suspend().catch(()=>{})}else{if(AC)AC.resume().catch(()=>{});if(!BGM)return;if(MUS.on&&MUS.el&&TRACK==='file')MUS.el.play().catch(()=>{});if(!MUS.on)startMusic()}});
 
 /* ---- hai bé mèo Chub (cam, mũm mĩm) và Bim (trắng, nơ hồng) ngủ trước quầy; chạm để vuốt ---- */
 let CATW=null;
