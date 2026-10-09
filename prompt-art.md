@@ -68,3 +68,32 @@ Cute cozy hand-painted chibi illustration for a mobile bubble tea shop game load
 ```
 
 Mèo cam nên giống con "Mèo cam nằm ngủ" đã có trong game. Nếu công cụ cho đính kèm ảnh tham khảo, hãy gửi kèm hình đó.
+
+---
+
+# Prompt vẽ nhân vật khách mới
+
+Có 2 tấm, mỗi tấm 3 nhân vật xếp một hàng. Vẽ xong bạn cắt từng nhân vật (đứng toàn thân, nền trong suốt) rồi gửi mình. Mình sẽ thu nhỏ và nhúng vào game với đúng tên dưới đây.
+
+Lúc chưa có hình, game dùng hình khách chung kèm biểu tượng nhỏ (🛵 💎 📦 📱). Có hình riêng rồi thì biểu tượng tự ẩn.
+
+| Nhân vật | Tên file | Ghi chú |
+|---|---|---|
+| Chú xe ôm | `k_xeom` | |
+| Cảnh sát chìm | `k_chim` | Phải trông **gần như khách thường**, chỉ có vài dấu hiệu nhỏ để người tinh mắt nhận ra |
+| Shipper | `k_shipper` | |
+| Đại gia | `k_sigai` | Chưa có thì game dùng hình "Đại gia" hiện tại |
+| Bạn gái đại gia | `k_bangai` | |
+| Hot girl sống ảo | `k_songao` | |
+
+## Prompt 7 · Chú xe ôm, cảnh sát chìm, shipper
+
+```
+Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 3 characters in one row: a cheerful middle-aged Vietnamese motorbike taxi driver in a faded green jacket, a worn half-face helmet pushed up on his head, sandals, holding a small cup of iced tea, big warm grin; an undercover police officer who looks like an ordinary customer, plain grey polo shirt and jeans, a folded newspaper under one arm, dark sunglasses, a tiny earpiece in one ear, calm serious expression; a young delivery rider in a bright orange jacket and matching cap, a large insulated delivery box on his back, holding a phone, slightly hurried expression. Transparent background PNG.
+```
+
+## Prompt 8 · Đại gia, bạn gái, hot girl sống ảo
+
+```
+Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 3 characters in one row: a flashy young rich man showing off, slicked-back hair, black sunglasses, a thick gold chain, an open patterned shirt, holding a designer car key, smug confident smile; his glamorous girlfriend in a pastel pink dress, long wavy hair, a small quilted handbag, sweet shy smile; a trendy young woman who loves selfies, cute bucket hat, oversized pastel cardigan, holding up a phone to take a photo of a bubble tea cup, sparkly excited expression. Transparent background PNG.
+```

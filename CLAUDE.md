@@ -8,7 +8,7 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 - Đồ trên quầy chỉ di chuyển được lúc chuẩn bị. Quầy là lưới tự do: món nào cũng đặt được ở bất kỳ chỗ trống nào, kể cả bàn pha và máy đóng gói.
 - Không cho phóng to khi chơi (viewport `user-scalable=no`, `touch-action`, chặn cử chỉ `gesturestart`).
 - Lúc bán: pha xong thì chạm máy đóng gói, ly tự chạy vào máy và giao. Không kéo ly.
-- Máy đóng gói chỉ giao ly khớp đơn (`cupMiss`). Sai không sửa được (sai size, rót quá vạch, thừa đồ, dư đường/đá) thì phải bỏ ly; còn thiếu (chưa tới vạch, thiếu nước/siro/topping/kem/đường/đá) thì bỏ thêm là giao được. Ly hỏng (`cup.broken`: nhân viên pha sai hoặc tràn ly) cũng bị từ chối. Ly hỏng chỉ báo bằng thông báo; người chơi phải bỏ ly và tự làm lại (`it.redo`, nhân viên không phụ ly làm lại).
+- Máy đóng gói chỉ giao ly khớp đơn (`cupMiss`). Sai không sửa được (sai size, rót quá vạch, thừa đồ, dư đường/đá) thì phải bỏ ly; còn thiếu (chưa tới vạch, thiếu nước/siro/topping/kem/đường/đá) thì bỏ thêm là giao được. Ly hỏng (`cup.broken`: nhân viên pha sai hoặc tràn ly) cũng bị từ chối. Ly hỏng chỉ báo bằng thông báo; nhân viên dừng lại chờ người chơi bấm Bỏ ly, rồi tự làm lại đơn đó.
 - Mỗi món trên quầy có khung viền xám. Lúc bán, đồ còn thiếu cho đơn đang phục vụ có viền cam đậm, nền cam nhạt, không nhấp nháy (`orderNeeds`). Khi phải bỏ ly thì thùng rác viền đỏ. Phiếu order tô cam các mục chưa làm.
 - Nhân viên Pha chế không pha ly riêng mà phụ cùng ly trên bàn pha (`staffTick`, trạng thái `D.as`), làm theo trình tự `ASTEPS`: lấy ly > nước > đường > đá > topping > kem. Một ly khoảng 3 giây (`cupTime`), càng nhiều Pha chế càng nhanh. Bước người chơi đã làm đủ thì bỏ qua; đường/đá chưa đủ thì bù cho đủ. Mỗi bước có xác suất pha hỏng `errP` theo Khéo tay. Càng nhiều nhân viên đi làm càng đông khách.
 - Chữ hướng dẫn mặc định ẩn. Nút (?) bật lên (class `sub`/`hint`, `body.help`).
@@ -22,6 +22,21 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - `inspect()` kiểm định món và tính hệ số. Giá trị món tính bằng `recValue`.
 - Công thức: `{bs, ss, ts, fs}` ứng với trà/sữa, siro/bột, topping, kem. `basic:true` là món cơ bản, do `syncBasics()` tạo.
 - Topping là món thêm, không nằm trong công thức: `r.ts` của công thức luôn rỗng. Khi gọi món, khách tự chọn topping đang bày trên quầy (`pickTops`, lưu vào `o.ts` của đơn) và trả thêm `topPrice`.
+  - Mỗi ly tối đa `topCap()` topping: 2, tiệm từ cấp 3 thì 3.
+  - Số topping mỗi ly: mỗi topping trên quầy có xác suất riêng `topP` (hợp vị, hot, hiếm), gộp thành phân phối `topDist`.
+  - Thay vì bốc ngẫu nhiên thuần, game bốc số `u` từ túi 20 lượt (`topBag`, lưu ở `D.tbag`). Túi chia đều 0..1 nên giữ đúng tỉ lệ, rồi xếp xen kẽ nửa thấp và nửa cao để đơn dễ và đơn nhiều topping luân phiên.
+  - Chọn topping nào thì topping hot được ưu tiên khoảng 2,5 lần.
+- Món được khách chọn theo `recW` (hợp vị, hot, hiếm, bán có hạn, giá hợp lý). Số khách mỗi ngày tính trong `dayRaw()`, dùng chung cho `startDay` và nút nhập hàng.
+- Giảm độ khó cho người mới:
+  - Số món bán cùng lúc theo cấp tiệm: `MENU_CAP`/`menuCap()`. Save cũ bán quá giới hạn vẫn giữ món, chỉ chặn thêm món mới.
+  - Tab mở dần theo ngày (`TAB_DAY`, `tabOpen`). Lưu game luôn hiện; Tài chính hiện sớm khi sắp hết tiền hoặc đang vay; mở khóa tất cả (`S.allOpen`) hiện đủ. Mục Kem ở tab Nguyên liệu hiện từ ngày 5.
+  - Nút "Bày theo thực đơn" (`layPlan`/`autoLay`) ở tab Quầy: giữ chỗ cũ, bày đủ đồ thực đơn cần, cất đồ không dùng, còn chỗ thì bày thêm topping.
+  - Nút "Nhập đủ cho hôm nay" (`buyPlan`/`autoBuy`) ở tab Nguyên liệu: ước lượng số ly (`dayCups`) rồi nhập phần còn thiếu, thiếu tiền thì nhập được tới đâu hay tới đó.
+  - `migrate()` báo một lần cho người chơi cũ (cờ `s.capV`).
+- Tab Thực đơn là lưới 3 cột (`thucdonHTML`):
+  - Lọc bằng `menuFilter` (`MFILT`), xếp bằng `menuSort` (`MSORT`: lãi/ly `recProfit`, giá, mới nhất).
+  - Mặc định hiện `MENU_SHOW` món, bấm "Xem thêm" mới hiện hết.
+  - Chạm món (`menuSel`) thì khung đặt giá (`recCard(r,'menu')`) mở ngay dưới hàng của món đó.
 - Quầy:
   - Toạ độ trong khung logic `SW` × `SH`, chia lưới `COLS` × `ROWS` (8×10) ô. `SH` cố định 237; `SW` co giãn 180–300 theo màn hình (`setSW`, tính trong `layoutShop`, nhớ ở localStorage `tt_sw`) để quầy lấp đầy bề ngang. Ô vì vậy có thể rộng hơn cao, nên đừng giả định `CW` = 22.5; vẽ trong bàn pha dùng tỉ lệ theo `WORK.w` (ví dụ `cupX()`).
   - `S.grid=[{id,c,r}]` lưu đồ đang bày (ô góc trái trên). `id` là mã nguyên liệu, `M`/`L` (chồng ly), `sugar`/`ice`/`trash`, `work` (bàn pha), `seal` (máy đóng gói).
@@ -32,6 +47,10 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - `dropPlan()` quyết định dời hay đổi chỗ (chỉ đổi chỗ với món cùng cỡ), `placeAt()` bày từ kho, `storeObj()` cất.
   - `syncLayout()` giữ lưới hợp lệ và chuyển save cũ có `S.layout` (quầy chia khu) sang lưới bằng `defaultGrid()`. `LAYG()` là quầy dùng lúc bán (ngày khẩn cấp chỉ có trà mạn).
   - Đồ hết hàng không được bày lên quầy.
+- Nhân vật đặc biệt (`TYPES`): xe ôm `xeom`, cảnh sát chìm `chim`, đại gia sĩ gái `sigai`, shipper `shipper`, hot girl sống ảo `songao`. Đơn riêng ở `typeOrders`, tên ở `TNAMES`. Hình riêng `k_xeom`, `k_chim`, `k_shipper`, `k_sigai`, `k_bangai`, `k_songao` đã có; loại nào thiếu hình thì dùng hình khách chung kèm biểu tượng `TICON` (cảnh sát chìm không có, và hiện là "Khách thường" trừ khi có nhân viên Tinh ý). Story của hot girl cộng khách hôm sau qua `S.buzz`.
+- Hết hàng giữa ngày: phiếu báo "Hết: …" (`missingOf`) và nút "Gợi ý món khác" (`sugHTML`, `suggest`): đổi sang món pha được hoặc bỏ topping hết hàng, giảm `SUB_DISC` (10%, lưu ở `o.disc`, `priceOf` tự trừ), khách chờ thêm 40%. Nhân viên chờ người chơi quyết định chứ không đuổi khách.
+- Phiếu order chỉ hiện những mục còn phải làm; mục đã bỏ đúng thì ẩn, đủ hết thì hiện "✓ Đủ rồi, chạm máy đóng gói".
+- Phiếu order (`#tk`) cao cố định `--tkh` để quầy bên dưới không nhảy chỗ; phần giữa `.tkmid` cuộn bên trong, còn nội dung bị che thì mờ đáy (`tkMore`).
 - Khách quen: lưu trong `S.regs` (tối đa `REG_MAX`), loại khách `quen`. `regAfter()` tạo khách quen mới (khách cho 5★, xác suất 30%) và xử lý lúc họ rời tiệm. `spawn()` thỉnh thoảng gọi một khách quen ghé lại (tối đa 1 lần/ngày). Hào quang vẽ trong `drawCust`.
 - Sự kiện vui: danh sách `EVS`. Mỗi sự kiện có `yes()`/`no()` trả về câu thông báo, và dùng các hàm hiệu ứng `ev*` (ví dụ `evAway` ra ngoài, `evSlow` pha chậm, `evGain`/`evPay` thu chi). Lịch sự kiện của ngày nằm ở `D.evPlan` (từ ngày 2), thẻ sự kiện hiện trong phiếu order (`renderTicket`). Thu từ sự kiện ghi vào `ev` trong sổ, chi ghi vào mục `sukien`.
 - Cảnh tiệm có kích thước 160×62. Hàm vẽ là `drawScene`, đồ trang trí vẽ qua `drawDecor` với các vị trí trong `DSLOT`.
@@ -57,7 +76,7 @@ Game được host trên GitHub Pages ở https://tuvu-m.github.io/bobo/ (repo `
 - Chụp ảnh tiệm (`takePhoto`): điện thoại mở bảng chia sẻ, máy tính tải PNG. Thời tiết trong ô kính cửa sổ (`weatherFX`). Âm thanh tổng hợp bằng Web Audio (`sfx`, bật/tắt bằng localStorage `tt_snd`).
 
 ## Cấp tiệm và tiền
-- `SHOP` có 5 cấp, mỗi cấp quy định trần số khách/ngày và số nhân viên tối đa (`staffMax()`). Cuối ngày `shopUp()` tự lên cấp khi đủ số review 5★ (`S.five`) và tổng doanh thu (`lifeRev`: tiền bán món + tip).
+- `SHOP` có 5 cấp, mỗi cấp quy định trần số khách/ngày, số nhân viên tối đa (`staffMax()`) và số món bán cùng lúc (`MENU_CAP`: 4, 5, 6, 7, 9). Cuối ngày `shopUp()` tự lên cấp khi đủ số review 5★ (`S.five`) và tổng doanh thu (`lifeRev`: tiền bán món + tip).
 - Hình theo cấp: `lvSpr('k_quay')` lấy `k_quay_N` (N = cấp 1..5), cấp nào chưa có hình thì dùng hình chung. Tương tự với `k_maihien`, `k_san`; ảnh tiệm `tiem_N` hiện ở tab Trang trí. Cả 5 cấp đã có hình. Tâm và bề rộng bảng tên trống trên từng ảnh quầy nằm trong `SIGNPOS`. Prompt vẽ nằm trong `prompt-art.md`.
 - Màn hình loading (`#boot`) đặt trước `#app`, trước dữ liệu ảnh nặng, để hiện ngay khi trang đang tải. Ảnh nền nhúng thẳng trong CSS của `#boot`. Thanh tải chạy giả tới 70%, sau đó tính theo số ảnh `SPRSRC` đã giải mã (`bootProgress`/`bootFinish`). Chạm để bỏ qua, tối đa 6 giây.
 - File có 2 khối `<script>`: khối nhỏ của màn loading và khối chính. Khi `node --check`, kiểm tra cả hai.
