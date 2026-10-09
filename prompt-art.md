@@ -97,3 +97,11 @@ Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop
 ```
 Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 3 characters in one row: a flashy young rich man showing off, slicked-back hair, black sunglasses, a thick gold chain, an open patterned shirt, holding a designer car key, smug confident smile; his glamorous girlfriend in a pastel pink dress, long wavy hair, a small quilted handbag, sweet shy smile; a trendy young woman who loves selfies, cute bucket hat, oversized pastel cardigan, holding up a phone to take a photo of a bubble tea cup, sparkly excited expression. Transparent background PNG.
 ```
+
+## Prompt 9 · Ông bà lớn tuổi (khách tặng vé số)
+
+Hiện game dùng hình ông tóc bạc có sẵn (`kt7`) và một bà tóc bạc tô lại từ hình cô búi tóc (`kt_ba`). Có hình riêng thì đặt tên `kt_ong` (ông) và `kt_ba2` (bà), game tự trộn vào.
+
+```
+Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 2 characters in one row: a kind elderly Vietnamese grandfather with short white hair, round glasses, a beige button shirt and brown trousers, holding a small lottery ticket and a cup of iced tea, warm smile; a sweet elderly Vietnamese grandmother with a silver hair bun, a soft purple cardigan over a floral blouse, a small cloth bag on her arm, holding a lottery ticket, gentle smile. Transparent background PNG.
+```

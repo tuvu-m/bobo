@@ -12,6 +12,11 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 - Mỗi món trên quầy có khung viền xám. Lúc bán, đồ còn thiếu cho đơn đang phục vụ có viền cam đậm, nền cam nhạt, không nhấp nháy (`orderNeeds`). Khi phải bỏ ly thì thùng rác viền đỏ. Phiếu order tô cam các mục chưa làm.
 - Nhân viên Pha chế không pha ly riêng mà phụ cùng ly trên bàn pha (`staffTick`, trạng thái `D.as`), làm theo trình tự `ASTEPS`: lấy ly > nước > đường > đá > topping > kem. Một ly khoảng 3 giây (`cupTime`), càng nhiều Pha chế càng nhanh. Bước người chơi đã làm đủ thì bỏ qua; đường/đá chưa đủ thì bù cho đủ. Mỗi bước có xác suất pha hỏng `errP` theo Khéo tay. Càng nhiều nhân viên đi làm càng đông khách.
 - Chữ hướng dẫn mặc định ẩn. Nút (?) bật lên (class `sub`/`hint`, `body.help`).
+- Rót trà/sữa: phải giữ bình. Kho chỉ bị trừ khi nước thật sự chảy vào ly; chạm nhanh thì nhắc "Giữ bình để rót". Ly đã tới vạch mà còn thiếu một loại trà/sữa thì loại đó chỉ rót thêm được một chút (`pourCap`). Nhân viên Pha chế đang rót thì người chơi chờ, và phần nhân viên rót không vượt vạch (`pourShare`).
+- Phiếu order: lỗi phải bỏ ly (ly hỏng, sai size, quá vạch, thừa đồ) luôn là nhãn đỏ đầu tiên; topping gộp một nhãn; "Không topping" là nhãn xám (`checks`). Ly hỏng có nhãn đỏ trên bàn pha ghi ai làm hỏng (`cup.brokeBy`).
+- Toast có mức ưu tiên (`toast(m,ms,p)`): kết quả sự kiện (2) không bị điểm sao (0) đè. Chuyển màn thì tắt toast cũ (`toastOff` trong `show`). Lúc bán, toast nằm giữa đồng hồ và nút tạm dừng.
+- Thông báo: thông báo xấu (`bad`) luôn lên đầu và còn lại khi chuyển tab; quá 2 cái thì có nút "+N thông báo khác".
+- Thanh tab: tab mới mở có chấm hồng (`S.newTabs`) và được cuộn vào tầm nhìn; mờ mép khi còn tab bị che (`tabFade`, class `tfl`/`tfr`). Đừng đặt class `fl`: trùng với biểu tượng ngọn lửa.
 
 ## Cấu trúc code (tìm theo tên)
 - Dữ liệu nguyên liệu thô:
@@ -48,6 +53,12 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - `syncLayout()` giữ lưới hợp lệ và chuyển save cũ có `S.layout` (quầy chia khu) sang lưới bằng `defaultGrid()`. `LAYG()` là quầy dùng lúc bán (ngày khẩn cấp chỉ có trà mạn).
   - Đồ hết hàng không được bày lên quầy.
 - Nhân vật đặc biệt (`TYPES`): xe ôm `xeom`, cảnh sát chìm `chim`, đại gia sĩ gái `sigai`, shipper `shipper`, hot girl sống ảo `songao`. Đơn riêng ở `typeOrders`, tên ở `TNAMES`. Hình riêng `k_xeom`, `k_chim`, `k_shipper`, `k_sigai`, `k_bangai`, `k_songao` đã có; loại nào thiếu hình thì dùng hình khách chung kèm biểu tượng `TICON` (cảnh sát chìm không có, và hiện là "Khách thường" trừ khi có nhân viên Tinh ý). Story của hot girl cộng khách hôm sau qua `S.buzz`.
+- Tên khách theo tuổi và giới (`genName`): cách gọi `XUNG` (Bé, Em/Bạn, Anh/Chị/Bạn, Cô/Dì/Chú, Ông/Bà/Bác/Cụ), tên `GNAME`, tên ở nhà của trẻ con `BENAME`, gọi theo thứ `THU` (Hai, Ba, Tư…). Mỗi loại khách có tỉ lệ tuổi và giới riêng trong `TPROF`, khớp hình riêng của loại đó (ví dụ Food reviewer là nữ). Khách có `c.age`, `c.sex`. Hình khách chung chọn theo giới và tuổi qua `KTA`/`ktFor`. `kt_ba` là bà tóc bạc (tô lại từ `kt3`), `kt7` là ông. Chú xe ôm và cảnh sát chìm là người lớn tuổi. Lời nói theo tuổi: `CHAT.gia` (xưng ông/bà, gọi chủ tiệm là "con"), `CHAT.nhi`.
+- Vé số:
+  - Khách lớn tuổi (`isOld`, gồm cả xe ôm và cảnh sát chìm) được 4–5★ thì hay tặng vé (`veGift`).
+  - Nhiều loại vé (`VE_KIND`: vé số, vé cào, thẻ cào…) nhưng chung bảng giải `VE_PRIZE`. Mỗi giải quay riêng cùng lúc, trúng nhiều thì lấy giải cao nhất (`veRoll`). Độc đắc `VE_JP` theo cấp tiệm, tỉ lệ `VE_JP_P`.
+  - Cuối ngày quay số vào `S.tix`. Dò ở màn tổng kết (`veHTML`, `veOpen`); không dò thì `veFlush` tự dò khi sang ngày. Tiền trúng ghi vào mục `veso` của sổ ngày đó.
+- Tab Nguyên liệu: đồ món trên thực đơn cần thì tô nổi, có nhãn "Thực đơn" và "cần ~N" (`dayNeed`); topping đang bày có nhãn "Đang bày". Các món này lên đầu mỗi mục.
 - Hết hàng giữa ngày: phiếu báo "Hết: …" (`missingOf`) và nút "Gợi ý món khác" (`sugHTML`, `suggest`): đổi sang món pha được hoặc bỏ topping hết hàng, giảm `SUB_DISC` (10%, lưu ở `o.disc`, `priceOf` tự trừ), khách chờ thêm 40%. Nhân viên chờ người chơi quyết định chứ không đuổi khách.
 - Phiếu order chỉ hiện những mục còn phải làm; mục đã bỏ đúng thì ẩn, đủ hết thì hiện "✓ Đủ rồi, chạm máy đóng gói".
 - Phiếu order (`#tk`) cao cố định `--tkh` để quầy bên dưới không nhảy chỗ; phần giữa `.tkmid` cuộn bên trong, còn nội dung bị che thì mờ đáy (`tkMore`).
