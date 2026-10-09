@@ -6,7 +6,7 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 - Cả game phải vừa một màn hình điện thoại. Các tab được phép cuộn bên trong.
 - Phong cách pastel vẽ tay. Hình là ảnh do người dùng vẽ bằng AI, nhúng thẳng vào file dưới dạng base64 trong `SPRSRC`. Món nào chưa có ảnh thì game tự vẽ bằng code thay thế.
 - Đồ trên quầy chỉ di chuyển được lúc chuẩn bị. Quầy là lưới tự do: món nào cũng đặt được ở bất kỳ chỗ trống nào, kể cả máy đóng gói.
-- Không cho phóng to khi chơi (viewport `user-scalable=no`, `touch-action`, chặn cử chỉ `gesturestart`).
+- Không cho phóng to khi chơi: viewport `user-scalable=no` (iPhone bỏ qua), mọi phần tử `touch-action:manipulation` để chặn chạm hai lần phóng to (canvas thì `none`), chặn cử chỉ `gesturestart`, và dự phòng chặn hai lần `touchend` liền nhau ngoài nút/ô nhập.
 - Lúc bán có hai màn (`syncMode`, cờ `MK`; có ly hoặc đang đóng gói thì là màn pha):
   - Màn quán: cảnh tiệm hiện đủ, phiếu order, ô chọn Ly M/L (`renderPick`). Ly khách gọi được tô cam.
   - Chạm ly thì hình ly bay lên (`flyCup`) và sang màn pha: khung trên (`drawStage`, canvas `#stg`) có ly to bên phải và đơn của khách bên trái (`renderOrd`, `#ordp`, chỉ ghi những gì còn phải làm, sai thì tô đỏ, không chữ giải thích). Phiếu `#tk` ẩn đi, chỉ hiện đè lên khung ly khi có sự kiện, mặc cả/ghi nợ hoặc gợi ý đổi món (class `tkov`). Quầy nguyên liệu bám đáy màn hình; quầy lấy chỗ trước, khung ly cao 140–200px. Nhân viên lấy ly thì cũng tự sang màn pha.
@@ -63,7 +63,7 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - Nhiều loại vé (`VE_KIND`: vé số, vé cào, thẻ cào…) nhưng chung bảng giải `VE_PRIZE`. Mỗi giải quay riêng cùng lúc, trúng nhiều thì lấy giải cao nhất (`veRoll`). Độc đắc `VE_JP` theo cấp tiệm, tỉ lệ `VE_JP_P`.
   - Cuối ngày quay số vào `S.tix`. Dò ở màn tổng kết (`veHTML`, `veOpen`); không dò thì `veFlush` tự dò khi sang ngày. Tiền trúng ghi vào mục `veso` của sổ ngày đó.
 - Tab Nguyên liệu: đồ món trên thực đơn cần thì tô nổi, có nhãn "Thực đơn" và "cần ~N" (`dayNeed`); topping đang bày có nhãn "Đang bày". Các món này lên đầu mỗi mục.
-- Hết hàng giữa ngày: phiếu báo "Hết: …" (`missingOf`) và nút "Gợi ý món khác" (`sugHTML`, `suggest`): đổi sang món pha được hoặc bỏ topping hết hàng, giảm `SUB_DISC` (10%, lưu ở `o.disc`, `priceOf` tự trừ), khách chờ thêm 40%. Nhân viên chờ người chơi quyết định chứ không đuổi khách.
+- Hết hàng giữa ngày: phiếu có dải đỏ "⚠ Hết …" (`missingOf`) với nút "Đổi món"; bấm thì bảng đổi món bật từ đáy màn hình (`renderSug`, `#sugp`, mỗi món một thẻ có hình, giá đã giảm), chọn món gọi `suggest`: đổi sang món pha được hoặc bỏ topping hết hàng, giảm `SUB_DISC` (10%, lưu ở `o.disc`, `priceOf` tự trừ), khách chờ thêm 40%. Nhân viên chờ người chơi quyết định chứ không đuổi khách.
 - Phiếu order chỉ hiện những mục còn phải làm; mục đã bỏ đúng thì ẩn, đủ hết thì hiện "✓ Đủ rồi, chạm máy đóng gói".
 - Phiếu order (`#tk`) cao cố định `--tkh` để quầy bên dưới không nhảy chỗ; phần giữa `.tkmid` cuộn bên trong, còn nội dung bị che thì mờ đáy (`tkMore`).
 - Khách quen: lưu trong `S.regs` (tối đa `REG_MAX`), loại khách `quen`. `regAfter()` tạo khách quen mới (khách cho 5★, xác suất 30%) và xử lý lúc họ rời tiệm. `spawn()` thỉnh thoảng gọi một khách quen ghé lại (tối đa 1 lần/ngày). Hào quang vẽ trong `drawCust`.

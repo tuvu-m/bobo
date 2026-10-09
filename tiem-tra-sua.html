@@ -14,7 +14,7 @@
   --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;touch-action:manipulation}
 [hidden]{display:none!important}
 .rarebox{background:#eaf1fb;border:2px solid #c3d5ef;border-radius:14px;padding:8px 10px;margin:0 0 12px}
 .rtag{display:inline-block;font-size:10px;font-weight:800;padding:0 7px;border-radius:999px;background:#dbe7f8;color:#47679b;vertical-align:middle}
@@ -68,6 +68,14 @@ html,body{touch-action:pan-x pan-y}
 .osug{font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--accent);color:#fff;min-height:28px}.omsg,.ohint{font-size:13px;font-weight:700;color:var(--muted)}
 .pill.strike{text-decoration:line-through}
 #shop.mk #tk{display:none}#shop.mk.tkov #tk{display:grid;position:absolute;left:0;right:0;top:4px;z-index:6;box-shadow:0 6px 18px rgba(74,51,40,.18)}
+.tk .oos{grid-column:1/-1;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 4px 10px;border-radius:12px;background:#fde3e0;border:2px solid var(--bad);color:var(--bad);font-size:13.5px;font-weight:700}.tk .oos .btn{flex:none;min-height:32px;font-size:13px}
+.sugp{position:absolute;left:8px;right:8px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:60;max-height:72%;overflow:auto;background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:10px 12px 12px;box-shadow:0 -6px 24px rgba(74,51,40,.22);animation:ctIn .25s ease-out}
+.sugh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.sugh b{font-family:var(--f-display);font-size:17px}
+.sugx{width:34px;height:34px;border-radius:50%;background:#f3eee9;font-weight:800;color:var(--muted)}
+.sugg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sugo{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;border-radius:14px;border:2px solid var(--line);background:#fff;font:inherit;min-height:56px}.sugo:active{transform:scale(.96)}
+.sugo img{width:40px;height:55px}.sugo b{font-size:12.5px;line-height:1.2;text-align:center}.sugo span{font-size:13px;font-weight:800;color:var(--accent)}
+.sugo.wide{width:100%;flex-direction:row;justify-content:space-between;padding:10px 14px;margin-bottom:8px}
 .flycup{position:fixed;z-index:60;pointer-events:none;transform-origin:0 0}
 .policeBtn{position:absolute;left:50%;top:70px;transform:translate(-50%,-50%);z-index:5;background:var(--bad);color:#fff;font-family:var(--f-display);font-size:18px;padding:6px 18px;border-radius:14px;box-shadow:0 4px 0 #9e3330;border:2px solid #fff;animation:pulse .45s infinite alternate}
 .policeBtn small{display:block;font-family:var(--f-body);font-size:10.5px;font-weight:700}
@@ -325,6 +333,7 @@ button.mcard{font:inherit;color:inherit;cursor:pointer;padding:5px 4px 6px}butto
     <button class="pauseBtn" id="pauseBtn" aria-label="Tạm dừng"><i></i><i></i></button>
     <button class="policeBtn" id="policeBtn" hidden>Báo công an!<small id="policeT"></small></button>
     <div class="tk" id="tk"></div>
+    <div class="sugp" id="sugp" hidden></div>
     <div class="cupPick" id="cupPick"></div>
     <div class="pauseOv" id="pauseOv" hidden><div class="pcard" role="dialog" aria-label="Tạm dừng"><div class="pt">Tạm dừng</div><div class="meta" id="pauseInfo"></div>
       <div class="pacts"><button class="btn pink wide" id="resumeBtn">Tiếp tục</button><button class="btn ghost" id="closeBtn">Đóng cửa sớm</button><div class="prow2"><button class="btn sm ghost" id="pBgm"></button><button class="btn sm ghost" id="pSnd"></button></div></div><p class="meta" id="closeInfo"></p></div></div>
@@ -1146,11 +1155,11 @@ function cupPic(size,skin){skin=skin||null;const key='cup|'+size+'|'+skin+'|'+Ob
   EL(16,42.6,10,1.4,'rgba(90,60,40,.15)',null);drawCup(16,41.8,.86,{size,skin,pours:[],syrups:[],fill:0,tops:[],foams:[],ice:0,sugar:0},false);K=old;return PICS[key]=cv.toDataURL()}
 /* màn quán: hai ly để chọn, ly khách đang gọi được tô cam */
 function renderPick(){const el=$('#cupPick');if(!D||!el)return;const o=curOrder(),sea=seasonCups(),away=D.away>now,eh=el.clientHeight;
-  const key=[o&&o.size,sea.join(),away,D.queue.length,D.closing,Object.keys(SPR).length,Math.round(eh/16)].join('|');if(el.dataset.k===key)return;el.dataset.k=key;
+  const key=[o&&o.size,sea.join(),away,D.queue.length,D.closing,Object.keys(SPR).length,Math.round(eh/16),o&&missingOf(o).join()].join('|');if(el.dataset.k===key)return;el.dataset.k=key;
   const ph=Math.round(clamp(eh-102,60,190));
   const btn=(z,sk)=>`<button class="cupBtn${o&&o.size===z?' need':''}${sk?' sea':''}" data-cup="${z}" data-skin="${sk||''}" ${away?'disabled':''} aria-label="${sk?CUPSKIN[sk].n:'Ly thường'} ${z}"><img src="${cupPic(z,sk||'')}" alt="" style="height:${ph}px"><b>${sk?CUPSKIN[sk].n.replace(/^Ly /,''):'Ly'} ${z}</b><small>${sk?`+${fk(CUPSKIN[sk].up)} tiền ly`:z==='L'?'+5k':'cỡ vừa'}</small></button>`;
   el.innerHTML=`<div class="cupRow">${btn('M')}${btn('L')}</div>
-   <div class="cupHint">${away?'Bạn đang ra ngoài, chờ chút nha':o?`Khách gọi ly ${o.size} · chạm ly để pha`:D.queue.length?'Nhân viên đang pha cho khách':D.closing?'Đã đóng cửa, đang dọn dẹp':'Đang chờ khách…'}</div>`}
+   <div class="cupHint">${away?'Bạn đang ra ngoài, chờ chút nha':o&&!D.emerg&&missingOf(o).length?'<span class="warn">Món này hết hàng · bấm Đổi món ở phiếu</span>':o?`Khách gọi ly ${o.size} · chạm ly để pha`:D.queue.length?'Nhân viên đang pha cho khách':D.closing?'Đã đóng cửa, đang dọn dẹp':'Đang chờ khách…'}</div>`}
 /* chạm ly: hình ly bay từ ô chọn lên khung ly to */
 function flyCup(a,src){syncMode();layoutShop();const r=$('#stg').getBoundingClientRect();if(!r.width||!a.width)return;
   const H=STG.LH,sc=stageSc(160,H),u=r.width/160,k=sc/.86,hT=44*k*u,wT=hT*192/264,lT=r.left+160*.71*u-wT/2,tT=r.top+(H-5.5)*u-41.8*k*u;
@@ -2088,6 +2097,15 @@ function missingOf(o){if(!o||(D&&D.emerg))return [];const mine=cup&&D&&curOrder(
 const canMake=r=>[...r.bs,...(r.ss||[]),...(r.fs||[])].every(k=>(BASES[k]&&BASES[k].free)||(qty(k)>0&&onCounter(k)));
 function subOptions(c){const o=c.items[c.cur],old=recById(o.r),base=old?old.price:16000;
   return activeMenu().filter(r=>r.id!==o.r&&canMake(r)&&(c.type!=='sigai'||r.price>=base)).sort((a,b)=>Math.abs(a.price-base)-Math.abs(b.price-base)).slice(0,3)}
+/* bảng đổi món: hiện từ đáy màn hình, mỗi món là một thẻ to (hình, tên, giá đã giảm) */
+function renderSug(){const el=$('#sugp');if(!el||!D)return;const c=target(),on=!!c&&D.sug===c.id;
+  const key=on?c.id+'|'+c.cur+'|'+missingOf(c.items[c.cur]).join():'';if(el.dataset.k===key)return;el.dataset.k=key;el.hidden=!on;if(!on){el.innerHTML='';return}
+  const o=c.items[c.cur],miss=missingOf(o),onlyTop=miss.length&&miss.every(k=>TOPS[k]),opts=subOptions(c);
+  const nt=r=>priceOf({...o,r:r.id,bs:r.bs,ss:r.ss||[],fs:r.fs,ts:o.ts.filter(k=>qty(k)>0&&onCounter(k)),disc:SUB_DISC});
+  el.innerHTML=`<div class="sugh"><b>Đổi món cho ${c.name}</b><button class="sugx" data-sugx="1" aria-label="Đóng">✕</button></div>
+   <p class="meta" style="margin:0 0 8px">Hết <b class="warn">${miss.map(k=>ITEM(k).sh).join(', ')}</b>. Món đổi giảm ${SUB_DISC*100}%, khách chờ thêm được.</p>
+   ${onlyTop?`<button class="sugo wide" data-sugr="top"><b>Bỏ ${miss.map(k=>TOPS[k].sh).join(', ')}</b><span>${fk(priceOf({...o,ts:o.ts.filter(k=>!miss.includes(k)),disc:SUB_DISC}))}</span></button>`:''}
+   ${opts.length?`<div class="sugg">${opts.map(r=>`<button class="sugo" data-sugr="${r.id}"><img src="${drinkPicR(r,o.size)}" alt=""><b>${r.name}</b><span>${fk(nt(r))}</span></button>`).join('')}</div>`:!onlyTop?'<p class="meta warn">Không còn món nào pha được. Từ chối khách hoặc đóng cửa sớm để nhập thêm hàng.</p>':''}`}
 function sugHTML(c){const o=c.items[c.cur],miss=missingOf(o),onlyTop=miss.length&&miss.every(k=>TOPS[k]),opts=subOptions(c);
   const nt=r=>{const n={...o,r:r.id,bs:r.bs,ss:r.ss||[],fs:r.fs,ts:o.ts.filter(k=>qty(k)>0&&onCounter(k)),disc:SUB_DISC};return priceOf(n)};
   return `<div class="tkmid sug"><span class="meta">Gợi ý món khác (giảm ${SUB_DISC*100}%, khách chờ thêm được):</span>
@@ -2107,7 +2125,7 @@ let tkKey='';
 /* phần giữa phiếu còn nội dung bị che: làm mờ đáy, cuộn tới cuối thì bỏ mờ */
 function tkMore(){const m=$('#tk .tkmid');if(!m)return;const f=()=>m.classList.toggle('more',m.scrollTop+m.clientHeight<m.scrollHeight-2);f();m.onscroll=f}
 let refArm=null;
-function renderTicket(){renderTicket0();tkMore();renderOrd()}
+function renderTicket(){renderTicket0();tkMore();renderOrd();renderSug()}
 /* màn pha: đơn của khách nằm bên trái ly (thay cho phiếu), chỉ ghi những gì còn phải làm; sai thì tô đỏ */
 function renderOrd(){const el=$('#ordp');if(!el||!D)return;const c=target();
   if(!c){const k='none|'+D.queue.length;if(el.dataset.k===k)return;el.dataset.k=k;el.innerHTML=`<div class="omsg">${D.queue.length?'Nhân viên đang pha':'Chưa có khách'}</div>`;return}
@@ -2117,6 +2135,9 @@ function renderOrd(){const el=$('#ordp');if(!el||!D)return;const c=target();
   el.innerHTML=`<div class="ohd"><img src="${c.pic}" alt=""><b>${c.name}</b><span class="opr">${fk(c.price)}${up?`<small>+${fk(up)}</small>`:''}</span></div>
    <div class="ops">${c.items.length>1?`<span class="op cur">Ly ${c.cur+1}/${c.items.length}</span>`:''}${miss.length?`<span class="op bad">Hết ${miss.map(k=>ITEM(k).sh).join(', ')}</span><button class="osug" data-sug="${c.id}">Đổi món</button>`:''}
    ${left.length?left.map(([t,ok,hot,bad,info,x])=>`<span class="op${bad?' bad':''}${info?' info':''}${x?' strike':''}">${t}${hot?' '+FLAME:''}</span>`).join(''):'<span class="op ok">✓ Đủ rồi</span>'}</div>${hint?'<div class="ohint">Giữ bình để rót</div>':''}`}
+$('#sugp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!D)return;
+  if(b.dataset.sugx!==undefined){D.sug=null;tkKey='';renderTicket();return}
+  if(b.dataset.sugr!==undefined){const c=target();D.sug=null;tkKey='';if(c)suggest(c,b.dataset.sugr);renderTicket()}});
 $('#ordp').addEventListener('click',e=>{const b=e.target.closest('[data-sug]');if(!b||!D)return;D.sug=+b.dataset.sug;tkKey='';renderTicket()});
 function renderTicket0(){const T_=$('#tk');if(!D)return;const p=D.pend[0];
   if(D.ev){const v=D.ev,key='ev'+v.k+evCantPay(v);if(key===tkKey)return;tkKey=key;T_.className='tk tkev';
@@ -2132,7 +2153,7 @@ function renderTicket0(){const T_=$('#tk');if(!D)return;const p=D.pend[0];
   const ch=checks(c.items[c.cur]),miss=D.emerg?[]:missingOf(c.items[c.cur]);const key=c.id+'|'+c.cur+'|'+ch.map(x=>(x[1]?1:0)+x[0]).join('')+'|'+miss.join()+'|'+(D.sug===c.id)+'|'+c.items[c.cur].r+'|'+(refArm===c.id)+'|'+(cup&&cup.broken)+'|'+(cup&&cup.skin);if(key===tkKey)return;tkKey=key;
   T_.className='tk';
   T_.innerHTML=`<img src="${c.pic}" alt=""${c.reg?' class="reg"':''}><div><div class="nm">${c.name}</div><div class="ty">${typeLabel(c)} · ${c.pay}</div></div><div class="prc"><div class="pr">${fk(c.price)}${cup&&cup.skin&&target()===c?`<small class="pup">+${fk(cupUp(cup))}</small>`:''}</div><button class="refuse${refArm===c.id?' arm':''}" data-refuse="${c.id}">${refArm===c.id?'Chắc chưa?':'Từ chối'}</button></div>
-    ${D.sug===c.id?sugHTML(c):`<div class="tkmid ord">${miss.length?`<span class="pill bad">Hết: ${miss.map(k=>ITEM(k).sh).join(', ')}</span><button class="btn sm pink sugBtn" data-sug="${c.id}">Gợi ý món khác</button>`:''}${c.items.length>1?`<span class="pill cur">Ly ${c.cur+1}/${c.items.length}${c.cur?' · xong '+c.res.map(r=>r.s+'★').join(' '):''}</span>`:''}<img class="dpic" src="${drinkPicR(c.items[c.cur],c.items[c.cur].size)}" alt=""><b class="dname">${c.items[c.cur].name}</b>${(()=>{/* món đã bỏ đúng thì ẩn, chỉ còn những thứ cần làm */const left=ch.filter(x=>!x[1]);return left.length?left.map(([t,ok,hot,bad,info,x])=>`<span class="pill${hot?' hotp':''}${bad?' bad':''}${!bad&&!info?' need':''}${info?' info':''}${x?' strike':''}">${t}${hot?' '+FLAME:''}</span>`).join(''):'<span class="pill ok">✓ Đủ rồi</span>'})()}</div>`}`}
+    ${`<div class="tkmid ord">${miss.length?`<div class="oos"><span>⚠ Hết <b>${miss.map(k=>ITEM(k).sh).join(', ')}</b></span><button class="btn sm pink" data-sug="${c.id}">Đổi món</button></div>`:''}${c.items.length>1?`<span class="pill cur">Ly ${c.cur+1}/${c.items.length}${c.cur?' · xong '+c.res.map(r=>r.s+'★').join(' '):''}</span>`:''}<img class="dpic" src="${drinkPicR(c.items[c.cur],c.items[c.cur].size)}" alt=""><b class="dname">${c.items[c.cur].name}</b>${(()=>{/* món đã bỏ đúng thì ẩn, chỉ còn những thứ cần làm */const left=ch.filter(x=>!x[1]);return left.length?left.map(([t,ok,hot,bad,info,x])=>`<span class="pill${hot?' hotp':''}${bad?' bad':''}${!bad&&!info?' need':''}${info?' info':''}${x?' strike':''}">${t}${hot?' '+FLAME:''}</span>`).join(''):'<span class="pill ok">✓ Đủ rồi</span>'})()}</div>`}`}
 $('#tk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!D)return;
   if(b.dataset.evy!==undefined){resolveEvent(b.dataset.evy==='1');return}
   if(b.dataset.sug){D.sug=+b.dataset.sug;tkKey='';renderTicket();return}
@@ -2506,12 +2527,14 @@ function frame0(t){
   const sec=t/1000,dt=Math.min(.1,Math.max(0,sec-lastT));lastT=sec;now+=dt;
   if(D){tickDay(dt);if(D&&(pouring||(D.as&&D.as.pk)))renderTicket()}
   /* cảnh tiệm tối đa 20 hình/giây kể cả khi quầy đang chạy 30 */
-  if(shop){syncMode();$('#shop').classList.toggle('tkov',MK&&!!D&&!!(D.ev||D.pend.length||D.sug!=null));layoutShop();if(!MK){renderPick();if(t-lastScene>=1000/(ECO?14:20)-3){lastScene=t;drawScene(SC,now)}}else{drawStage(STG,now);drawStation(ST,now,false)}}
+  if(shop){syncMode();$('#shop').classList.toggle('tkov',MK&&!!D&&!!(D.ev||D.pend.length));layoutShop();if(!MK){renderPick();if(t-lastScene>=1000/(ECO?14:20)-3){lastScene=t;drawScene(SC,now)}}else{drawStage(STG,now);drawStation(ST,now,false)}}
   if(edC&&!$('#prep').hidden&&tab==='quay'){setSW(shopSW());const bw=$('#edBox').clientWidth-12;const w=Math.min(bw,440);fit(ED,w,Math.round(w*SH/SW));drawStation(ED,now,true)}
   if(scEd&&!$('#prep').hidden&&tab==='trangtri'){const bw=scEd.parentElement.clientWidth-12;fit(SCE,bw,Math.round(bw*62/160));drawScene(SCE,now,{edit:true})}
   requestAnimationFrame(frame)}
 /* iOS Safari bỏ qua user-scalable=no nên chặn thêm cử chỉ phóng to */
 ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+/* dự phòng: chạm hai lần liền nhau vào vùng không phải nút/ô nhập thì không cho trình duyệt phóng to */
+{let lastTE=0;document.addEventListener('touchend',e=>{if(e.target.closest&&e.target.closest('input,textarea,select,button,a,canvas,.kchip'))return;const n=e.timeStamp;if(n-lastTE<350)e.preventDefault();lastTE=n},{passive:false})}
 document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});
 try{if(localStorage.getItem('tt_help')==='1')document.body.classList.add('help')}catch(e){}
 $('#helpBtn').onclick=()=>{const on=document.body.classList.toggle('help');$('#helpBtn').setAttribute('aria-pressed',on);try{localStorage.setItem('tt_help',on?'1':'0')}catch(e){}};
