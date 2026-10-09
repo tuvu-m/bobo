@@ -5,16 +5,19 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 ## Yêu cầu chung
 - Cả game phải vừa một màn hình điện thoại. Các tab được phép cuộn bên trong.
 - Phong cách pastel vẽ tay. Hình là ảnh do người dùng vẽ bằng AI, nhúng thẳng vào file dưới dạng base64 trong `SPRSRC`. Món nào chưa có ảnh thì game tự vẽ bằng code thay thế.
-- Đồ trên quầy chỉ di chuyển được lúc chuẩn bị. Quầy là lưới tự do: món nào cũng đặt được ở bất kỳ chỗ trống nào, kể cả bàn pha và máy đóng gói.
+- Đồ trên quầy chỉ di chuyển được lúc chuẩn bị. Quầy là lưới tự do: món nào cũng đặt được ở bất kỳ chỗ trống nào, kể cả máy đóng gói.
 - Không cho phóng to khi chơi (viewport `user-scalable=no`, `touch-action`, chặn cử chỉ `gesturestart`).
-- Lúc bán: pha xong thì chạm máy đóng gói, ly tự chạy vào máy và giao. Không kéo ly.
+- Lúc bán có hai màn (`syncMode`, cờ `MK`; có ly hoặc đang đóng gói thì là màn pha):
+  - Màn quán: cảnh tiệm hiện đủ, phiếu order, ô chọn Ly M/L (`renderPick`). Ly khách gọi được tô cam.
+  - Chạm ly thì hình ly bay lên (`flyCup`) và sang màn pha: khung trên (`drawStage`, canvas `#stg`) có ly to bên phải và đơn của khách bên trái (`renderOrd`, `#ordp`, chỉ ghi những gì còn phải làm, sai thì tô đỏ, không chữ giải thích). Phiếu `#tk` ẩn đi, chỉ hiện đè lên khung ly khi có sự kiện, mặc cả/ghi nợ hoặc gợi ý đổi món (class `tkov`). Quầy nguyên liệu bám đáy màn hình; quầy lấy chỗ trước, khung ly cao 140–200px. Nhân viên lấy ly thì cũng tự sang màn pha.
+  - Pha xong chạm máy đóng gói trên quầy (không có nút Đóng gói riêng): ly rơi từ trên xuống máy, giao xong thì về màn quán. Không kéo ly.
 - Máy đóng gói chỉ giao ly khớp đơn (`cupMiss`). Sai không sửa được (sai size, rót quá vạch, thừa đồ, dư đường/đá) thì phải bỏ ly; còn thiếu (chưa tới vạch, thiếu nước/siro/topping/kem/đường/đá) thì bỏ thêm là giao được. Ly hỏng (`cup.broken`: nhân viên pha sai hoặc tràn ly) cũng bị từ chối. Ly hỏng chỉ báo bằng thông báo; nhân viên dừng lại chờ người chơi bấm Bỏ ly, rồi tự làm lại đơn đó.
 - Mỗi món trên quầy có khung viền xám. Lúc bán, đồ còn thiếu cho đơn đang phục vụ có viền cam đậm, nền cam nhạt, không nhấp nháy (`orderNeeds`). Khi phải bỏ ly thì thùng rác viền đỏ. Phiếu order tô cam các mục chưa làm.
-- Nhân viên Pha chế không pha ly riêng mà phụ cùng ly trên bàn pha (`staffTick`, trạng thái `D.as`), làm theo trình tự `ASTEPS`: lấy ly > nước > đường > đá > topping > kem. Một ly khoảng 3 giây (`cupTime`), càng nhiều Pha chế càng nhanh. Bước người chơi đã làm đủ thì bỏ qua; đường/đá chưa đủ thì bù cho đủ. Mỗi bước có xác suất pha hỏng `errP` theo Khéo tay. Càng nhiều nhân viên đi làm càng đông khách.
+- Nhân viên Pha chế không pha ly riêng mà phụ cùng ly đang pha (`staffTick`, trạng thái `D.as`), làm theo trình tự `ASTEPS`: lấy ly > nước > đường > đá > topping > kem. Một ly khoảng 3 giây (`cupTime`), càng nhiều Pha chế càng nhanh. Bước người chơi đã làm đủ thì bỏ qua; đường/đá chưa đủ thì bù cho đủ. Mỗi bước có xác suất pha hỏng `errP` theo Khéo tay. Càng nhiều nhân viên đi làm càng đông khách.
 - Chữ hướng dẫn mặc định ẩn. Nút (?) bật lên (class `sub`/`hint`, `body.help`).
-- Rót trà/sữa: phải giữ bình. Kho chỉ bị trừ khi nước thật sự chảy vào ly; chạm nhanh thì nhắc "Giữ bình để rót". Ly đã tới vạch mà còn thiếu một loại trà/sữa thì loại đó chỉ rót thêm được một chút (`pourCap`). Nhân viên Pha chế đang rót thì người chơi chờ, và phần nhân viên rót không vượt vạch (`pourShare`).
-- Phiếu order: lỗi phải bỏ ly (ly hỏng, sai size, quá vạch, thừa đồ) luôn là nhãn đỏ đầu tiên; topping gộp một nhãn; "Không topping" là nhãn xám (`checks`). Ly hỏng có nhãn đỏ trên bàn pha ghi ai làm hỏng (`cup.brokeBy`).
-- Toast có mức ưu tiên (`toast(m,ms,p)`): kết quả sự kiện (2) không bị điểm sao (0) đè. Chuyển màn thì tắt toast cũ (`toastOff` trong `show`). Lúc bán, toast nằm giữa đồng hồ và nút tạm dừng.
+- Rót trà/sữa: phải giữ bình. Mỗi ly chỉ tốn 1 phần cho mỗi loại trà/sữa dù bấm bao nhiêu lần (`cup.used`); bỏ ly làm ly khác thì tốn thêm. Phần đó chỉ bị trừ khi nước thật sự chảy vào ly; chạm nhanh thì nhắc "Giữ bình để rót". Ly đã tới vạch mà còn thiếu một loại trà/sữa thì loại đó chỉ rót thêm được một chút (`pourCap`). Nhân viên Pha chế đang rót thì người chơi chờ, và phần nhân viên rót không vượt vạch (`pourShare`).
+- Phiếu order: lỗi phải bỏ ly (ly hỏng, sai size, quá vạch, thừa đồ) luôn là nhãn đỏ đầu tiên; topping gộp một nhãn; "Không topping" là nhãn xám (`checks`). Ly hỏng có nhãn đỏ ở khung ly ghi ai làm hỏng (`cup.brokeBy`).
+- Toast có mức ưu tiên (`toast(m,ms,p)`): kết quả sự kiện (2) không bị điểm sao (0) đè. Chuyển màn thì tắt toast cũ (`toastOff` trong `show`). Lúc bán, toast nằm ở đáy màn hình để không che cảnh tiệm.
 - Thông báo: thông báo xấu (`bad`) luôn lên đầu và còn lại khi chuyển tab; quá 2 cái thì có nút "+N thông báo khác".
 - Thanh tab: tab mới mở có chấm hồng (`S.newTabs`) và được cuộn vào tầm nhìn; mờ mép khi còn tab bị che (`tabFade`, class `tfl`/`tfr`). Đừng đặt class `fl`: trùng với biểu tượng ngọn lửa.
 
@@ -43,17 +46,18 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
   - Mặc định hiện `MENU_SHOW` món, bấm "Xem thêm" mới hiện hết.
   - Chạm món (`menuSel`) thì khung đặt giá (`recCard(r,'menu')`) mở ngay dưới hàng của món đó.
 - Quầy:
-  - Toạ độ trong khung logic `SW` × `SH`, chia lưới `COLS` × `ROWS` (8×10) ô. `SH` cố định 237; `SW` co giãn 180–300 theo màn hình (`setSW`, tính trong `layoutShop`, nhớ ở localStorage `tt_sw`) để quầy lấp đầy bề ngang. Ô vì vậy có thể rộng hơn cao, nên đừng giả định `CW` = 22.5; vẽ trong bàn pha dùng tỉ lệ theo `WORK.w` (ví dụ `cupX()`).
-  - `S.grid=[{id,c,r}]` lưu đồ đang bày (ô góc trái trên). `id` là mã nguyên liệu, `M`/`L` (chồng ly), `sugar`/`ice`/`trash`, `work` (bàn pha), `seal` (máy đóng gói).
-  - Kích thước tính bằng ô trong `FP`: trà, sữa, siro, kem, ly, dụng cụ là 1×2; khay topping và máy đóng gói 2×2; bàn pha 3×2. Máy đóng gói chỉ vẽ hình máy và đèn trạng thái, không có chữ; chỗ ly chui vào máy lấy theo hình (`sealSlot`).
-  - `WORK`/`SEAL` là hình chữ nhật hiện tại của bàn pha và máy, do `placeFixed()` cập nhật.
-  - `S.stored` lưu đồ cất trong kho, `S.lastPos` nhớ chỗ cũ của món bị gỡ. Ly, dụng cụ, bàn pha và máy (`FIXED`) không cất được.
+  - Toạ độ trong khung logic `SW` × `SH`, chia lưới 6 cột × `ROWS` hàng. Số hàng mở dần: người mới 6×6, mua "Nới quầy +2 hàng" ở tab Quầy (`growCounter`, giá `QROW_COST` 80k/250k/600k, tối đa 6×12, lưu ở `S.qrows`, `setRows`). Hàng mới thêm ở phía trên, mọi món dời xuống 2 hàng nên đồ ở đáy giữ nguyên chỗ. Save cũ mở sẵn 6×12. Ô cao ~23.7 (`CH`), `SH`=`ROWS`×`CH`; `SW` co giãn 135–224 theo màn hình (ô rộng/cao .95–1.58) (`setSW`, tính trong `layoutShop`, nhớ ở localStorage `tt_sw`) để quầy lấp đầy bề ngang. Ô vì vậy có thể rộng hơn cao, nên đừng giả định `CW` = 22.5.
+  - `S.grid=[{id,c,r}]` lưu đồ đang bày (ô góc trái trên). `id` là mã nguyên liệu, `sugar`/`ice`/`trash`, `seal` (máy đóng gói). Bàn pha và chồng ly M/L không còn trên quầy. Save lưới 8×10 cũ được `migrate()` xếp lại theo bố cục mặc định (cờ `s.g6`), giữ thứ tự từng loại đồ. Bố cục mặc định: trà/sữa hàng trên cùng, dụng cụ và máy đóng gói hàng dưới cùng (gần ngón cái).
+  - Kích thước tính bằng ô trong `FP`: trà, sữa, siro, kem, giấy bọc, dụng cụ là 1×2; khay topping và máy đóng gói 2×2. Máy đóng gói chỉ vẽ hình máy và đèn trạng thái, không có chữ; chỗ ly chui vào máy lấy theo hình (`sealSlot`).
+  - `SEAL` là hình chữ nhật hiện tại của máy đóng gói, do `placeFixed()` cập nhật.
+  - `S.stored` lưu đồ cất trong kho, `S.lastPos` nhớ chỗ cũ của món bị gỡ. Dụng cụ và máy đóng gói (`FIXED`) không cất được.
   - Ô Kho (`#khoBox`) ở tab Quầy luôn hiện và dính ở đầu tab; kéo đồ từ quầy thả vào đó để cất.
   - `dropPlan()` quyết định dời hay đổi chỗ (chỉ đổi chỗ với món cùng cỡ), `placeAt()` bày từ kho, `storeObj()` cất.
   - `syncLayout()` giữ lưới hợp lệ và chuyển save cũ có `S.layout` (quầy chia khu) sang lưới bằng `defaultGrid()`. `LAYG()` là quầy dùng lúc bán (ngày khẩn cấp chỉ có trà mạn).
   - Đồ hết hàng không được bày lên quầy.
 - Nhân vật đặc biệt (`TYPES`): xe ôm `xeom`, cảnh sát chìm `chim`, đại gia sĩ gái `sigai`, shipper `shipper`, hot girl sống ảo `songao`. Đơn riêng ở `typeOrders`, tên ở `TNAMES`. Hình riêng `k_xeom`, `k_chim`, `k_shipper`, `k_sigai`, `k_bangai`, `k_songao` đã có; loại nào thiếu hình thì dùng hình khách chung kèm biểu tượng `TICON` (cảnh sát chìm không có, và hiện là "Khách thường" trừ khi có nhân viên Tinh ý). Story của hot girl cộng khách hôm sau qua `S.buzz`.
 - Tên khách theo tuổi và giới (`genName`): cách gọi `XUNG` (Bé, Em/Bạn, Anh/Chị/Bạn, Cô/Dì/Chú, Ông/Bà/Bác/Cụ), tên `GNAME`, tên ở nhà của trẻ con `BENAME`, gọi theo thứ `THU` (Hai, Ba, Tư…). Mỗi loại khách có tỉ lệ tuổi và giới riêng trong `TPROF`, khớp hình riêng của loại đó (ví dụ Food reviewer là nữ). Khách có `c.age`, `c.sex`. Hình khách chung chọn theo giới và tuổi qua `KTA`/`ktFor`. `kt_ba` là bà tóc bạc (tô lại từ `kt3`), `kt7` là ông. Chú xe ôm và cảnh sát chìm là người lớn tuổi. Lời nói theo tuổi: `CHAT.gia` (xưng ông/bà, gọi chủ tiệm là "con"), `CHAT.nhi`.
+- Giấy bọc ly theo mùa (`CUPSKIN`): mua một lần ở tab Trang trí (mục Giấy bọc ly). Tới mùa theo tháng thật (`inSeason`, `seasonCups`) thì xấp giấy bọc là một món 1×2 trên quầy (loại `sleeve`, `drawSleeveStack`, không hết hàng). Pha ly thường xong chạm xấp giấy để bọc, chạm lần nữa để tháo (`wrapCup`, `cup.skin`). Khách trả thêm `up` (`cupUp`, cộng vào `c.cupUp` lúc giao); học sinh và chú xe ôm chê ly mắc (−1★). Hình: `sleeve_l_<id>`/`sleeve_m_<id>` cùng khung với `ly_l`/`ly_m` (vẽ đè lên ly), `sleeve_i_<id>` cho xấp giấy; thiếu hình thì vẽ bằng code (`drawSleeve`).
 - Vé số:
   - Khách lớn tuổi (`isOld`, gồm cả xe ôm và cảnh sát chìm) được 4–5★ thì hay tặng vé (`veGift`).
   - Nhiều loại vé (`VE_KIND`: vé số, vé cào, thẻ cào…) nhưng chung bảng giải `VE_PRIZE`. Mỗi giải quay riêng cùng lúc, trúng nhiều thì lấy giải cao nhất (`veRoll`). Độc đắc `VE_JP` theo cấp tiệm, tỉ lệ `VE_JP_P`.
@@ -64,7 +68,7 @@ Game quản lý tiệm trà sữa trên web, một file `tiem-tra-sua.html` (HTM
 - Phiếu order (`#tk`) cao cố định `--tkh` để quầy bên dưới không nhảy chỗ; phần giữa `.tkmid` cuộn bên trong, còn nội dung bị che thì mờ đáy (`tkMore`).
 - Khách quen: lưu trong `S.regs` (tối đa `REG_MAX`), loại khách `quen`. `regAfter()` tạo khách quen mới (khách cho 5★, xác suất 30%) và xử lý lúc họ rời tiệm. `spawn()` thỉnh thoảng gọi một khách quen ghé lại (tối đa 1 lần/ngày). Hào quang vẽ trong `drawCust`.
 - Sự kiện vui: danh sách `EVS`. Mỗi sự kiện có `yes()`/`no()` trả về câu thông báo, và dùng các hàm hiệu ứng `ev*` (ví dụ `evAway` ra ngoài, `evSlow` pha chậm, `evGain`/`evPay` thu chi). Lịch sự kiện của ngày nằm ở `D.evPlan` (từ ngày 2), thẻ sự kiện hiện trong phiếu order (`renderTicket`). Thu từ sự kiện ghi vào `ev` trong sổ, chi ghi vào mục `sukien`.
-- Cảnh tiệm có kích thước 160×62. Hàm vẽ là `drawScene`, đồ trang trí vẽ qua `drawDecor` với các vị trí trong `DSLOT`.
+- Cảnh tiệm có kích thước 160×62. Hàm vẽ là `drawScene`, đồ trang trí vẽ qua `drawDecor` với các vị trí trong `DSLOT`. Lúc bán thanh trên cùng ẩn; màn quán hiện đủ cảnh, màn pha thì khung ly cao `stageH` (màn hình thấp hơn 720px thì thấp bớt).
 - Lưu game: biến state `S` lưu vào localStorage `tiemtra3`. Hàm `migrate()` chuyển save cũ sang dạng mới, trong đó `toRaw()` chuyển công thức cũ sang nguyên liệu thô, còn khối `s.addon` bỏ topping khỏi công thức cũ.
 - Lưu đám mây dùng `window.claude.use('db')`. Tính năng này chỉ chạy khi file được mở như artifact trên claude.ai.
 

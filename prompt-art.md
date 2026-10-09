@@ -105,3 +105,19 @@ Hiện game dùng hình ông tóc bạc có sẵn (`kt7`) và một bà tóc b�
 ```
 Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 2 characters in one row: a kind elderly Vietnamese grandfather with short white hair, round glasses, a beige button shirt and brown trousers, holding a small lottery ticket and a cup of iced tea, warm smile; a sweet elderly Vietnamese grandmother with a silver hair bun, a soft purple cardigan over a floral blouse, a small cloth bag on her arm, holding a lottery ticket, gentle smile. Transparent background PNG.
 ```
+
+---
+
+# Giấy bọc ly theo mùa
+
+Game dùng **ly thường** cho mọi đơn. Pha xong, người chơi chạm xấp giấy bọc trên quầy để bọc ly. Vì vậy chỉ cần hình **dải giấy bọc**, không cần vẽ cả ly.
+
+8 mẫu đầu tiên (Tết, Valentine, hoa anh đào, mùa hè, Trung thu, Halloween, mùa thu, Giáng sinh) đã cắt từ tấm ly bạn vẽ. Mình ướm dải bọc vào ly M và ly L đang dùng, ra các hình `sleeve_l_<id>`, `sleeve_m_<id>` và `sleeve_i_<id>` (xấp giấy trên quầy).
+
+## Prompt 10 · Thêm mẫu giấy bọc mới
+
+Vẽ dải giấy phẳng, nhìn thẳng, không cần ly. Mình sẽ tự uốn theo dáng ly.
+
+```
+Cute cozy hand-painted game asset sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline. Show 4 flat paper cup sleeves laid out straight from the front, each a wide horizontal band about 3 times as wide as it is tall, slightly wider at the top edge than at the bottom edge, fully separated with generous empty space. No cup, no text, no letters, no logo, no shadow. Each sleeve has a different seasonal pattern: [MÔ TẢ 4 MẪU Ở ĐÂY]. Transparent background PNG.
+```
