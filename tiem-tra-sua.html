@@ -1703,7 +1703,7 @@ let rvFilt='all';
 const RVF={all:['Tất cả',()=>true],s5:['5★',r=>r.s===5],s4:['4★',r=>r.s===4],low:['≤3★',r=>r.s<=3],norep:['Chưa trả lời',r=>r.id&&!r.reply],last:['Hôm qua',r=>r.d===S.day-1]};
 function rvHTML(){const all=S.reviews,F=RVF[rvFilt]||RVF.all,cnt=k=>all.filter(RVF[k][1]).length;
   const chips=`<div class="seg rvf">${Object.entries(RVF).filter(([k])=>k==='all'||cnt(k)).map(([k,[l]])=>`<button data-rvf="${k}" aria-pressed="${rvFilt===k}">${l} <small>${cnt(k)}</small></button>`).join('')}</div>`;
-  const list=all.filter(F[1]).slice(-80).reverse().map(r=>`<div class="rv${r.type==='reviewer'?' big':''}"><span class="st">${'★'.repeat(r.s)}${'☆'.repeat(5-r.s)}</span> <b>${r.name}</b> <span class="tg${r.type==='quen'?' quen':''}">${r.tag||TYPES[r.type].label}</span> <span class="meta">· ngày ${r.d}${r.n>1?` · ${r.n} ly`:''}${r.by?` · ${r.by} pha`:''}</span><div>${r.t}</div>${r.def?`<div class="thr def"><b>💛 ${esc(r.def.n)}:</b> ${esc(r.def.t)}</div>`:''}${repHTML(r)}</div>`).join('');
+  const list=all.filter(F[1]).slice(-80).reverse().map(r=>`<div class="rv${r.type==='reviewer'?' big':''}"><span class="st">${'★'.repeat(r.s)}${'☆'.repeat(5-r.s)}</span> <b>${r.name}</b> <span class="tg${r.type==='quen'?' quen':''}">${r.tag||TYPES[r.type].label}</span> <span class="meta">· ngày ${r.d}${r.n>1?` · ${r.n} ly`:''}${r.by?` · ${r.by} pha`:''}</span><div>${r.t}</div>${r.def?`<div class="thr def"><b>${r.def.good?'💬':'💛'} ${esc(r.def.n)}:</b> ${esc(r.def.t)}</div>`:''}${repHTML(r)}</div>`).join('');
   return `<div class="pop"><b>${popularity().toFixed(1)}★</b><span class="meta">${S.five} review 5★<span class="hint"> · Sao càng cao càng đông khách. Review của food reviewer tính gấp 3.</span></span></div>
    ${achHTML()}<div class="h3" style="margin:6px 0 6px">${SPARK} Khách quen (${(S.regs||[]).length}/${REG_MAX})</div>
    ${(S.regs||[]).length?`<div class="regs">${S.regs.map(r=>`<button class="regc" data-renick="${r.id}" aria-label="Đổi biệt danh ${regName(r)}"><b>${regName(r)}</b>${r.nick===(r.favName||'').toLowerCase()?'':' · '+r.favName} · ${r.visits} lần ghé</button>`).join('')}</div>`:'<p class="meta" style="margin:0 0 10px">Chưa có khách quen.<span class="hint"> Khách được 5★ đôi khi thành khách quen: hay ghé lại, chịu chờ, bo thêm. Phục vụ tệ hai lần liền thì họ thôi ghé.</span></p>'}
@@ -3029,15 +3029,70 @@ const DEF_W={
   'từ chối':['Tiệm từ chối chắc có lý do. Đọc bình luận này là {t} hiểu lý do rồi.'],
   _:['{X} chê vậy thôi chứ mai lại ghé, {t} biết mà.','Bình luận này chắc viết lúc đói. Uống thêm ly nữa rồi review lại nha {x}.','Tiệm ruột của {t} đó, chê nhẹ tay thôi {x}.']};
 const DEF_A={gia:['{T} uống ở đây mấy năm nay, {x} mới tới một lần mà đã phán.'],nhi:['Con thấy ngon mà, {x} khó ghê á!','Mẹ con nói chê người ta là không ngoan đó {x}.']};
+/* bình luận dạo dưới review tốt (4–5★): khen, hùa theo, rủ rê */
+const CMT_T={
+  xeom:['Lần sau ghé, chú chở tới tiệm miễn phí luôn!','Chú chạy xe cả ngày, tới đây là hết mệt.'],
+  shipper:['Đơn tiệm này mình giao hoài, khách nào cũng khen như {x}.','Giao đơn xong ghé làm một ly, nạp năng lượng chạy tiếp.'],
+  betthu:['Kèo thơm nhất khu này đó {x}, tất tay đi!','Tiệm này ván nào cũng thắng, {x} theo {t} là chuẩn.'],
+  thayboi:['Thầy xem rồi, {x} với tiệm này hợp mệnh lắm.','Quẻ hôm nay đại cát, uống ly này là thấy.'],
+  batam:['Cô kể cả xóm nghe rồi, tiệm ngon số một!','Đúng rồi đó con, nhà bên kia cũng ghé đây hoài.'],
+  streamer:['Chuẩn luôn {x}! Mai mình live ở đây, ghé chơi nha.','Ai chưa uống là chưa xem hết clip của mình đó.'],
+  tay:['Agree! Best bubble tea in Vietnam! 🇻🇳','Second time here this week. No regrets! 🧋'],
+  songao:['Góc bên cửa sổ chụp xinh lắm nha {x}, thử đi!','Ly lên hình đã xinh mà uống còn ngon hơn.'],
+  sigai:['Anh bao cả tiệm một bữa, {x} ghé đúng hôm là uống free.','Anh dẫn em ấy tới đây hoài, em khen hoài.'],sop:['Anh bao cả tiệm một bữa, {x} ghé đúng hôm là uống free.','Anh dẫn em ấy tới đây hoài, em khen hoài.'],
+  chim:['Tôi xác nhận: tiệm làm ăn đàng hoàng, uống yên tâm.','Đã kiểm tra: chất lượng đạt chuẩn.'],
+  reviewer:['Mình review rồi, 9/10. {X} có gu đó.','Một trong những ly ngon nhất mình từng review.'],
+  voi:['Ly này cứu cả buổi họp chiều của {t} đó.','Ghé năm phút là có ly, kịp giờ họp.'],vanphong:['Ly này cứu cả buổi họp chiều của {t} đó.'],
+  hocsinh:['Uống xong làm bài kiểm tra được 10 điểm luôn!','Tiền ăn sáng để dành uống ly này, đáng lắm!'],
+  khotinh:['Hiếm khi tôi đồng ý với ai. Lần này đồng ý.','Lần đầu tôi cho 5 sao mà không tiếc.']};
+const CMT_N={
+  'kế toán':['{T} đã kiểm toán: chất lượng vượt giá tiền. Hợp lệ.'],IT:['Approve! Merge vô thực đơn mỗi ngày của {t} luôn.'],
+  'thợ hồ':['Ngon chắc như nền móng {t} đổ.'],'bán xôi':['Sáng ăn xôi của {t}, chiều uống trà ở đây, chuẩn bài!'],
+  'tập gym':['Uống xong lên tạ thêm năm ký.'],'đá banh':['Bàn thắng đẹp nhất mùa giải là ly trà này.'],
+  'game thủ':['Buff máu full cây luôn {x}.'],yoga:['Uống xong thấy tâm an, nhẹ cả người.'],'học bá':['Em chấm 10/10, không trừ điểm nào.'],
+  'nhai trầu':['Bà uống còn thấy ngọt hơn miếng trầu.'],'đánh cờ':['Ông đi nước nào rồi cũng về tiệm này.'],'mê mèo':['Nhớ vuốt Chub với Bim giùm {t} nha {x}!'],
+  'tiệm nail':['Làm móng xong qua đây uống ly trà, đời đẹp!'],'đi chợ':['Đi chợ về ghé làm một ly, mát cả người.'],
+  mập:['Nhìn {t} là biết uống ở đây bao nhiêu ly rồi đó {x}.'],chảnh:['{T} chảnh vậy mà cũng phải gật đầu đó.'],lầy:['{X} khen trễ rồi, {t} khen từ năm ngoái.'],
+  nhây:['Khen nữa đi {x}, khen hoài vẫn chưa đủ.'],sến:['Mỗi ly trà ở đây là một kỷ niệm của {t}.'],tửng:['Ngon tới mức {t} uống xong đi nhầm đường về.'],
+  gầy:['{T} uống ở đây mỗi ngày mà vẫn chưa mập, ngon mà không lo dáng nha {x}.'],ốm:['{T} uống ở đây mỗi ngày mà vẫn chưa mập, ngon mà không lo dáng nha {x}.'],còi:['{T} uống ở đây mỗi ngày mà vẫn chưa mập, ngon mà không lo dáng nha {x}.'],
+  cao:['Đứng cuối hàng {t} vẫn thấy ly trà ngon đó nha {x}.'],lùn:['{T} nhón chân gọi món mà vẫn thấy đáng.'],bự:['Ly bự, người bự, cái bụng vui. Chuẩn!'],
+  bựa:['Khen kiểu {x} là còn hiền, {t} khen tới mức chủ tiệm ngại.'],ngố:['{T} ngố thiệt nhưng chọn tiệm thì không ngố đâu.'],khờ:['Khờ như {t} mà còn biết chỗ ngon, {x} khôn quá rồi.'],
+  hâm:['Ngon tới mức {t} hâm luôn, ngày nào cũng ghé.'],lì:['{T} lì lắm, chỗ nào ngon là đóng đô luôn.'],đen:['Trà đen, trân châu đen, {t} cũng đen. Hợp vibe!'],
+  hiền:['{T} hiền nên chỉ nói nhỏ thôi: ngon thiệt.'],dữ:['Ai chê tiệm là {t} xử, còn ai khen thì {t} thương.'],điệu:['Ly xinh y như {t} vậy đó {x}.'],
+  ngầu:['Ngầu là uống một hơi hết ly. Mà ngon thiệt.'],lém:['{X} khen đúng ý {t} ghê, chung team nha.'],lanh:['{T} lanh lắm, chỗ nào ngon là biết trước.'],
+  chậm:['{T} cái gì cũng chậm, riêng ghé tiệm là nhanh nhất.'],
+  'kính cận':['{T} lau kính ba lần đọc lại, đúng là review chuẩn.'],'tóc xoăn':['Ngon xoăn tít luôn {x} ơi!'],'má lúm':['Đọc review này {t} cười lộ má lúm luôn.'],
+  'răng khểnh':['Cười khoe răng khểnh với {x} một cái, chuẩn ý {t}!'],'răng hô':['{T} cười tới lộ răng hô, đồng ý trăm phần trăm.'],'mắt híp':['Ngon tới mức {t} cười híp cả mắt.'],
+  'tai nghe':['{T} tháo tai nghe ra để vỗ tay cho review này.'],'nói nhiều':['{T} nói nhiều mà review này nói đủ hết rồi, {t} khỏi nói.'],'cười to':['Haha! {T} cười to nhất tiệm, mà công nhận ngon.'],
+  'hay quên ví':['{T} hay quên ví mà chưa bao giờ quên đường tới tiệm.'],'đi sớm':['{T} tới từ lúc tiệm mới mở cửa, ly đầu ngày là ngon nhất!'],'tám chuyện':['Chuyện này {t} đem đi tám, cả xóm biết tiệm ngon.'],
+  'xe đạp':['{T} đạp xe hai cây số để uống, đáng lắm {x}.'],Vespa:['Chạy Vespa vòng vòng rồi cũng về đây đậu xe.'],'áo hồng':['Ly hồng, tiệm hồng, áo {t} cũng hồng. Chuẩn gu!'],
+  'điện thoại':['{T} lưu review này vô điện thoại, ai hỏi là đưa coi.'],
+  'răng sún':['Con uống không cần răng mà vẫn thấy ngon!'],'má phính':['Uống xong má con phính thêm, mẹ khen ngoan.'],'mít ướt':['Có ly trà sữa là con hết khóc liền!'],
+  'nghịch ngợm':['Uống xong con ngồi yên luôn, mẹ mừng ghê.'],'cục bông':['Ngon xỉu, con ôm ly ngủ luôn.'],'ham ăn':['Con ăn hết trân châu của ba luôn đó!'],'tóc trái đào':['Con thích trà đào nhất, giống tóc con!'],
+  'niềng răng':['Niềng răng mà vẫn nhai trân châu ngon lành, ngon thiệt mà!'],'tóc nhuộm':['Màu trà sữa này {t} lấy đi nhuộm tóc luôn.'],balo:['Balo {t} lúc nào cũng chừa chỗ cho ly trà ở đây.'],
+  'sống ảo':['Ly này lên hình hơn nghìn tim đó {x}!'],'tóc mái':['Tiệm chuẩn như mái tóc mới cắt của {t}.'],
+  'móng dài':['Móng dài mà {t} vẫn cầm ly chắc tay, ngon sợ rớt!'],'son đỏ':['Uống xong vẫn giữ son, mà muốn uống thêm ly nữa.'],'văn phòng':['Cả phòng {t} order ở đây, sếp duyệt rồi.'],
+  'râu kẽm':['Râu {t} dính bọt kem mà vẫn khen.'],'đầu đinh':['Ngắn gọn như đầu {t}: ngon.'],
+  'nón lá':['Đội nón lá đi bộ tới mà thấy đáng.'],'chạy bộ':['Chạy năm cây số xong làm ly này là hết mệt.'],'bánh mì':['Bánh mì {t} với trà ở đây là cặp bài trùng.'],
+  'cầu lông':['Đánh xong trận cầu lông là ghé đây làm một ly.'],'râu quai nón':['Râu {t} dính đầy bọt kem mà vẫn khen nức nở.'],'câu cá':['Câu không được cá nhưng câu được ly ngon.'],
+  'sửa xe':['Sửa xe cả ngày, tới đây là máy chạy êm lại.'],'bụng bia':['Từ ngày uống trà ở đây, {t} bớt bia rồi đó.'],
+  'tóc bạc':['Tóc {t} bạc rồi mà uống vẫn thấy trẻ ra.'],'dưỡng sinh':['Uống ly trà cho mát gan, dưỡng sinh tốt hơn thuốc.'],'đi chùa':['Đi chùa về ghé tiệm, tâm cũng an mà miệng cũng ngọt.'],
+  'nghe radio':['Đài mà biết chắc cũng đưa tin tiệm này ngon.'],'đọc báo':['Tin vui nhất trên báo sáng nay là review của {x}.'],'chống gậy':['Chống gậy mà tuần nào {t} cũng ghé, đủ hiểu.'],
+  'không đá':['{T} uống không đá mà vẫn mát, trà ngon thiệt.'],'ít ngọt':['Ít ngọt mà vẫn thấy ngọt, là do tiệm có tâm.'],'nhiều đường':['Ngọt như {t} thích, ngọt như review của {x}.'],
+  'ly bự':['Ly bự mới đủ đô với {t}, {x} thử size L đi.'],'nhiều topping':['{X} nhớ thêm topping nha, {t} lần nào cũng full topping.']};
+const CMT_G=['Biết ngay mà, tiệm ruột của {t} đó!','Thấy chưa, {t} giới thiệu có sai đâu {x}.','Lần sau ghé rủ {t} uống chung nha {x}!','Ly này {t} uống ba năm chưa chán.','Đúng rồi đó {x}, lần sau gọi thêm topping nữa nha.','Chuẩn không cần chỉnh {x} ơi!','Thấy {x} review là biết người có gu.','Hôm nào gặp {x} ở tiệm, {t} mời một ly!','Ai đọc review này thì ghé thử liền đi.','Khen nữa đi {x}, tiệm xứng đáng mà.','Tiệm này {t} bảo kê, uống là ghiền.'];
 const SELF={Anh:'anh',Chị:'chị',Bạn:'mình',Em:'em',Bé:'con',Cô:'cô',Dì:'dì',Chú:'chú',Ông:'ông',Bà:'bà',Bác:'bác',Cụ:'tôi',Thầy:'thầy'};
-function defLine(R,rv,c,notes){const ra=R.age||ageOf(R.name),ca=c.age||ageOf(rv.name),cp=rv.name.split(' ')[0];let t=SELF[R.name.split(' ')[0]]||'mình';
+function defLine(R,rv,c,notes,good){const ra=R.age||ageOf(R.name),ca=c.age||ageOf(rv.name),cp=rv.name.split(' ')[0];let t=SELF[R.name.split(' ')[0]]||'mình';
   const x=(ra==='gia'||ra==='trung')&&['nhi','teen','tre'].includes(ca)?'con':ra==='nhi'&&ca==='nhi'?'bạn':(SELF[cp]&&cp!=='Bạn'&&cp!=='Cụ'?SELF[cp]:cp==='Cụ'?'cụ':'bạn');
   /* cùng vai (anh với anh, chị với chị) thì tự xưng "mình" cho khỏi rối */
   if(t===x)t='mình';
-  const ty=R.type||(R.spr&&/^k_/.test(R.spr)?R.spr.slice(2):'thuong'),per=[...(DEF_T[ty]||[]),...(DEF_N[R.nick]||[])],why=DEF_W[notes[0]]||[],gen=[...(DEF_A[ra]||[]),...DEF_W._];
+  const ty=R.type||(R.spr&&/^k_/.test(R.spr)?R.spr.slice(2):'thuong'),per=good?[...(CMT_T[ty]||[]),...(CMT_N[R.nick]||[])]:[...(DEF_T[ty]||[]),...(DEF_N[R.nick]||[])],why=good?[]:DEF_W[notes[0]]||[],gen=good?CMT_G:[...(DEF_A[ra]||[]),...DEF_W._];
   const L=per.length&&Math.random()<.65?per:why.length&&Math.random()<.7?why:per.length?per:gen,up=w=>w[0].toUpperCase()+w.slice(1);
   return pick(L).replace(/\{T\}/g,up(t)).replace(/\{t\}/g,t).replace(/\{X\}/g,up(x)).replace(/\{x\}/g,x)}
-function regDefend(rv,c,notes){if(!rv||rv.s>2||!D||(D.defN||0)>=2||Math.random()>=.15)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length)return;
+/* bình luận dạo dưới review tốt: 6%, tối đa 2 lần/ngày, không đổi sao */
+function regCheer(rv,c){if(!rv||rv.s<4||!D||(D.cmtN||0)>=2||Math.random()>=.06)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length)return;
+  const R=pick(L),t=defLine(R,rv,c,[],1);rv.def={n:regName(R),t,good:1};D.cmtN=(D.cmtN||0)+1;bump('cheer');setTimeout(()=>{if(D)toast(`💬 ${regName(R)}: “${t}”`,4000)},1700)}
+function regDefend(rv,c,notes){if(rv&&rv.s>=4)return regCheer(rv,c);if(!rv||rv.s>2||!D||(D.defN||0)>=2||Math.random()>=.15)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length)return;
   const R=pick(L),t=defLine(R,rv,c,notes||[]);rv.def={n:regName(R),t};D.defN=(D.defN||0)+1;bump('def');
   const W=S.ratings.find(x=>x.id===rv.id);if(W)W.w/=2;D.log.push(`💛 ${regName(R)} vào bênh tiệm dưới review ${rv.s}★ của ${rv.name}.`);
   setTimeout(()=>{if(D)toast(`💛 ${regName(R)}: “${t}”`,4800,1)},1700);checkAch()}
@@ -3116,7 +3171,8 @@ function takePhoto(){const W=160,H=62,cap=12,s=6,old=K;
 
 /* ======================= MAIN LOOP ======================= */
 let shopLayKey='';
-function layoutShop(){
+let layPK='',layT=0;
+function layoutShop(){const pk=innerWidth+'|'+innerHeight+'|'+ECO+'|'+MK+'|'+ROWS+'|'+$('#shop').className,tn=performance.now();if(pk===layPK&&shopLayKey&&tn-layT<600)return;layPK=pk;layT=tn;
   const W=$('#app').clientWidth,H=$('#app').clientHeight,tkH=$('#tk').offsetHeight,lk=W+'|'+H+'|'+tkH+'|'+ECO+'|'+$('#stWrap').clientHeight+'|'+MK+'|'+ROWS;if(lk===shopLayKey)return;shopLayKey=lk;
   const full=Math.round(W*62/160);
   /* màn quán: cảnh tiệm hiện đủ; màn pha: khung ly to thay chỗ cảnh tiệm, quầy nguyên liệu bên dưới */
@@ -3140,6 +3196,7 @@ const sceneCrop=(full,H)=>H<720?Math.round(Math.min(full*.2,(720-H)*.5)):0,stage
 function shopSW(){if(SW_SHOP)return SW_SHOP;const W=$('#app').clientWidth,H=$('#app').clientHeight,full=Math.round(W*62/160);
   return clamp(SH*(W-24)/Math.max(1,H-stageH(W,H)-24),SW_MIN,SW_MAX)}
 let lastDraw=0,lastScene=0;
+let lastQ=0;
 function frame(t){try{frame0(t)}catch(e){console.error(e);requestAnimationFrame(frame)}}
 function frame0(t){
   /* giới hạn khung hình để đỡ tốn pin: bán hàng 20 hình/giây (30 khi đang rót, kéo, đóng gói), chuẩn bị 10; tiết kiệm pin thì thấp hơn */
@@ -3149,14 +3206,15 @@ function frame0(t){
   const prep=!$('#prep').hidden,idle=!shop&&!(prep&&((edC&&tab==='quay')||(scEd&&tab==='trangtri')));if(idle){lastT=t/1000;setTimeout(()=>requestAnimationFrame(frame),250);return}
   /* đang tạm dừng: không chạy giờ trong game, không vẽ */
   if(PAUSED&&shop){lastT=t/1000;setTimeout(()=>requestAnimationFrame(frame),250);return}
-  if(t-lastDraw<1000/fps-3){requestAnimationFrame(frame);return}lastDraw=t;
+  {const w=1000/fps-3-(t-lastDraw);if(w>0){if(w>12)setTimeout(()=>requestAnimationFrame(frame),w-8);else requestAnimationFrame(frame);return}}lastDraw=t;
   const sec=t/1000,dt=Math.min(.1,Math.max(0,sec-lastT));lastT=sec;now+=dt;
   if(D){tickDay(dt);if(D&&pouring)renderTicket()}
   /* cảnh tiệm tối đa 20 hình/giây kể cả khi quầy đang chạy 30 */
-  if(shop){syncMode();{const bq=MK&&hasRole('barista').length>0;if($('#backQ').hidden===bq)$('#backQ').hidden=!bq}{const ev=!!D&&!!(D.ev||D.pend.length);$('#shop').classList.toggle('tkov',MK&&ev);$('#shop').classList.toggle('tkon',!MK&&ev)}layoutShop();if(!MK)renderPick();else{liveTick();renderStf($('#stfm'),true);drawStage(STG,now);drawStation(ST,now,false)}if(t-lastScene>=1000/(ECO?14:20)-3){lastScene=t;drawScene(SC,now)}}
+  if(shop){syncMode();{const bq=MK&&hasRole('barista').length>0;if($('#backQ').hidden===bq)$('#backQ').hidden=!bq}{const ev=!!D&&!!(D.ev||D.pend.length);$('#shop').classList.toggle('tkov',MK&&ev);$('#shop').classList.toggle('tkon',!MK&&ev)}layoutShop();if(!MK){if(t-lastQ>=120){lastQ=t;renderPick()}}else{liveTick();renderStf($('#stfm'),true);drawStage(STG,now);drawStation(ST,now,false)}if(t-lastScene>=1000/(ECO?14:20)-3){lastScene=t;drawScene(SC,now)}}
   if(edC&&!$('#prep').hidden&&tab==='quay'){setSW(shopSW());const bw=$('#edBox').clientWidth-12;const w=Math.min(bw,440);fit(ED,w,Math.round(w*SH/SW));drawStation(ED,now,true)}
   if(scEd&&!$('#prep').hidden&&tab==='trangtri'){const bw=scEd.parentElement.clientWidth-12;fit(SCE,bw,Math.round(bw*62/160));drawScene(SCE,now,{edit:true})}
-  requestAnimationFrame(frame)}
+  /* vẽ xong thì ngủ tới gần lần vẽ sau; đang rót, kéo, đóng gói thì chạy liền cho mượt */
+  {const nx=1000/fps-(performance.now()-t)-10;if(!busy&&nx>6)setTimeout(()=>requestAnimationFrame(frame),nx);else requestAnimationFrame(frame)}}
 /* iOS Safari bỏ qua user-scalable=no nên chặn thêm cử chỉ phóng to */
 ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 /* dự phòng: chạm hai lần liền nhau vào vùng không phải nút/ô nhập thì không cho trình duyệt phóng to */
