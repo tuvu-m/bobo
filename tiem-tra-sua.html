@@ -187,8 +187,8 @@ html,body{touch-action:pan-x pan-y}
 .krare{display:block;width:100%;text-align:left;margin-bottom:8px;padding:7px 12px;border-radius:12px;background:#eef3ff;border:2px solid #b9c8f0;font:inherit;font-size:13px;color:#3d5a9a}
 .kcats{display:flex;gap:6px;margin-bottom:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}.kcats::-webkit-scrollbar{display:none}.kcats button{flex:1 0 auto;position:relative;padding:7px 11px;border-radius:999px;border:2px solid var(--line);background:var(--paper);font-weight:800;font-size:13px;white-space:nowrap}
 .kcats button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.kcats small{margin-left:4px;font-size:11px;background:#fff;color:var(--accent);border-radius:999px;padding:0 6px}.kcats .kdotr{position:absolute;top:1px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
-.krow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 4px;border-bottom:1.5px solid var(--line)}.krow img{width:40px;height:40px;object-fit:contain}.kdot{width:22px;height:22px;border-radius:50%;justify-self:center;border:2px solid rgba(0,0,0,.08)}
-.krow.inmenu{background:linear-gradient(90deg,#fff0f4,rgba(255,240,244,0))}.krow.oncnt{background:linear-gradient(90deg,#fff6e6,rgba(255,246,230,0))}
+.kit{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 4px;border-bottom:1.5px solid var(--line)}.kit img{width:40px;height:40px;object-fit:contain}.kitd{width:22px;height:22px;border-radius:50%;justify-self:center;border:2px solid rgba(0,0,0,.08)}
+.kit.inmenu{background:linear-gradient(90deg,#fff0f4,rgba(255,240,244,0))}.kit.oncnt{background:linear-gradient(90deg,#fff6e6,rgba(255,246,230,0))}
 .kn{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.kn b{font-size:14.5px}.kb{font-size:11px;font-weight:800;padding:0 6px;border-radius:999px;background:#fff1d8;color:#9a6a1c}
 .km{display:flex;gap:9px;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:var(--muted);margin-top:2px}.km .bad{color:var(--bad)}.km .ok{color:var(--good)}.km .warn{color:#c25a00}.km .add{color:var(--good);margin-left:2px}
 .step{display:flex;align-items:center;gap:4px}.step button{width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--paper);font-weight:800;font-size:17px;color:var(--ink)}.step button:disabled{opacity:.35}
@@ -1524,7 +1524,7 @@ function menuHTML(){
   const cats=KCAT.filter(([c])=>c!=='foam'||S.day>=5||S.foams.length||S.allOpen);
   if(!kcat||!cats.some(([c])=>c===kcat))kcat=(cats.find(([c])=>kItems(c).some(x=>x.own&&short(x.k)))||cats[0])[0];
   const row=({k,s})=>{const q=qty(k),n=cart[k]||0,e=est[k]?Math.ceil(est[k]):0,ex=expTonight(k),dis=s.rare&&!rareOn(k),u=use(k),im=thumb(k);
-    return `<div class="krow${u===2?' inmenu':u?' oncnt':''}">${im?`<img src="${im}" alt="">`:`<span class="kdot" style="background:${s.col}"></span>`}
+    return `<div class="kit${u===2?' inmenu':u?' oncnt':''}">${im?`<img src="${im}" alt="">`:`<span class="kitd" style="background:${s.col}"></span>`}
      <div class="ki"><div class="kn"><b>${s.name}</b>${isHot(k)?FLAME:''}<span class="kb">⏳${s.life}</span>${u===2?'<span class="mtag">Thực đơn</span>':u?'<span class="mtag t">Đang bày</span>':''}${s.rare?`<span class="rtag">${rareOn(k)?'✈️ hiếm':'hết đợt'}</span>`:''}</div>
      <div class="km"><span class="${q?'':'bad'}">📦 ${q}${n?`<b class="add">+${n*s.pack}</b>`:''}</span>${e?`<span class="${after(k)<e?'bad':'ok'}">🎯 ${e}</span>`:''}<span>${fk(s.cost)}</span>${ex?`<span class="warn">⚠ ${ex}</span>`:''}</div></div>
      <div class="step"><button data-cq="${k}:-1" ${n?'':'disabled'} aria-label="Bớt ${s.name}">−</button><b>${n}</b><button data-cq="${k}:1" ${dis?'disabled':''} aria-label="Thêm ${s.name}">+</button></div></div>`};
@@ -1535,7 +1535,7 @@ function menuHTML(){
    ${R&&rc&&rc[0]!==kcat?`<button class="krare" data-kcat="${rc[0]}">✈️ Hàng hiếm: <b>${ITEM(R.k).name}</b> · tới ${R.until>S.day?'mai':'tối nay'} ›</button>`:''}
    <div class="kcats">${cats.map(([c,i,l])=>{const nc=kItems(c).reduce((a,x)=>a+(cart[x.k]||0),0);return `<button data-kcat="${c}" aria-pressed="${c===kcat}">${i} ${l}${nc?`<small>${nc}</small>`:kItems(c).some(x=>x.own&&short(x.k))?'<i class="kdotr"></i>':''}</button>`}).join('')}</div>
    <div class="klist">${own.map(row).join('')||'<p class="meta">Chưa có món nào.</p>'}</div>
-   ${lock.length?`<details class="lockd"${own.length?'':' open'}><summary>🔒 Chưa mở (${lock.length})</summary><div class="klist">${lock.map(({k,s})=>`<div class="krow">${thumb(k)?`<img src="${thumb(k)}" alt="">`:`<span class="kdot" style="background:${s.col}"></span>`}<div class="ki"><div class="kn"><b>${s.name}</b>${isHot(k)?FLAME:''}</div></div><button class="btn sm pink" data-learn="${k}" ${ownMoney()<s.rc?'disabled':''}>Mở ${fk(s.rc)}</button></div>`).join('')}</div></details>`:''}
+   ${lock.length?`<details class="lockd"${own.length?'':' open'}><summary>🔒 Chưa mở (${lock.length})</summary><div class="klist">${lock.map(({k,s})=>`<div class="kit">${thumb(k)?`<img src="${thumb(k)}" alt="">`:`<span class="kitd" style="background:${s.col}"></span>`}<div class="ki"><div class="kn"><b>${s.name}</b>${isHot(k)?FLAME:''}</div></div><button class="btn sm pink" data-learn="${k}" ${ownMoney()<s.rc?'disabled':''}>Mở ${fk(s.rc)}</button></div>`).join('')}</div></details>`:''}
    <p class="klg">📦 đang có · 🎯 cần hôm nay · ⏳ để được (ngày) · ⚠ hết hạn tối nay</p>
    ${cn?`<div class="cartbar"><span>🛒 ${cn} gói · <b>${fk(tot)}</b>${S.money<tot?` <i>thiếu ${fk(tot-S.money)}</i>`:''}</span><button class="btn sm ghost" data-cart="clear">Xoá</button><button class="btn sm pink" data-cart="buy" ${S.money<tot?'disabled':''}>Nhập hàng</button></div>`:''}`}
 let lab={bs:['hongtra'],ss:[],ts:[],fs:[],name:''},recDel=null;
@@ -2612,7 +2612,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseGame()
 /* ---- âm thanh tổng hợp bằng Web Audio, bật/tắt trong tab Cài đặt ---- */
 let SND=true;try{SND=localStorage.getItem('tt_snd')!=='0'}catch(e){}
 let AC=null;
-function audio(){if(!AC){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;AC=new A()}if(AC.state==='suspended')AC.resume();return AC}
+function audio(){if(!AC){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;AC=new A()}if(AC.state!=='running'){try{AC.resume()}catch(e){}}return AC}
 const mf=m=>440*Math.pow(2,(m-69)/12);
 function note(m,t,d,type,v,dest){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=mf(m);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+Math.min(.04,d*.2));g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(dest);o.start(t);o.stop(t+d+.05)}
 function sfx(n){if(!SND)return;try{if(!audio())return;
@@ -2676,7 +2676,15 @@ function startMusic(){if(!BGM||MUS.on||document.hidden)return;
   MUS.gain.gain.cancelScheduledValues(AC.currentTime);MUS.gain.gain.setTargetAtTime(1,AC.currentTime,.4);MUS.next=AC.currentTime+.15;MUS.step=0;clearInterval(MUS.timer);MUS.timer=setInterval(musicTick,200);musicTick()}
 function stopMusic(){if(!MUS.on)return;MUS.on=false;if(MYM.el)MYM.el.pause();clearInterval(MUS.timer);if(MUS.gain&&AC)MUS.gain.gain.setTargetAtTime(0,AC.currentTime,.15);setTimeout(()=>{if(!MUS.on&&AC)rainBed(false)},600)}
 /* trình duyệt chỉ cho phát tiếng sau lần chạm đầu tiên */
-document.addEventListener('pointerdown',()=>{if(!BGM)return;if(TRACK!=='file'&&MUS.on)audio();else if(MUS.on&&MYM.el&&MYM.el.paused)MYM.el.play().catch(()=>{});if(!MUS.on)startMusic()},{passive:true});
+/* iPhone: sau khi chuyển app/khoá máy, âm thanh ở trạng thái "interrupted" và chỉ chạy lại khi có chạm thật (touchend/click),
+   nên mỗi lần chạm đều đánh thức lại âm thanh và nhạc */
+function wakeAudio(){if(document.hidden)return;if(AC&&AC.state!=='running'&&(BGM||SND)){try{AC.resume()}catch(e){}
+    /* vẫn không chạy lại được thì bỏ AudioContext cũ, tạo cái mới (lần chạm sau sẽ bật được) */
+    setTimeout(()=>{if(!AC||AC.state==='running'||document.hidden)return;try{AC.close()}catch(e){}AC=null;MUS.gain=null;MUS.noise=null;MUS.rainSrc=null;clearInterval(MUS.timer);MUS.on=false;if(BGM)startMusic()},500)}
+  if(!BGM)return;
+  if(MUS.on&&TRACK==='file'&&MYM.el&&MYM.el.paused)MYM.el.play().catch(()=>{});if(!MUS.on)startMusic()}
+['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,wakeAudio,{passive:true,capture:true}));
+window.addEventListener('pageshow',()=>{if(BGM&&!document.hidden)startMusic()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(BGM)startMusic()});
 
 /* ---- hai bé mèo Chub (cam, mũm mĩm) và Bim (trắng, nơ hồng) ngủ trước quầy; chạm để vuốt ---- */
