@@ -121,3 +121,29 @@ Vẽ dải giấy phẳng, nhìn thẳng, không cần ly. Mình sẽ tự uốn
 ```
 Cute cozy hand-painted game asset sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline. Show 4 flat paper cup sleeves laid out straight from the front, each a wide horizontal band about 3 times as wide as it is tall, slightly wider at the top edge than at the bottom edge, fully separated with generous empty space. No cup, no text, no letters, no logo, no shadow. Each sleeve has a different seasonal pattern: [MÔ TẢ 4 MẪU Ở ĐÂY]. Transparent background PNG.
 ```
+
+---
+
+# Nhân vật mới (đợt 2)
+
+Đã vẽ xong và đưa vào game (cắt khỏi nền bằng tính năng tách chủ thể của macOS; đồng xu của Bet thủ bay rời nên cắt riêng rồi ghép lại).
+
+| Nhân vật | Tên file | Cách chơi |
+|---|---|---|
+| Bet thủ | `k_betthu` | Trả tiền bằng cách tung đồng xu: chọn Sấp/Ngửa, đúng trả 150%, sai trả 50% |
+| Thầy bói | `k_thayboi` | Trả tiền xong mời rút 1 trong 3 quẻ: may (khách sau tip đậm), thường, xui (khách sau khó tính) |
+| Bà tám | `k_batam` | Chịu nghe bà tám thì biết trước thời tiết/sự kiện ngày mai, nhưng bà đứng lâu; từ chối thì bà dỗi |
+| Streamer | `k_streamer` | Livestream thử thách: ly của anh có đồng hồ đếm ngược; kịp thì lên sóng, hôm sau thêm khách; trễ thì bị chê trên live |
+| Tây ba lô | `k_tay` | Phiếu order ghi tiếng Anh; trả kèm tip bằng đô |
+
+## Prompt 11 · Bet thủ, thầy bói, bà tám
+
+```
+Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 3 characters in one row: a cheeky young Vietnamese guy who loves to bet, red and yellow football jersey, backwards cap, shorts and flip-flops, a red string lucky bracelet, flipping a big shiny gold coin off his thumb, one eyebrow raised and a mischievous grin; a quirky elderly Vietnamese fortune teller with a long thin white goatee, small round dark glasses, a dark blue traditional tunic and a black wrapped headband, holding a bamboo cup of fortune sticks in one hand and a folding paper fan in the other, mysterious knowing smile; a chatty middle-aged Vietnamese neighborhood auntie in a matching flowery pastel pajama set, pink hair curlers, plastic slippers, a paper hand fan in one hand and a plastic bag of vegetables in the other, one hand raised beside her mouth as if whispering juicy gossip, lively eyebrows. Transparent background PNG.
+```
+
+## Prompt 12 · Streamer, Tây ba lô
+
+```
+Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 2 characters in one row: a hyper young Vietnamese livestreamer in a colorful pastel hoodie, a gaming headset around his neck, holding a phone on a selfie stick with a tiny ring light, pointing at the camera with an excited open-mouth expression; a friendly sunburnt Western backpacker tourist, messy blond hair under a Vietnamese conical straw hat, a huge hiking backpack, a tank top, cargo shorts and sandals with socks, holding a folded paper map and a small phrasebook, slightly confused but happy smile. Transparent background PNG.
+```
