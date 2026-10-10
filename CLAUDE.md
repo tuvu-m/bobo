@@ -136,5 +136,10 @@ Game được host trên GitHub Pages ở https://tuvu-m.github.io/bobo/ (repo `
 Cắt ảnh sprite sheet (nền trong suốt) thành từng món, thu nhỏ còn khoảng 200px, đổi sang webp base64, rồi thêm vào `SPRSRC` với key là mã món, ví dụ `hongtra` hay `ly_den`.
 
 ## Kiểm tra
-- Tách từng khối `<script>` ra rồi chạy `node --check` để kiểm tra cú pháp.
+- Bộ test nằm trong `tests/` (lần đầu: `cd tests && npm install`; test giao diện dùng Chrome đã cài trên máy):
+  - `tests/t.sh`: kiểm tra cú pháp 2 khối `<script>`, chạy mọi test logic (`tests/logic/test*.js`, node + vm, mỗi bài ~0,1 giây) và chỉ những test giao diện (`tests/pw/*.js`, Playwright) có từ khoá trùng với phần vừa sửa so với commit gần nhất (`tests/pick_pw.py`). Chạy sau mỗi lần sửa, thường 8–50 giây.
+  - `tests/t.sh qpick walkin`: chạy đúng mấy test giao diện đó. `tests/t.sh full`: toàn bộ, khoảng 2 phút, chạy trước khi push.
+  - Thêm test giao diện mới thì thêm tên vào `ALL` trong `t.sh` và từ khoá vào `MAP` trong `pick_pw.py`. Ảnh chụp và file tạm ghi vào `tests/out/` (không commit).
+  - Chrome của test phải tắt tiếng (`pw/pwpatch.js` nạp qua `NODE_OPTIONS`, cờ `--mute-audio`): nhiều Chrome cùng phát âm thanh của game thì chậm nhau gấp 10 lần (3 test cùng lúc 609 giây, tắt tiếng 57 giây).
+- Mô phỏng chơi dài bằng bot (`tests/sim/longsim.js <game.js> <số ngày> <seed>`, `game.js` tách sẵn ở `tests/out/`): nhập hàng, thuê nhân viên, chế món, thi thanh tra, tự pha 8–12 giây/ly; in kết quả theo cấp. `longsim_dump.js` lưu save ở vài mốc ngày vào `dumps/` để chạy lại trong trình duyệt (`pw/freeze.js` dò lỗi bị vòng lặp `frame` nuốt, `pw/monkey.js` chạm loạn như người chơi, `pw/slowmo.js` đo game có chạy chậm lúc đông với CPU chậm 4 lần).
 - Chạy Playwright với khung 390×780 và 375×667 để chụp ảnh màn hình kiểm tra.

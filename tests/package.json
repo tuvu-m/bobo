@@ -1,0 +1,8 @@
+{
+  "name": "tiem-tra-bobo-tests",
+  "private": true,
+  "description": "Test cho game Tiệm Trà Bobơ: test logic (node) và test giao diện (Playwright, dùng Chrome đã cài trên máy)",
+  "dependencies": {
+    "playwright-core": "1.48.2"
+  }
+}
