@@ -147,3 +147,34 @@ Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop
 ```
 Cute cozy hand-painted chibi character sprite sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading. Every character is full body, about 2.5 heads tall, standing, facing the viewer, friendly simple face, same size and same style, fully separated with generous empty space around each one. Plain flat cream background. No text, no letters, no logo, no ground shadow. Show 2 characters in one row: a hyper young Vietnamese livestreamer in a colorful pastel hoodie, a gaming headset around his neck, holding a phone on a selfie stick with a tiny ring light, pointing at the camera with an excited open-mouth expression; a friendly sunburnt Western backpacker tourist, messy blond hair under a Vietnamese conical straw hat, a huge hiking backpack, a tank top, cargo shorts and sandals with socks, holding a folded paper map and a small phrasebook, slightly confused but happy smile. Transparent background PNG.
 ```
+
+---
+
+# Đồ siêu hiếm
+
+Món hạng A gắn đồ siêu hiếm thì lên S/SS/SSS. Pha món đó thì bước cuối, trước khi đóng nắp, chạm mục đồ trên phiếu order để rắc lên mặt ly. Quên rắc thì khách buồn (−2★) và viết review nhắc. Đồ **không** đặt trên quầy, nên chỉ cần 2 loại hình:
+
+| Đồ | Hạng | Mã | Hình hộp (`gem_i_<mã>`) | Rắc trên ly (`gem_t_<mã>`) |
+|---|---|---|---|---|
+| Kim tuyến ăn được | S | `kimtuyen` | hũ thủy tinh nhỏ, kim tuyến nhiều màu | hạt lấp lánh vàng, hồng, xanh nhạt |
+| Hoa hồng sấy | S | `hoahong` | túi giấy kraft buộc ruy băng | vài cánh hoa hồng sấy |
+| Lá vàng 24K | SS | `lavang` | sổ lá vàng mỏng, giấy lót kem | mảnh lá vàng nhăn, óng ánh |
+| Tổ yến | SS | `toyen` | hộp gỗ nhỏ lót lụa đỏ, tổ yến trắng ngà | sợi yến trắng trong |
+| Nhụy nghệ tây | SSS | `saffron` | lọ thủy tinh tí hon nắp vàng, sợi đỏ cam | vài sợi nhụy đỏ cam |
+| Bột ngọc trai | SSS | `ngoctrai` | vỏ sò mở, bột trắng óng | bột trắng óng ánh tím nhạt |
+
+Đã vẽ xong và đưa vào game (tách nền bằng tính năng tách chủ thể của macOS, thu nhỏ còn 160–200px). Đồ rắc vẽ nổi trên mặt nước trong ly.
+
+## Prompt 13 · Hộp đựng 6 món đồ siêu hiếm
+
+```
+Cute cozy hand-painted game item icon sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, a tiny sparkle of luxury on each item. Show 6 small precious garnish containers in 2 rows of 3, front view, same size and same style, fully separated with generous empty space. No text, no letters, no logo, no ground shadow. Row 1: a small glass jar of edible rainbow glitter with a pink lid; a little kraft paper pouch of dried pink rose petals tied with a ribbon, a few petals peeking out; a thin booklet of real gold leaf sheets opened to show a shiny crinkled gold sheet on cream paper. Row 2: a small wooden box lined with red silk holding an ivory white edible bird's nest; a tiny glass vial with a gold cap filled with deep red-orange saffron threads; an open pearly seashell holding fine shimmering white pearl powder. Transparent background PNG.
+```
+
+## Prompt 14 · Đồ rắc trên mặt ly
+
+Vẽ riêng phần đồ rắc, nhìn thẳng từ phía trước như đang nằm trên mặt nước trà sữa, dáng dẹt và rộng ngang. Không cần vẽ ly, mình sẽ ướm vào ly.
+
+```
+Cute cozy hand-painted game asset sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline where needed. Show 6 separate garnish toppings as they would sit on top of a drink, seen from the front at a slight angle, each a wide shallow cluster about 4 times as wide as it is tall, fully separated with generous empty space. No cup, no drink, no text, no letters, no shadow. Row 1: a sprinkle of edible rainbow glitter flakes and tiny star sparkles in gold, pink and pale cyan; a few scattered dried pink rose petals; crinkled shiny flakes of 24K gold leaf. Row 2: soft translucent ivory strands of edible bird's nest; a few thin deep red-orange saffron threads; a dusting of shimmering white pearl powder with a soft lilac sheen. Transparent background PNG.
+```
