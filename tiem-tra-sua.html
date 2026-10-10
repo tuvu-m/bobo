@@ -833,7 +833,7 @@ const LAYG=()=>{if(!(D&&D.emerg))return S.grid;const g=S.grid.filter(o=>objKind(
 const onCounter=id=>LAYG().some(o=>o.id===id);
 function prepDay(){
   syncBasics();syncLayout();rivalTick();if(activeMenu().length)genQuests();
-  if(S.evDay!==S.day){const dw=S.day%7;S.ev=S.evNext&&S.evNext.d===S.day?S.evNext.ev:(dw===6||dw===0)?'cuoituan':pick(['binhthuong','binhthuong','binhthuong','nangnong','mua','hanhphuc']);S.evNext=null;S.evDay=S.day}
+  if(S.evDay!==S.day){const dw=S.day%7;S.ev=(dw===6||dw===0)?'cuoituan':pick(['binhthuong','binhthuong','binhthuong','nangnong','mua','hanhphuc']);S.evDay=S.day}
   const w=Math.floor((S.day-1)/7);if(!S.trend||S.trend.w!==w||!S.trend.ids.every(k=>ITEM(k))){const pool=ALLT.flatMap(T_=>Object.keys(T_).filter(k=>!T_[k].free&&!T_[k].rare&&(S.day>=5||!FOAMS[k])));let a=pick(pool);if(!S.meTrend){a='s_me';S.meTrend=1}let b=pick(pool);while(b===a)b=pick(pool);S.trend={w,ids:[a,b]}}
   if(S.rareDay!==S.day){S.rareDay=S.day;if(S.rare&&S.rare.until<S.day)S.rare=null;
     if(!S.rare&&S.day>=3&&Math.random()<.35){const pool=ALLT.flatMap(T_=>Object.keys(T_).filter(k=>T_[k].rare)),nw=pool.filter(k=>!ownList(k).includes(k));const k=pick(nw.length&&Math.random()<.75?nw:pool);S.rare={k,until:S.day+1};
@@ -2208,6 +2208,7 @@ function settle(c,s,payOverride,notes,why){
   /* khách Tây trả tờ đô chẵn (1$ ≈ 25k) rồi bảo khỏi thối */
   if(c.type==='tay'&&s>=4){const u=Math.ceil((c.price+5000)/25000);tip+=u*25000-c.price;tw.push(`trả $${u}, khỏi thối`)}
   if(c.type==='streamer'&&c.liveOk&&s>=4){const b=ri(3,5);S.buzz=Math.min(16,(S.buzz||0)+b);bump('live');D.log.push(`${c.name} livestream khen tiệm, mai thêm khách.`);if(!why)why='📹 lên sóng, mai thêm khách';setTimeout(()=>{if(D)say(c,'Kịp giờ! Cả nhà thả tim đi!',1800)},300)}
+  if(c.type==='batam'&&c.tam===1&&s>=4){S.buzz=Math.min(16,(S.buzz||0)+2);D.log.push(`${c.name} đi kể cả xóm về tiệm, mai thêm khách.`);if(!why)why='bà đi kể cả xóm, mai thêm khách'}
   if(c.type==='songao'&&s===5){const b=ri(2,4);S.buzz=Math.min(12,(S.buzz||0)+b);D.log.push(`${c.name} đăng story khen tiệm, mai sẽ có thêm khách.`);setTimeout(()=>{if(D)say(c,'Lên story liền!',1600)},300)}
   if(D.tipB&&D.tipB.n>0&&s>=3){tip+=D.tipB.amt;tw.push(D.tipB.why);D.tipB.n--}
   if(S.ev==='mua')tip*=2;
@@ -2226,15 +2227,28 @@ function settle(c,s,payOverride,notes,why){
   toast(`${c.name} ${'★'.repeat(s)}${'☆'.repeat(5-s)} +${fk(pay-tip)}${tip?` · tip ${fk(tip)}${tw.length?' ('+tw[0]+')':''}`:''}${why?' · '+why:notes.length?' · '+notes[0]:''}${rg}`,rg||tip?3000:1800,rg?1:0);
   renderTicket()}
 /* bà tám vào tiệm: hỏi có nghe tám không */
-function tamAsk(c){c.dec=true;D.pend.push({kind:'tam',c,t0:now});say(c,'Con ơi lại đây cô kể nghe…',3000);renderTicket()}
-const TAM_NEWS={mua:'Mai trời mưa to đó con, khách ít mà bo đậm!',nangnong:'Mai nắng chang chang, nhập nhiều đá với trà trái cây nha!',hanhphuc:'Mai ngày đẹp trời, khách vui hay bo lắm!',cuoituan:'Mai cuối tuần, đông khách lắm, nhập hàng nhiều vô!',binhthuong:'Mai trời bình thường thôi, buôn bán đều đều.'};
-/* chọn trước thời tiết ngày mai (prepDay dùng S.evNext) */
-function tamNews(){const d=S.day+1,dw=d%7,ev=S.evNext&&S.evNext.d===d?S.evNext.ev:(dw===6||dw===0)?'cuoituan':pick(['binhthuong','binhthuong','binhthuong','nangnong','mua','hanhphuc']);S.evNext={d,ev};return TAM_NEWS[ev]}
+/* bà tám tự xưng theo tên: Cô/Dì/Bà/Bác Tám */
+const tamSelf=c=>({Cô:'cô',Dì:'dì',Bà:'bà',Bác:'bác'})[c.name.split(' ')[0]]||'cô';
+const tamSay=(c,t)=>t.replace(/(^|[\s“])([Cc])ô(?=[\s,!.…]|$)/g,(m,a,C)=>a+(C==='C'?tamSelf(c)[0].toUpperCase()+tamSelf(c).slice(1):tamSelf(c)));
+function tamAsk(c){c.dec=true;D.pend.push({kind:'tam',c,t0:now});say(c,tamSay(c,'Con ơi lại đây cô kể nghe…'),3000);renderTicket()}
+/* chuyện xàm trong xóm bà tám kể (không ảnh hưởng gì, chỉ để vui) */
+const TAM_GOSSIP=['Con biết chưa, con mèo nhà bà Năm mới đẻ ba con, con nào cũng giống ông tổ trưởng!','Thằng Tư đầu hẻm đi tập gym được ba bữa, giờ đi đâu cũng cởi áo khoe.',
+  'Ông bán vé số đầu hẻm trúng độc đắc mà giấu vợ, giờ vợ biết rồi, cả xóm nghe la!','Nhà bên kia mua cái tủ lạnh to tới mức phải tháo cửa mới khiêng vô.',
+  'Bà Sáu tập nhảy zumba tới trật cái hông, giờ còn đòi nhảy tiếp.','Ông Bảy nuôi con vẹt biết chửi, ai đi ngang cũng bị nó chửi, kể cả ông Bảy.',
+  'Thằng cháu nhà cô thi bằng lái rớt tám lần, lần thứ chín tông luôn cái cọc của giám khảo.','Cây xoài nhà ông Ba ra trái hình trái tim, người ta tới chụp hình kẹt cả hẻm.',
+  'Nhà kia cãi lộn từ tối tới sáng, rốt cuộc là giành cái remote tivi.','Ông tổ trưởng mới mua chó Phú Quốc, mà con chó sợ con mèo nhà bên một phép.',
+  'Con gái bà Tư lấy chồng Tây, đám cưới ông Tây nhậu say hát bolero tới khuya!','Anh shipper hay ghé tiệm con đó, ảnh đang tán con nhỏ bán bánh mì đầu hẻm.',
+  'Bà Chín trả giá bó rau từ mười nghìn còn chín nghìn, mà đi xe ôm về hết năm chục.','Thằng Út nhà bên livestream bán hàng, có ba người xem, hai người là ba mẹ nó.',
+  'Nhà số 12 trồng rau trên sân thượng, mưa to trôi hết xuống nhà dưới, nhà dưới ăn rau khỏi mua.','Ông hàng xóm tối nào cũng hát karaoke, bài nào hát xong cũng thành bài Lòng mẹ.',
+  'Con nhỏ hay chụp hình ở tiệm con đó, nó chụp hai trăm tấm mới chịu đăng một tấm.','Cái anh văn phòng hay ghé lúc mười hai giờ là trốn sếp ra uống trà đó, cô biết hết!',
+  'Bữa trước có con chuột chạy ngang, hai bé mèo nhà con nằm ngủ không thèm ngó.','Ông Hai đi tập thể dục lúc năm giờ sáng, mà tập xong ghé quán ăn hai tô hủ tiếu.',
+  'Thằng nhỏ nhà bên đặt tên con gà là Mì Tôm, giờ con gà nghe kêu Mì Tôm là chạy tới.','Bà Tư mới nhuộm tóc tím, ông Tư đi ngang nhà mình mà tưởng nhà ai.',
+  'Cô nghe đồn tiệm bên kia đường pha trà bằng nước lã… cô nói vậy thôi, con đừng nói ai nha!','Ông chú xe ôm hay ghé tiệm con hồi xưa chở hoa hậu thiệt đó, cô có thấy hình!'];
 const PEND_T=12;
 function pendPick(p,v){if(p.pick!=null||D.pend[0]!==p)return;const c=p.c;
   if(p.kind==='lost'){D.pend.shift();tkKey='';lostDo(p,v);renderTicket();return}
   if(p.kind==='tam'){D.pend.shift();c.dec=false;tkKey='';
-    if(v==='yes'){c.tam=1;evAway(6);D.awayWhy='Đang nghe bà tám…';const n=tamNews();say(c,n,5200);toast('🗣️ '+n,4500,2);D.log.push(`🗣️ ${c.name} mách: ${n}`)}
+    if(v==='yes'){c.tam=1;evAway(6);D.awayWhy='Đang nghe bà tám…';const n=tamSay(c,pick(TAM_GOSSIP));say(c,n,5200);toast('🗣️ '+n,5000,2);D.log.push(`🗣️ ${c.name} kể: ${n}`)}
     else{c.tam=-1;say(c,'Hứ, bận dữ vậy!',1600)}renderTicket();return}
   p.pick=v;p.at=now+.9;tkKey='';sfx(p.kind==='coin'?'coin':'scratch');renderTicket()}
 function pendDone(p){D.pend.shift();tkKey='';const c=p.c;
@@ -2254,7 +2268,7 @@ const LOST={hocsinh:[['ví vải','👛',5,10,0],['hộp bút','✏️',5,10,0]]
   tay:[['ví đô','💵',200,1000,.15]],betthu:[['vé cược','🎟️',0,500,.05]],thayboi:[['túi gấm','🧧',20,100,.05]],batam:[['túi rau','🥬',10,30,0]],streamer:[['ví','👛',30,150,.25]]};
 const LOST_THX={_:['Để quên {i} mà tiệm giữ trả lại, tử tế quá!','Tiệm thật thà, mình sẽ ghé hoài.','Quên {i} mà tiệm chạy theo trả, cảm động ghê!'],
   tay:['Forgot my wallet, they gave it back. Honest shop! 10/10'],sop:['Anh để quên {i}, tiệm trả đủ không thiếu cắc nào. Anh thưởng!'],sigai:['Anh để quên {i}, tiệm trả đủ không thiếu cắc nào. Anh thưởng!'],
-  hocsinh:['Em quên {i} mà chủ quán giữ giùm, thương ghê!'],batam:['Bỏ quên túi rau mà tiệm cất giùm, cô đi kể cả xóm nghe!'],betthu:['Quên vé cược mà tiệm trả lại, uy tín!'],
+  hocsinh:['Em quên {i} mà chủ quán giữ giùm, thương ghê!'],batam:['Bỏ quên túi rau mà tiệm cất giùm, phải đi kể cả xóm nghe liền!'],betthu:['Quên vé cược mà tiệm trả lại, uy tín!'],
   xeom:['Chú quên {i}, tiệm giữ giùm. Người tốt nha con!'],thayboi:['Tiệm này tâm sáng, thầy xem là biết.']};
 const copHere=()=>D&&[...D.queue,...D.walk].find(x=>x.type==='chim'&&!x.leaving);
 function lostMaybe(c){if(!D||D.emerg||S.day<3||(D.lostN||0)>=2||['chim','quyt','ghino'].includes(c.type)||Math.random()>=.05)return;
@@ -2577,7 +2591,7 @@ function renderTicket0(){const T_=$('#tk');if(!D)return;const p=D.pend[0];
   if(p&&p.t0!=null){const c=p.c;if(!c.pic)c.pic=(c.spr&&sprHead(c.spr,'#f8e7da'))||portrait(c.look,{mood:2},'#f8e7da');const key='p'+c.id+p.kind+(p.pick||'');if(key===tkKey)return;tkKey=key;T_.className='tk';
     const K={coin:['🪙 Bet thủ · tung đồng xu','“Chơi không chủ quán? Đoán trúng anh trả 150%, trật thì 50% thôi nha!”',`<button class="btn sm pink" data-dec="sap">Sấp</button><button class="btn sm pink" data-dec="ngua">Ngửa</button>`],
       que:['🔮 Thầy bói · gieo quẻ','“Rút một quẻ đi con, xem nay buôn bán sao.”',[0,1,2].map(i=>`<button class="btn sm ghost que" data-dec="q${i}" aria-label="Quẻ ${i+1}">🎴</button>`).join('')],
-      tam:['🗣️ Bà tám · muốn tám chuyện','“Con ơi lại đây cô kể nghe chuyện này…”',`<button class="btn sm pink" data-dec="yes">Nghe tám (bận 6s)</button><button class="btn sm ghost" data-dec="no">Dạ con bận</button>`],
+      tam:['🗣️ Bà tám · muốn tám chuyện',tamSay(c,'“Con ơi lại đây cô kể nghe chuyện này…”'),`<button class="btn sm pink" data-dec="yes">Nghe tám (bận 6s)</button><button class="btn sm ghost" data-dec="no">Dạ con bận</button>`],
       lost:[`${p.ic} ${typeLabel(c)} · để quên ${p.item}`,`Khách vừa về, bỏ quên trên bàn.<span class="hint"> Ỉm thì được tiền tùy khách giàu nghèo; có cảnh sát chìm trong quán hoặc đồ càng đắt thì càng dễ lộ, phải trả lại và nộp phạt 50%.</span>`,`<button class="btn sm pink" data-dec="tra">Trả lại (review 5★)</button><button class="btn sm ghost" data-dec="im">Ỉm luôn 🤫</button>`]}[p.kind];
     T_.innerHTML=`<img src="${c.pic}" alt=""><div><div class="nm">${c.name}</div><div class="ty">${K[0]}</div></div><div class="prc"><div class="pr">${p.kind==='tam'||p.kind==='lost'?'':fk(c.price)}</div></div>
       <div class="tkmid"><div class="q">${p.pick!=null?`<span class="coinspin">${p.kind==='coin'?'🪙':'🎴'}</span> ${p.kind==='coin'?`Bạn chọn ${p.pick==='sap'?'Sấp':'Ngửa'}, đang tung…`:'Đang xem quẻ…'}`:K[1]}</div></div>
@@ -2925,7 +2939,7 @@ const CHAT={all:['Tiệm mở tới mấy giờ vậy?','Wifi pass là gì vậy
   songao:['Chụp cái đã!','Ly này lên hình có xinh không?','Để em quay story chút nha.','Ánh sáng chỗ này đẹp ghê.','Cho em mượn Chub chụp hình nha!'],
   betthu:['Kèo này thơm nè!','Tối nay bắt đội nào đây ta?','Chơi một ván không chủ quán?','Sấp ngửa định đoạt hết!','Hôm qua húp đậm, nay mời nước!'],
   thayboi:['Thầy xem tướng con có số làm giàu.','Tiệm này phong thủy tốt lắm.','Năm nay con hợp màu hồng.','Quầy đừng quay ra hướng tây nha con.','Để thầy bấm độn cái đã…'],
-  batam:['Con biết chưa, nhà bên kia mới cãi lộn đó!','Con nhỏ đầu hẻm có bồ rồi nha.','Giá rau ngoài chợ lên dữ lắm con.','Ông tổ trưởng mới mua xe mới!','Cô kể con nghe cái này, bí mật nha…'],
+  batam:['Con biết chưa, nhà bên kia mới cãi lộn đó!','Con nhỏ đầu hẻm có bồ rồi nha.','Giá rau ngoài chợ lên dữ lắm con.','Ông tổ trưởng mới mua xe mới!','Kể con nghe cái này, bí mật nha…'],
   streamer:['Cả nhà thả tim cho tiệm nha!','Ai muốn ghé thì comment liền!','Live đang lên xu hướng nè!','Zoom cận nè cả nhà, đẹp không?','Một, hai, ba… zô!'],
   tay:['Hello! Xin chào!','So yummy! Ngon quá!','How much? Bao nhiêu?','Vietnam is beautiful!','Cảm ơn! Thank you!']};
 function chat(c){const ty=c.type==='quyt'&&c.dis&&Math.random()<.7?'thuong':c.type,x=c.name.split(' ')[0];
@@ -2965,7 +2979,7 @@ const DEF_T={
   shipper:['Mình giao đơn 30 phút còn bị chửi chậm, tiệm pha có 3 phút mà {x} than. Đổi vai thử không?','Đơn này mình giao rồi, khách ai cũng khen. Chắc {x} uống nhầm ly của người ta.'],
   betthu:['Kèo này {t} bắt tiệm thắng, 1 ăn 10. Ai theo {x} là thua chắc.','Chê tiệm là bắt kèo dưới rồi {x} ơi, cháy túi đó.'],
   thayboi:['Thầy bấm độn rồi: mệnh {x} khắc với sự hài lòng, không phải lỗi của tiệm.','Quẻ hôm nay của {x} là quẻ Hung, đi đâu cũng thấy dở. Đừng đổ cho ly trà.'],
-  batam:['Cô biết hết đó nha, hôm đó {x} tới trễ còn hối người ta làm lẹ!','Chuyện này cô kể cả xóm nghe rồi: {x} chê oan cho tiệm.'],
+  batam:['{T} biết hết đó nha, hôm đó {x} tới trễ còn hối người ta làm lẹ!','Chuyện này {t} kể cả xóm nghe rồi: {x} chê oan cho tiệm.'],
   streamer:['Live hôm qua hai nghìn người thả tim tiệm, mỗi {x} chê. Chắc {x} đúng… chắc vậy.','Clip mới của mình: "Phản ứng khi đọc bình luận chê oan". Cảm ơn {x} cho nội dung nha.'],
   tay:['I flew 10,000 km for this tea. You live next door and still complain? 😂','Ở nước mình ly này giá gấp năm lần mà không ngon bằng. Đừng chê nha {x}!'],
   songao:['Ly đẹp vậy mà chụp ra xấu là do người chụp đó {x}.','{T} chụp ly này được nghìn tim, {x} chụp được mấy tim mà chê?'],
@@ -3035,7 +3049,7 @@ const CMT_T={
   shipper:['Đơn tiệm này mình giao hoài, khách nào cũng khen như {x}.','Giao đơn xong ghé làm một ly, nạp năng lượng chạy tiếp.'],
   betthu:['Kèo thơm nhất khu này đó {x}, tất tay đi!','Tiệm này ván nào cũng thắng, {x} theo {t} là chuẩn.'],
   thayboi:['Thầy xem rồi, {x} với tiệm này hợp mệnh lắm.','Quẻ hôm nay đại cát, uống ly này là thấy.'],
-  batam:['Cô kể cả xóm nghe rồi, tiệm ngon số một!','Đúng rồi đó con, nhà bên kia cũng ghé đây hoài.'],
+  batam:['{T} kể cả xóm nghe rồi, tiệm ngon số một!','Đúng rồi đó {x}, nhà bên kia cũng ghé đây hoài.'],
   streamer:['Chuẩn luôn {x}! Mai mình live ở đây, ghé chơi nha.','Ai chưa uống là chưa xem hết clip của mình đó.'],
   tay:['Agree! Best bubble tea in Vietnam! 🇻🇳','Second time here this week. No regrets! 🧋'],
   songao:['Góc bên cửa sổ chụp xinh lắm nha {x}, thử đi!','Ly lên hình đã xinh mà uống còn ngon hơn.'],
