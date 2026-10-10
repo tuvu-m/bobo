@@ -1402,7 +1402,7 @@ $('#cupPick').addEventListener('click',e=>{if(stfClick(e)||!D)return;if(e.target
 /* chạm thẻ order: chờ thì lấy order đó, nhân viên đang pha thì vào phụ, hỏng thì bỏ ly, thiếu hàng thì đổi món */
 $('#qrow').addEventListener('click',e=>{if(!D)return;qHold=0;lastQ=0;const x=e.target.closest('[data-qref]');if(x){refuseCust(+x.dataset.qref);renderQ();return}
   const q=e.target.closest('[data-qc]');if(!q)return;const [cid,i]=q.dataset.qc.split(':').map(Number),c=D.queue.find(y=>y.id===cid);if(!c||!c.items[i]||c.items[i].done){toast('Ly này vừa xong rồi',1400);renderQ();return}const st=qState(c,i);
-  if(st.k==='me'){PV=true;syncMode()}else if(st.k==='bad')staffDrop(st.s.id);else if(st.k==='sf'&&staffGrab(st.s)){}else if(st.k==='sf'||st.k==='lz')staffHelp(st.s.id);else if(st.k==='oos'){D.sug=c.id;D.sugIx=i;tkKey='';renderTicket()}else takeOrder(c,i,q.querySelector('.qd img'))});
+  if(st.k==='me'){PV=true;syncMode()}else if(st.k==='bad')staffDrop(st.s.id);else if(st.k==='sf'&&staffGrab(st.s,q.classList.contains('wait'))){}else if(st.k==='sf'||st.k==='lz')staffHelp(st.s.id);else if(st.k==='oos'){D.sug=c.id;D.sugIx=i;tkKey='';renderTicket()}else takeOrder(c,i,q.querySelector('.qd img'))});
 
 /* ======================= PREP UI ======================= */
 let tab='quay',resetArm=false,importTxt='',placeSel=null,noticeAll=false;
@@ -2246,7 +2246,7 @@ function bindCup(){if(!cup||cup.cid!=null||!D)return;const c=target();if(c){cup.
    để ly xong vừa lúc khách tới quầy (nhân viên nhanh ở cấp cao từng pha xong khi khách chưa vào tới nơi) */
 const stepsOf=it=>ASTEPS.filter(st=>st==='ly'||st==='nuoc'||st==='goi'||(st==='duong'&&it.sugar)||(st==='da'&&iceN(it)>0)||(st==='top'&&it.ts.length)||(st==='kem'&&it.fs.length)||(st==='boc'&&it.sk));
 const walkLeft=c=>c.in?0:Math.abs(c.x-c.tx)/42,estT=(s,it)=>soloTime(s)/4.7*stepsOf(it).reduce((a,st)=>a+stepDur(st,it),0);
-function staffPick(s){if(!MK&&performance.now()<qHold)return null;for(const c of D.queue){if(c.by||c.dec)continue;const wl=walkLeft(c);for(let i=0;i<c.items.length;i++)if(freeIt(c,i)&&!missingOf(c.items[i]).length&&(!wl||!s||wl<=estT(s,c.items[i])))return [c,i]}return null}
+function staffPick(s){for(const c of D.queue){if(c.by||c.dec)continue;const wl=walkLeft(c);for(let i=0;i<c.items.length;i++)if(freeIt(c,i)&&!missingOf(c.items[i]).length&&(!wl||!s||wl<=estT(s,c.items[i])))return [c,i]}return null}
 /* ly nhân viên đang pha là một ly thật (w.cup) để người chơi nhảy vào phụ được: bước nào đã đủ thì nhân viên bỏ qua */
 function stepNeed(st,it,cp){if(st==='ly')return !cp.lyOk;if(st==='goi')return true;
   if(st==='nuoc'){const pd=new Set(cp.pours.filter(p=>p.amt>.001).map(p=>p.k));return it.bs.some(k=>!pd.has(k))||cp.fill<TARGET-POUR_TOL||(it.ss||[]).some(k=>!cp.syrups.includes(k))}
@@ -2272,12 +2272,13 @@ function staffTick(dt){
     let w=s.w;const c=w&&D.queue.find(x=>x.id===w.cid);
     /* khách đã đi hoặc đã đổi món: bỏ ly đang pha */
     if(w&&(!c||c.items[w.ix]!==w.it)){if(c&&c.items[w.ix])c.items[w.ix].sj=null;if(cup===w.cup)cup.staff=null;w=s.w=null;s.job=null}
-    if(w&&w.broken){if(away){staffRedo(s);D.log.push(`${s.name} tự bỏ ly pha hỏng lúc bạn ra ngoài.`)}else{s.job=null;return}}
+    if(w&&w.broken){if(away||now-(w.bt??(w.bt=now))>=BROKE_T){staffRedo(s);D.log.push(`🗑️ ${s.name} tự bỏ ly pha hỏng, làm lại.`)}else{s.job=null;return}}
     if(w&&sealing&&cup===w.cup)return;
     if(s.brkT>now){s.job=null;return}
     if(s.idle>0){s.idle-=dt;return}
     if(!w){if(s.brkReq){s.brkReq=0;s.brkT=now+BRK_T;s.mood=Math.min(100,s.mood+BRK_MOOD);s.job=null;toast(`${s.name} nghỉ giải lao ${BRK_T} giây`);return}
-      const p=staffPick(s);if(!p){s.job=null;return}
+      if(!MK&&performance.now()<qHold&&(s.hw=(s.hw||0)+dt)<HOLD_MAX){s.job=null;return}
+      const p=staffPick(s);if(!p){s.job=null;return}s.hw=0;
       const [c2,ix]=p,it=c2.items[ix];it.sj=s.id;
       const steps=stepsOf(it);
       w=s.w={cid:c2.id,ix,it,steps,i:0,t:0,got:0,broken:null,at:now,cup:staffCup(s,c2,ix,it)};wTime(s,w);renderTicket();
@@ -2299,6 +2300,9 @@ function staffTick(dt){
       if(Math.random()<errP(s)){staffErr(s,st);break}
       w.i++;if(mine)renderTicket()}
     s.job={t:Math.min(w.T,w.acc+w.t),T:w.T}})}
+/* ly hỏng: nhân viên chờ bạn chạm Bỏ ly tối đa BROKE_T giây rồi tự bỏ, làm lại (trước đây chờ mãi nên lúc đông cả đội đứng im như đơ game);
+   bạn đang vuốt hàng thẻ thì pha chế chờ tối đa HOLD_MAX giây rồi vẫn nhận ly */
+const BROKE_T=3,HOLD_MAX=1;
 const errLog=(s,why)=>{const E=D.err[s.id]||(D.err[s.id]={name:s.name,cups:0,list:{}});E.cups++;if(why)E.list[why]=(E.list[why]||0)+1};
 /* pha sai ở một bước: ly thật bị hỏng theo kiểu lỗi đó */
 function staffErr(s,st){const w=s.w,cp=w.cup,it=w.it;let why='sai kem';
@@ -2310,7 +2314,7 @@ function staffErr(s,st){const w=s.w,cp=w.cup,it=w.it;let why='sai kem';
   else if(st==='top'){const wr=S.tops.find(k=>!it.ts.includes(k)&&onCounter(k)&&qty(k)>0);if(wr&&Math.random()<.6){use(wr);cp.tops.push(wr);why='sai topping'}else{cp.tops.pop();why='thiếu topping'}}
   staffBroke(s,why)}
 function staffBroke(s,why){const w=s.w,c=D.queue.find(x=>x.id===w.cid);
-  w.broken=why;w.cup.broken=why;w.cup.brokeBy=s.name;if(cup===w.cup)pouring=null;s.job=null;errLog(s,why);sfx('fail');toast(`${s.name} pha hỏng ly của ${c?c.name:'khách'} (${why})! Chạm thẻ ${s.name} để bỏ ly`,3800,1);renderTicket()}
+  w.broken=why;w.bt=now;w.cup.broken=why;w.cup.brokeBy=s.name;if(cup===w.cup)pouring=null;s.job=null;errLog(s,why);sfx('fail');toast(`${s.name} pha hỏng ly của ${c?c.name:'khách'} (${why}), làm lại`,2600,1);renderTicket()}
 /* bỏ ly: nhân viên làm lại từ đầu với ly mới (tốn nguyên liệu lần nữa); đang phụ ly đó thì phụ tiếp ly mới */
 function staffRedo(s){const w=s.w;if(!w)return;const old=w.cup,c=D.queue.find(x=>x.id===w.cid);w.cup=c?staffCup(s,c,w.ix,w.it):Object.assign(newCup(w.it.size),{staff:s.id});w.broken=null;w.retry=0;w.i=0;w.t=0;w.got=0;w.share=null;wTime(s,w);
   if(cup===old){cup=w.cup;pouring=null;tkKey=''}}
@@ -2323,7 +2327,7 @@ function staffHelp(id){const s=S.staff.find(x=>x.id===id),w=s&&s.w;if(!D||!w)ret
 function staffRest(id){const s=S.staff.find(x=>x.id===id);if(!s||!D)return;if(s.brkT>now||s.brkReq)return;if(s.brkDay===S.day)return toast(`${s.name} đã nghỉ giải lao hôm nay rồi`);
   s.brkDay=S.day;s.brkReq=1;sfx('pop');toast(s.w?`${s.name} sẽ nghỉ giải lao sau ly này`:`${s.name} đi nghỉ giải lao`)}
 /* thẻ còn ghi "Chờ" mà nhân viên vừa nhận (dưới 0,8 giây): người chơi chạm thì lấy luôn ly đó (cả phần đã pha), nhân viên nhận ly khác */
-function staffGrab(s){const w=s.w;if(!w||cup||w.broken||now-(w.at??-9)>.8||D.away>now)return false;const c=D.queue.find(x=>x.id===w.cid);if(c&&c.items[w.ix])c.items[w.ix].sj=null;
+function staffGrab(s,stale){const w=s.w;if(!w||cup||w.broken||(!stale&&now-(w.at??-9)>.8)||D.away>now)return false;const c=D.queue.find(x=>x.id===w.cid);if(c&&c.items[w.ix])c.items[w.ix].sj=null;
   s.w=null;s.job=null;cup=w.cup;cup.staff=null;PV=true;sfx('pop');tkKey='';renderTicket();syncMode();return true}
 /* hết hàng giữa chừng: trả ly lại để người chơi đổi món (đang phụ ly đó thì ly thành của người chơi) */
 function staffRelease(s){const w=s.w,c=D.queue.find(x=>x.id===w.cid);if(c&&c.items[w.ix])c.items[w.ix].sj=null;if(cup===w.cup)cup.staff=null;s.w=null;s.job=null;
@@ -2931,7 +2935,7 @@ const LOG_GROUPS=[[/^🗣️ .* kể: /,n=>`🗣️ Bà tám kể ${n} chuyện 
   [/thành khách quen/,n=>`✨ ${n} khách thành khách quen`],[/anh em xe ôm ghé tiệm/,n=>`🛵 Chú xe ôm rủ anh em ghé ${n} lần`],
   [/(đi kể cả xóm về tiệm|livestream khen tiệm|đăng story khen tiệm)/,n=>`📣 ${n} khách đi khoe tiệm, mai thêm khách`],[/^🎴 /,(n,ls)=>`🎴 Thầy bói gieo ${n} quẻ · ${cntOf(ls,[['Đại cát',/Đại cát/],['Bình an',/Bình an/],['Hung',/Hung/]])}`],
   [/ ghi nợ \d/,(n,ls)=>{const t=ls.reduce((a,l)=>{const v=(l.match(/ghi nợ ([\d.]+)đ/)||[])[1];return a+(v?+v.replace(/\./g,''):0)},0);return `📒 ${n} khách ghi nợ${t?' · '+fk(t):''}`}],
-  [/^🪙 /,(n,ls)=>`🪙 Bet thủ tung xu ${n} lần · ${[['150%',/trả 150%/],['50%',/trả 50%/]].map(([k,re])=>[k,ls.filter(l=>re.test(l)).length]).filter(x=>x[1]).map(([k,v])=>`${k} ×${v}`).join(', ')}`],[/^🎒 /,n=>`🎒 ${n} học sinh trả giá học sinh −20%`],[/ trả .* cho .* · review 5★/,n=>`🤝 Trả lại ${n} món đồ khách để quên`],[/không thấy đâu/,n=>`🤔 ${n} món đồ khách để quên không thấy đâu`],
+  [/^🪙 /,(n,ls)=>`🪙 Bet thủ tung xu ${n} lần · ${[['150%',/trả 150%/],['50%',/trả 50%/]].map(([k,re])=>[k,ls.filter(l=>re.test(l)).length]).filter(x=>x[1]).map(([k,v])=>`${k} ×${v}`).join(', ')}`],[/^🎒 /,n=>`🎒 ${n} học sinh trả giá học sinh −20%`],[/^🗑️ .* tự bỏ ly pha hỏng/,n=>`🗑️ Nhân viên tự bỏ ${n} ly pha hỏng`],[/ trả .* cho .* · review 5★/,n=>`🤝 Trả lại ${n} món đồ khách để quên`],[/không thấy đâu/,n=>`🤔 ${n} món đồ khách để quên không thấy đâu`],
   [/quay lại lấy /,n=>`👜 ${n} khách quay lại lấy đồ để quên`],[/^🤫 Ỉm /,n=>`🤫 Ỉm ${n} món đồ khách để quên`],[/không còn là khách quen/,n=>`💔 ${n} khách quen không ghé nữa`]];
 const cntOf=(ls,K)=>K.map(([k,re])=>[k,ls.filter(l=>re.test(l)).length]).filter(x=>x[1]).map(([k,v])=>`${v} ${k}`).join(', ');
 /* dòng gộp là {t: câu tóm tắt, ls: các dòng gốc}, ở màn tổng kết chạm để mở xem từng dòng (logLi) */
