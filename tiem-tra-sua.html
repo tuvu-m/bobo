@@ -235,7 +235,8 @@ html,body{touch-action:pan-x pan-y}
 .bdg.off{border-color:var(--line);opacity:.55}
 .shoppic{float:right;width:96px;height:72px;object-fit:contain;margin:0 0 4px 8px}
 .shopname{display:flex;align-items:center;gap:8px;margin:0 0 8px}.shopname input{flex:1;min-width:0;width:auto;font:inherit;font-size:16px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px 10px}
-.shopbox{display:flow-root;background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin:0 0 10px}
+.shopbox{display:flow-root;background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin:0 0 10px}.shopbox.ready{border-color:var(--accent);background:#fff1f4}
+.upbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
 .prog{display:grid;grid-template-columns:minmax(0,46%) 1fr;gap:8px;align-items:center;font-size:12px;margin-top:4px}
 .prog i{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:block}.prog i b{display:block;height:100%;background:var(--good)}
 .kchip[aria-pressed="true"]{border-color:var(--counter);background:var(--counter-2)}.kdot{width:9px;height:9px;border-radius:50%;border:1px solid rgba(122,86,70,.4)}
@@ -623,15 +624,17 @@ const EVENTS={binhthuong:{i:'🌤️',l:'Ngày thường',d:'',m:1},nangnong:{i:
 
 /* cấp tiệm: trần số khách mỗi ngày và số nhân viên. Tiệm tự mở rộng cuối ngày khi đủ review 5★ và tổng doanh thu (bán món + tip) */
 /* mốc tính sao cho người chơi giỏi (luôn chạy hết công suất) lên cấp 2 ~ngày 10, cấp 3 ~ngày 40, cấp 4 ~ngày 120, cấp 5 ~ngày 300 */
-const SHOP=[{n:'Xe đẩy góc phố',cap:30,staff:2,five:0,rev:0},{n:'Ki-ốt nhỏ',cap:60,staff:3,five:200,rev:10e6},{n:'Tiệm mặt tiền',cap:120,staff:4,five:1500,rev:100e6},
-  {n:'Tiệm hai tầng',cap:220,staff:6,five:8500,rev:550e6},{n:'Chuỗi flagship',cap:350,staff:8,five:37000,rev:2.5e9}];
+/* fee: phí mở rộng lên cấp đó, trả sau khi đủ điều kiện (khoảng 1/3 tiền lãi kiếm được ở cấp trước) */
+const SHOP=[{n:'Xe đẩy góc phố',cap:30,staff:2,five:0,rev:0,fee:0},{n:'Ki-ốt nhỏ',cap:60,staff:3,five:200,rev:10e6,fee:2e6},{n:'Tiệm mặt tiền',cap:120,staff:4,five:1500,rev:100e6,fee:15e6},
+  {n:'Tiệm hai tầng',cap:220,staff:6,five:8500,rev:550e6,fee:80e6},{n:'Chuỗi flagship',cap:350,staff:8,five:37000,rev:2.5e9,fee:300e6}];
 const lifeRev=s=>s.life?(s.life.sales||0)+(s.life.tips||0):0;
-function shopUp(s){let up=0;while((s.shop||0)<SHOP.length-1){const L=SHOP[(s.shop||0)+1];if((s.five||0)>=L.five&&lifeRev(s)>=L.rev){s.shop=(s.shop||0)+1;up++}else break}return up}
+/* lên cấp không tự động: đủ review 5★ và doanh thu thì người chơi tự bấm Mở rộng ở tab Trang trí và trả phí (shopUpBuy) */
+const shopReady=s=>{const N=SHOP[(s.shop||0)+1];return !!N&&(s.five||0)>=N.five&&lifeRev(s)>=N.rev};
 const shopLv=()=>SHOP[S.shop||0],staffMax=()=>shopLv().staff;
 /* tiệm lớn quầy rộng, máy xịn: nhân viên pha nhanh hơn (⚡, nhân vào thời gian pha) để ngày bán đông khách không kéo dài quá */
 const LV_SPD=[1,1,.65,.45,.36],lvSpd=()=>LV_SPD[S.shop||0];
 /* số món được bán cùng lúc theo cấp tiệm */
-const MENU_CAP=[4,5,6,7,9],menuCap=()=>MENU_CAP[S.shop||0];
+const MENU_CAP=[8,10,12,14,18],menuCap=()=>MENU_CAP[S.shop||0];
 /* ảnh theo cấp tiệm: k_quay_3 cho cấp 3…; cấp nào chưa có ảnh thì dùng ảnh chung k_quay */
 const lvSpr=k=>SPR[k+'_'+((S.shop||0)+1)]||SPR[k];
 /* bảng tên trống trên ảnh quầy từng cấp: [tâm x, tâm y, bề rộng chữ tối đa] theo tỉ lệ ảnh */
@@ -774,7 +777,7 @@ function toRaw(s){if(s.raw)return;s.raw=1;const bs=new Set(['hongtra','suadac'])
   s.layout.tea=[];s.layout.syrup=[];s.trend=null;
   s.notice=(s.notice||[]).concat([{t:'Tiệm đã chuyển sang nguyên liệu thô: trà, sữa, siro và bột được pha riêng. Món cũ đã đổi sang công thức mới, hàng trong kho được quy đổi. Quầy có thêm khu Siro & bột ở hàng dưới.'}])}
 const cleanName=t=>String(t||'').replace(/[<>&"]/g,'').trim();
-function migrate(s){(s.recipes||[]).forEach(r=>{r.name=cleanName(r.name)||'Món mới'});if(s.shopName)s.shopName=cleanName(s.shopName)||'Bobơ';(s.reviews||[]).forEach(r=>{if(!r.id)r.id=s.rvId=(s.rvId||0)+1});if(!s.shopName||(s.shopName==='Góc Phố'&&!s.nameV2))s.shopName='Bobơ';s.nameV2=1;if(s.shop==null){const i=SHOP.findIndex(l=>l.staff>=(s.staff||[]).length);s.shop=i<0?SHOP.length-1:i}shopUp(s);if(!s.foams)s.foams=[];if(!s.recipes){s.recipes=[defaultRecipe()];s.ruid=2}if(!s.ruid)s.ruid=2;s.recipes.forEach(normRec);if(!s.life&&s.ledger&&s.ledger.length){s.life=aggOf(s.ledger);s.life.from=s.ledger[0].d}delete s.pl;delete s.hot;
+function migrate(s){(s.recipes||[]).forEach(r=>{r.name=cleanName(r.name)||'Món mới'});if(s.shopName)s.shopName=cleanName(s.shopName)||'Bobơ';(s.reviews||[]).forEach(r=>{if(!r.id)r.id=s.rvId=(s.rvId||0)+1});if(!s.shopName||(s.shopName==='Góc Phố'&&!s.nameV2))s.shopName='Bobơ';s.nameV2=1;if(s.shop==null){const i=SHOP.findIndex(l=>l.staff>=(s.staff||[]).length);s.shop=i<0?SHOP.length-1:i}if(!s.foams)s.foams=[];if(!s.recipes){s.recipes=[defaultRecipe()];s.ruid=2}if(!s.ruid)s.ruid=2;s.recipes.forEach(normRec);if(!s.life&&s.ledger&&s.ledger.length){s.life=aggOf(s.ledger);s.life.from=s.ledger[0].d}delete s.pl;delete s.hot;
   if(s.tops.includes('cheese')){s.tops=s.tops.filter(k=>k!=='cheese');if(!s.foams.includes('f_cheese'))s.foams.push('f_cheese');if(s.stock.cheese){s.stock.f_cheese=s.stock.cheese;delete s.stock.cheese}}
   toRaw(s);if(!s.syrups)s.syrups=[];s.tops=s.tops.filter(k=>TOPS[k]);s.drinks=s.drinks.filter(k=>BASES[k]&&!BASES[k].free);s.syrups=s.syrups.filter(k=>SYRUPS[k]);s.foams=s.foams.filter(k=>FOAMS[k]);
   if(s.layout){if(!s.layout.foam)s.layout.foam=[];if(!s.layout.syrup)s.layout.syrup=[]}
@@ -1478,6 +1481,12 @@ function rivalDay(day,log,notice){const R=S.rival;if(!R||day<R.start)return;cons
   R.n++;if(win)R.w++;else R.l++;log.push(`⚔️ ${R.name}: bạn ${avg?avg.toFixed(1):'—'}★, họ ${rd}★ → ${win?'thắng':'thua'} (${R.w}–${R.l}).`);
   if(R.w>=4){notice.push({t:`🎉 “${R.name}” dẹp tiệm! Khách của họ chuyển sang bạn (+8 khách ngày mai).`});S.buzz=Math.min(16,(S.buzz||0)+8);bump('doithu');S.rival=null;S.rivalLast=day}
   else if(R.l>=4||R.n>=7){notice.push({t:`😓 “${R.name}” trụ lại được. Khách giảm 10% thêm 7 ngày.`,bad:1});S.rvPen=day+7;S.rival=null;S.rivalLast=day}}
+/* mở rộng tiệm: đủ điều kiện thì trả phí, chạm 2 lần để xác nhận (resetArm) */
+function shopUpBuy(){const i=S.shop||0,N=SHOP[i+1];if(!N||!shopReady(S))return;
+  if(ownMoney()<N.fee){resetArm=false;return toast(S.money>=N.fee?'Tiền vay chỉ dùng để nhập nguyên liệu':`Thiếu ${fk(N.fee-ownMoney())} để mở rộng tiệm`)}
+  if(resetArm!=='shopup'){resetArm='shopup';sfx('pop');renderPrep();return}
+  resetArm=false;spend('nangcap',N.fee);S.shop=i+1;S.upNote=null;S.notice=(S.notice||[]).filter(n=>!/^⬆️ Đủ điều kiện/.test(n.t));sfx('fanfare');
+  toast(`🎉 ${N.n}! 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[i+1]} món`,3600,2);checkAch();save();renderPrep()}
 function growCounter(){const n=S.qrows||12,cost=QROW_COST[n];if(n>=QROWS_MAX||!cost)return;if(ownMoney()<cost)return toast(S.money>=cost?'Tiền vay chỉ dùng để nhập nguyên liệu':'Không đủ tiền nới quầy');
   spend('quay',cost);S.qrows=n+2;S.grid.forEach(o=>o.r+=2);for(const k in S.lastPos||{})S.lastPos[k].r+=2;syncLayout();save();toast(`Quầy rộng thêm 2 hàng (6×${S.qrows})`);renderPrep()}
 function storeObj(o){if(!storable(o.id))return toast('Dụng cụ và máy đóng gói luôn để trên quầy');
@@ -1486,11 +1495,12 @@ function storeObj(o){if(!storable(o.id))return toast('Dụng cụ và máy đón
 function shopHTML(){const i=S.shop||0,L=SHOP[i],N=SHOP[i+1],rv=lifeRev(S),bar=(v,m)=>`<i><b style="width:${Math.round(Math.min(1,v/m)*100)}%"></b></i>`;
   const pic=k=>SPRSRC[k]?`<img class="shoppic" src="${SPRSRC[k]}" alt="">`:'';
   const nm=(S.shopName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-  return `<div class="shopbox">${pic('tiem_'+(i+1))}<label class="shopname"><input id="shopName" maxlength="18" value="${nm}" placeholder="Tên tiệm" aria-label="Tên tiệm"></label><div class="h3" style="margin:0 0 2px">${L.n} <span class="meta">· cấp ${i+1}/${SHOP.length}</span></div><div class="meta sstat">👥 <b>${L.cap}</b> · 👩‍🍳 <b>${L.staff}</b> · 📋 <b>${MENU_CAP[i]}</b> món${LV_SPD[i]<1?` · ⚡ <b>×${(1/LV_SPD[i]).toFixed(1).replace('.',',')}</b>`:''}<span class="hint"> ⚡ quầy rộng, máy xịn: nhân viên pha nhanh hơn.</span></div>
-   ${N?`<div class="meta" style="margin-top:6px">⬆ <b style="color:var(--ink)">${N.n}</b> · 👥 ${N.cap} · 👩‍🍳 ${N.staff}${LV_SPD[i+1]<1?` · ⚡ ×${(1/LV_SPD[i+1]).toFixed(1).replace('.',',')}`:''}</div>
+  return `<div class="shopbox${N&&shopReady(S)?' ready':''}">${pic('tiem_'+(i+1))}<label class="shopname"><input id="shopName" maxlength="18" value="${nm}" placeholder="Tên tiệm" aria-label="Tên tiệm"></label><div class="h3" style="margin:0 0 2px">${L.n} <span class="meta">· cấp ${i+1}/${SHOP.length}</span></div><div class="meta sstat">👥 <b>${L.cap}</b> · 👩‍🍳 <b>${L.staff}</b> · 📋 <b>${MENU_CAP[i]}</b> món${LV_SPD[i]<1?` · ⚡ <b>×${(1/LV_SPD[i]).toFixed(1).replace('.',',')}</b>`:''}<span class="hint"> ⚡ quầy rộng, máy xịn: nhân viên pha nhanh hơn.</span></div>
+   ${N?`<div class="meta" style="margin-top:6px">⬆ <b style="color:var(--ink)">${N.n}</b> · 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[i+1]}${LV_SPD[i+1]<1?` · ⚡ ×${(1/LV_SPD[i+1]).toFixed(1).replace('.',',')}`:''} · 💰 ${fk(N.fee)}</div>
    <div class="prog"><span>⭐ ${Math.min(S.five,N.five)}/${N.five}</span>${bar(S.five,N.five)}</div>
    <div class="prog"><span>💰 ${fk(Math.min(rv,N.rev))}/${fk(N.rev)}</span>${bar(rv,N.rev)}</div>
-   <div class="meta hint" style="margin-top:4px">Đủ cả hai thì tiệm tự mở rộng vào cuối ngày. Doanh thu tính tổng tiền bán món và tiền tip từ trước tới nay.</div>`:'<div class="meta" style="margin-top:4px">Tiệm đã lớn nhất rồi!</div>'}</div>`}
+   ${shopReady(S)?`<div class="upbar"><button class="btn pink" data-shopup ${ownMoney()<N.fee?'disabled':''}>${resetArm==='shopup'?'✓ Chạm lần nữa':'⬆ Mở rộng'} · ${fk(N.fee)}</button>${ownMoney()<N.fee?`<span class="meta warn">thiếu ${fk(N.fee-ownMoney())}</span>`:''}</div>`:''}
+   <div class="meta hint" style="margin-top:4px">Đủ cả hai thì bấm Mở rộng và trả phí. Doanh thu tính tổng tiền bán món và tiền tip từ trước tới nay.</div>`:'<div class="meta" style="margin-top:4px">Tiệm đã lớn nhất rồi!</div>'}</div>`}
 function decoHTML(){
   const chips=Object.entries(DSLOT).map(([k,s])=>`<button data-dsel="${k}" aria-pressed="${decSel===k}">${s.l}</button>`).join('')+`<button data-dsel="outfit" aria-pressed="${decSel==='outfit'}">Đồng phục</button><button data-dsel="cup" aria-pressed="${decSel==='cup'}">Giấy bọc ly</button>`;
   let list='';
@@ -1667,7 +1677,7 @@ function staffHTML(){if(staffSel&&!S.staff.some(s=>s.id===staffSel))staffSel=nul
   ${tr.length?`<div class="notice bad" style="margin-bottom:6px">😩 ${tr.map(s=>s.name).join(', ')} mệt: pha chậm, dễ hỏng. Thưởng hoặc cho nghỉ.</div>`:''}
   ${S.staff.length?`<div class="srows">${S.staff.map(staffRow).join('')}</div>`:'<p class="meta">Chưa có nhân viên.</p>'}
   <div class="h3">Ứng viên hôm nay</div>${full?`<p class="meta" style="margin:-2px 0 6px">Đủ ${staffMax()} người. ${(S.shop||0)<SHOP.length-1?'Lên cấp tiệm để thuê thêm.':''}</p>`:''}<div class="srows">${S.cands.map(candRow).join('')}</div>`}
-const CAT={thue:'Thuế',boithuong:'Bồi thường, kiện tụng',matbang:'Mặt bằng',laivay:'Lãi vay ngân hàng',nhaphang:'Nhập nguyên liệu',quay:'Nới quầy',dungcu:'Nâng cấp dụng cụ',mokhoa:'Mở nguyên liệu mới',kiemdinh:'Kiểm định món',trangtri:'Trang trí, đồng phục',nhanvien:'Thưởng, đào tạo NV',sukien:'Sự kiện bất ngờ',wages:'Lương nhân viên'};
+const CAT={thue:'Thuế',boithuong:'Bồi thường, kiện tụng',matbang:'Mặt bằng',laivay:'Lãi vay ngân hàng',nhaphang:'Nhập nguyên liệu',quay:'Nới quầy',dungcu:'Nâng cấp dụng cụ',nangcap:'Mở rộng tiệm',mokhoa:'Mở nguyên liệu mới',kiemdinh:'Kiểm định món',trangtri:'Trang trí, đồng phục',nhanvien:'Thưởng, đào tạo NV',sukien:'Sự kiện bất ngờ',wages:'Lương nhân viên'};
 function newLife(){return{days:0,sales:0,tips:0,other:0,ev:0,veso:0,debt:0,spent:{},wages:0,served:0,dish:{}}}
 function lifeAdd(L,e){L.days++;e.sales.forEach(x=>{L.sales+=x.rev;const a=L.dish[x.r]||(L.dish[x.r]={name:x.name,n:0,rev:0,cost:0});a.n+=x.n;a.rev+=x.rev;a.cost+=x.cost;a.name=x.name});
   L.tips+=e.tips;L.other+=e.other;L.ev=(L.ev||0)+(e.ev||0);L.veso=(L.veso||0)+(e.veso||0);L.debt+=e.debt;for(const k in e.spent)L.spent[k]=(L.spent[k]||0)+e.spent[k];L.wages+=e.wages;L.served+=e.served;return L}
@@ -1802,6 +1812,7 @@ $('#tbody').addEventListener('click',e=>{
   if(d.roff){const r=recById(+d.roff);r.on=false;r.until=null;save();renderPrep();return}
   if(d.rdel){const id=+d.rdel;if(recDel!==id){recDel=id;renderPrep();armTimer(()=>{recDel=null});return}S.recipes=S.recipes.filter(r=>r.id!==id);recDel=null;save();renderPrep();return}
   if(d.renick){const R=(S.regs||[]).find(r=>r.id===+d.renick);if(R){const o=R.nick;for(let i=0;i<6&&R.nick===o;i++)R.nick=genNick(R);save();toast(`Biệt danh mới: ${regName(R)}`);sfx('pop');renderPrep()}return}
+  if(d.shopup!==undefined)return shopUpBuy();
   if(d.unlock){const id=d.unlock,it=DECOR[id]||OUTFITS[id]||CUPSKIN[id],u=unlockState(it);if(!u.ok)return;if(!it.five)spend('trangtri',it.cost);S.owned.push(id);
     if(DECOR[id]&&decSel!=='outfit'&&DSLOT[decSel].t===DECOR[id].slot){for(const k in S.decor)if(S.decor[k]===id)S.decor[k]=null;S.decor[decSel]=id}if(CUPSKIN[id])syncLayout();toast(CUPSKIN[id]?`Đã mua ${it.name}${inSeason(id)?', đã bày lên quầy':', tới mùa sẽ hiện trên quầy'}`:`Đã mở khóa ${it.n}`)}
   if(d.place!==undefined){const id=d.place||null;if(id)for(const k in S.decor)if(S.decor[k]===id)S.decor[k]=null;S.decor[decSel]=id;if(decSel==='wallpaper'&&!id)S.decor.wallpaper='wp_kem'}
@@ -2811,7 +2822,7 @@ function endDay(){
   /* tiệm lớn có thể vài trăm khách: gom dòng cùng loại thành một dòng có số đếm, chỉ hiện 8 dòng đầu, bấm để xem hết */
   {const L=condenseLog(log.length?log:['Một ngày bình yên.']),M=8;$('#sumLog').innerHTML=L.slice(0,M).map(logLi).join('')+(L.length>M?`<li class="more"><button class="btn sm ghost" id="sumMore">＋ ${L.length-M} dòng khác</button></li>`:'');
    if(L.length>M)$('#sumMore').onclick=()=>{$('#sumLog').innerHTML=L.map(logLi).join('')}}
-  S.ledger=S.ledger||[];S.ledger.push({loanIn:S.loanInToday||0,loanOut:S.loanOutToday||0,d:day,sales:Object.entries(D.sales).map(([k,v])=>({r:+k,name:v.name,n:v.n,rev:Math.round(v.rev),cost:Math.round(v.cost)})),tips:D.tips,other:D.other,ev:D.evIn||0,debt:debtIn,spent:{...(S.spentCat||{})},wages,served:D.served,total:D.total,avg:D.stars.length?D.stars.reduce((a,b)=>a+b,0)/D.stars.length:0,lost:D.lost,money:S.money});if(S.ledger.length>60)S.ledger.shift();S.life=lifeAdd(S.life||newLife(),S.ledger[S.ledger.length-1]);if(!S.life.from)S.life.from=day;{const up=shopUp(S);if(up)notice.push({t:`Tiệm đã mở rộng thành ${shopLv().n}! Giờ chứa tối đa ${shopLv().cap} khách/ngày và thuê được ${shopLv().staff} nhân viên.`})}
+  S.ledger=S.ledger||[];S.ledger.push({loanIn:S.loanInToday||0,loanOut:S.loanOutToday||0,d:day,sales:Object.entries(D.sales).map(([k,v])=>({r:+k,name:v.name,n:v.n,rev:Math.round(v.rev),cost:Math.round(v.cost)})),tips:D.tips,other:D.other,ev:D.evIn||0,debt:debtIn,spent:{...(S.spentCat||{})},wages,served:D.served,total:D.total,avg:D.stars.length?D.stars.reduce((a,b)=>a+b,0)/D.stars.length:0,lost:D.lost,money:S.money});if(S.ledger.length>60)S.ledger.shift();S.life=lifeAdd(S.life||newLife(),S.ledger[S.ledger.length-1]);if(!S.life.from)S.life.from=day;if(shopReady(S)&&S.upNote!==(S.shop||0)){const N=SHOP[(S.shop||0)+1];S.upNote=S.shop||0;notice.push({t:`⬆️ Đủ điều kiện mở rộng thành ${N.n} · 💰 ${fk(N.fee)} · tab Trang trí`});S.newTabs=[...(S.newTabs||[]).filter(k=>k!=='trangtri'),'trangtri']}
   D=null;cup=null;pouring=null;sealing=null;tkKey='';{const was=new Set(TABS.filter(([k])=>tabOpen(k)).map(([k])=>k));S.day++;const nt=TABS.filter(([k])=>!was.has(k)&&tabOpen(k));if(nt.length){notice.push({t:`🔓 Mở tab mới: ${nt.map(([,l])=>l).join(', ')}`});S.newTabs=[...(S.newTabs||[]),...nt.map(([k])=>k)]}}if(S.day===5&&!S.foams.length)notice.push({t:'🔓 Kem phủ đã có ở tab Kho'});checkAch();S.spent=0;S.spentCat={};S.loanInToday=0;S.loanOutToday=0;S.notice=notice;save();hud('Đóng cửa');$('#hDay').firstChild.textContent=`Ngày ${day}`;show('summary')}
 $('#hMoney').onclick=()=>{if(D)return toast('Xem tài chính sau khi đóng cửa nhé');if(!$('#summary').hidden)return;if(!tabOpen('taichinh'))return toast(`Tab Tài chính mở từ ngày ${TAB_DAY.taichinh}`);tab='taichinh';resetArm=false;$('#tbody').scrollTop=0;renderPrep()};
 $('#hStar').onclick=()=>{if(D)return toast('Xem đánh giá sau khi đóng cửa nhé');if(!$('#summary').hidden)return;if(!tabOpen('rv'))return toast(`Tab Đánh giá mở từ ngày ${TAB_DAY.rv}`);tab='rv';resetArm=false;$('#tbody').scrollTop=0;renderPrep()};
