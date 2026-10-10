@@ -358,6 +358,9 @@ button.mcard{font:inherit;color:inherit;cursor:pointer;padding:5px 4px 6px}butto
 .frow i{height:9px;border-radius:5px;background:var(--counter);display:block;min-width:3px}.frow.in i{background:var(--good)}
 .frow b{font-variant-numeric:tabular-nums}
 .log{font-size:13px;line-height:1.55;margin:0;padding-left:18px}.log li.more{list-style:none;margin:6px 0 0 -18px}
+.log li.lgx{list-style:none}.log summary{cursor:pointer;list-style:none;position:relative}.log summary::-webkit-details-marker{display:none}
+.log summary::before{content:'▸';position:absolute;left:-15px;color:var(--accent);transition:transform .15s}.log details[open]>summary::before{transform:rotate(90deg)}
+.log details ul{margin:2px 0 6px;padding-left:14px;font-size:12px;line-height:1.5;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <!-- màn hình loading: đặt trước dữ liệu ảnh nặng để hiện ngay khi trang đang tải -->
@@ -1963,7 +1966,6 @@ function spawn(ft){const R=!ft&&!D.emerg&&Math.random()<.2?pick((S.regs||[]).fil
   /* bạn gái của đại gia; nhân vật mới chưa có hình riêng thì kèm biểu tượng nhỏ cạnh đầu (cảnh sát chìm thì không, để còn giấu mặt) */
   if(type==='sigai'&&c.friends[0])c.friends[0].spr=SPR.k_bangai?'k_bangai':kt([1,3,4,6].filter(i=>'kt'+i!==c.spr));
   if(type==='chim')c.spr=ktFor('m','gia');
-  if(type==='batam')c.name=pick(age==='gia'?['Bà','Bác']:['Cô','Dì'])+' Tám';
   if(type==='tay'){c.name='Anh '+pick(['John','Tom','Mike','Peter','Sam','Max','Ben']);c.pay='Tiền đô';c.items.forEach(it=>it.en=1)}
   if(TICON[type]&&!SPR['k_'+type])c.icon=TICON[type];
   if(R&&now-(D.bellT??-9)>1.1){D.bellT=now;sfx('bell')}
@@ -2213,14 +2215,14 @@ function served(c,s,notes,by){
   s=clamp(s,1,5);
   if(c.type==='quyt')return thief(c);
   /* học sinh xin bớt: lúc vắng thì hỏi bạn; lúc đông thì tự trả giá học sinh (80%), vui nên +1★ */
-  if(c.type==='hocsinh'&&s>=3){const offer=r1k(c.price*.8);if(by||!canAsk()){say(c,'Giá học sinh nha, cảm ơn ạ!',1600);settle(c,Math.min(5,s+1),offer,notes,'giá học sinh −20%');return}
+  if(c.type==='hocsinh'&&s>=3){const offer=r1k(c.price*.8);if(by||!canAsk()){say(c,'Giá học sinh nha, cảm ơn ạ!',1600);D.log.push(`🎒 ${c.name} trả giá học sinh −20%`);settle(c,Math.min(5,s+1),offer,notes,'giá học sinh −20%');return}
     asked();c.dec=true;D.pend.push({kind:'bargain',c,s,notes,offer});say(c,`Bớt còn ${fk(offer)} nha?`,4000);renderTicket();return}
   if(c.type==='ghino'&&s>=2){if(!canAsk()){S.debts.push({name:c.name,amt:c.price,d:S.day});D.log.push(`${c.name} ghi nợ ${fmt(c.price)}.`);say(c,'Ghi sổ nha, mai trả!',1600);settle(c,s,0,notes,'ghi sổ nợ');return}
     asked();c.dec=true;D.pend.push({kind:'debt',c,s,notes});say(c,'Ghi nợ nha…',4000);renderTicket();return}
   /* Bet thủ: lúc vắng thì rủ bạn đoán sấp/ngửa; lúc đông thì tự tung vì thấy hôm nay mình hên: hên thì chỉ trả 50%, xui thì trả 150% */
   if(c.type==='betthu'&&s>=3&&canAsk()){asked();c.dec=true;D.pend.push({kind:'coin',c,s,notes,t0:now});say(c,'Chơi không? Sấp hay ngửa!',4000);renderTicket();return}
   if(c.type==='betthu'&&s>=3){const win=Math.random()<.5,base=c.price+(c.cupUp||0);if(!win)bump('coinW');sfx('coin');say(c,win?'Hên rồi! Anh trả nửa thôi nha!':'Xui quá, anh chịu, trả gấp rưỡi!',1800);
-    settle(c,s,r1k(base*(win?.5:1.5)),notes,`🪙 anh tự tung đồng xu, ${win?'hên: trả 50%':'xui: trả 150%'}`);checkAch();return}
+    D.log.push(`🪙 ${c.name} tự tung xu, ${win?'hên: trả 50%':'xui: trả 150%'}`);settle(c,s,r1k(base*(win?.5:1.5)),notes,`🪙 anh tự tung đồng xu, ${win?'hên: trả 50%':'xui: trả 150%'}`);checkAch();return}
   settle(c,s,null,notes);
   if(c.type==='thayboi'&&s>=3){if(canAsk()){asked();D.pend.push({kind:'que',c,t0:now});say(c,'Để thầy gieo cho con một quẻ…',3000);tkKey='';renderTicket()}else queDo(c)}}
 /* thầy bói tự gieo quẻ cho tiệm sau khi trả tiền */
@@ -2265,13 +2267,14 @@ function settle(c,s,payOverride,notes,why){
   if(!(s>=4&&!tip&&!why&&!rg&&!notes.length&&(rushNow()||waitN()>=4)))toast(`${c.name} ${'★'.repeat(s)}${'☆'.repeat(5-s)} +${fk(pay-tip)}${tip?` · tip ${fk(tip)}${tw.length?' ('+tw[0]+')':''}`:''}${why?' · '+why:notes.length?' · '+notes[0]:''}${rg}`,rg||tip?3000:1800,rg?1:0);
   renderTicket()}
 /* bà tám vào tiệm: hỏi có nghe tám không */
-/* bà tám tự xưng theo tên: Cô/Dì/Bà/Bác Tám */
-const tamSelf=c=>({Cô:'cô',Dì:'dì',Bà:'bà',Bác:'bác'})[c.name.split(' ')[0]]||'cô';
+/* bà tám là một loại khách (tên đặt theo tuổi như mọi khách), tự xưng theo cách gọi: Cô/Dì/Bà/Bác… */
+const tamSelf=c=>({Cô:'cô',Dì:'dì',Bà:'bà',Bác:'bác',Chú:'chú',Ông:'ông',Cụ:c.sex==='m'?'ông':'bà'})[c.name.split(' ')[0]]||'cô';
 const tamSay=(c,t)=>t.replace(/(^|[\s“])([Cc])ô(?=[\s,!.…]|$)/g,(m,a,C)=>a+(C==='C'?tamSelf(c)[0].toUpperCase()+tamSelf(c).slice(1):tamSelf(c)));
 /* bà tám: lúc vắng thì rủ bạn tám (chọn nghe hay không); lúc đông thì tự kể, bạn chỉ mất 2 giây (đang rót hay đóng gói thì thôi) */
 function tamAsk(c){if(canAsk()){asked();c.dec=true;D.pend.push({kind:'tam',c,t0:now});say(c,tamSay(c,'Con ơi lại đây cô kể nghe…'),3000);renderTicket();return}
-  c.tam=1;const n=tamSay(c,pick(TAM_GOSSIP));say(c,n,5200);toast('🗣️ '+n,4200);D.log.push(`🗣️ ${c.name} kể: ${n}`);if(!pouring&&!sealing&&!(D.away>now)){evAway(2);D.awayWhy='Đang nghe bà tám…'}}
-/* chuyện xàm trong xóm bà tám kể (không ảnh hưởng gì, chỉ để vui) */
+  c.tam=1;const n=tamSay(c,tamPick());say(c,n,5200);toast('🗣️ '+n,4200);D.log.push(`🗣️ ${c.name} kể: ${n}`);if(!pouring&&!sealing&&!(D.away>now)){evAway(2);D.awayWhy='Đang nghe bà tám…'}}
+/* chuyện xàm trong xóm bà tám kể (không ảnh hưởng gì, chỉ để vui); trong ngày không kể trùng chuyện (D.tamU) */
+function tamPick(){const u=D.tamU||(D.tamU=[]);let L=TAM_GOSSIP.filter(x=>!u.includes(x));if(!L.length){u.length=0;L=TAM_GOSSIP}const g=pick(L);u.push(g);return g}
 const TAM_GOSSIP=['Con biết chưa, con mèo nhà bà Năm mới đẻ ba con, con nào cũng giống ông tổ trưởng!','Thằng Tư đầu hẻm đi tập gym được ba bữa, giờ đi đâu cũng cởi áo khoe.',
   'Ông bán vé số đầu hẻm trúng độc đắc mà giấu vợ, giờ vợ biết rồi, cả xóm nghe la!','Nhà bên kia mua cái tủ lạnh to tới mức phải tháo cửa mới khiêng vô.',
   'Bà Sáu tập nhảy zumba tới trật cái hông, giờ còn đòi nhảy tiếp.','Ông Bảy nuôi con vẹt biết chửi, ai đi ngang cũng bị nó chửi, kể cả ông Bảy.',
@@ -2294,12 +2297,12 @@ const asked=()=>{D.askN=(D.askN||0)+1};
 function pendPick(p,v){if(p.pick!=null||D.pend[0]!==p)return;const c=p.c;
   if(p.kind==='lost'){D.pend.shift();tkKey='';lostDo(p,v);renderTicket();return}
   if(p.kind==='tam'){D.pend.shift();c.dec=false;tkKey='';
-    if(v==='yes'){c.tam=1;evAway(6);D.awayWhy='Đang nghe bà tám…';const n=tamSay(c,pick(TAM_GOSSIP));say(c,n,5200);toast('🗣️ '+n,5000,2);D.log.push(`🗣️ ${c.name} kể: ${n}`)}
+    if(v==='yes'){c.tam=1;evAway(6);D.awayWhy='Đang nghe bà tám…';const n=tamSay(c,tamPick());say(c,n,5200);toast('🗣️ '+n,5000,2);D.log.push(`🗣️ ${c.name} kể: ${n}`)}
     else{c.tam=-1;say(c,'Hứ, bận dữ vậy!',1600)}renderTicket();return}
   p.pick=v;p.at=now+.9;tkKey='';sfx(p.kind==='coin'?'coin':'scratch');renderTicket()}
 function pendDone(p){D.pend.shift();tkKey='';const c=p.c;
   if(p.kind==='coin'){c.dec=false;const f=Math.random()<.5?'sap':'ngua',win=f===p.pick,base=c.price+(c.cupUp||0);if(win)bump('coinW');
-    say(c,win?'Chơi đẹp, anh chịu!':'Hehe, lần sau nha!',1800);settle(c,p.s,r1k(base*(win?1.5:.5)),p.notes,`🪙 ${f==='sap'?'Sấp':'Ngửa'}, ${win?'đoán trúng: trả 150%':'đoán trật: trả 50%'}`);checkAch()}
+    say(c,win?'Chơi đẹp, anh chịu!':'Hehe, lần sau nha!',1800);D.log.push(`🪙 Đoán ${win?'trúng':'trật'} xu với ${c.name}: trả ${win?'150%':'50%'}`);settle(c,p.s,r1k(base*(win?1.5:.5)),p.notes,`🪙 ${f==='sap'?'Sấp':'Ngửa'}, ${win?'đoán trúng: trả 150%':'đoán trật: trả 50%'}`);checkAch()}
   else{const r=Math.random();let m;if(r<.4){D.tipB={n:5,amt:5000,why:'quẻ đại cát'};m='🎴 Quẻ Đại cát! 5 khách tới bo thêm 5k'}else if(r<.75)m='🎴 Quẻ Bình an: buôn bán đều đều';else{D.nextT='khotinh';m='🎴 Quẻ Hung! Khách kế tiếp khó tính đó con'}
     toast(m,3400,2);D.log.push(m);say(c,r<.4?'Đại cát, đại lợi!':r<.75?'Bình an là quý.':'Cẩn thận nha con…',1800)}
   renderTicket()}
@@ -2674,7 +2677,7 @@ $('#tk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||
   if(b.dataset.sugx!==undefined){D.sug=null;tkKey='';renderTicket();return}
   if(b.dataset.sugr!==undefined){const c=D.queue.find(x=>x.id===D.sug);const ix=c&&sugIx(c);D.sug=null;D.sugIx=null;tkKey='';if(c)suggest(c,b.dataset.sugr,ix);renderTicket();return}
   if(b.dataset.dec){const p0=D.pend[0];if(p0&&p0.t0!=null){pendPick(p0,b.dataset.dec);return}const p=D.pend.shift();if(!p)return;const c=p.c;c.dec=false;tkKey='';
-    if(p.kind==='bargain'){if(b.dataset.dec==='yes')settle(c,Math.min(5,p.s+1),p.offer,p.notes);else{say(c,'Dạ…',1200);settle(c,Math.max(1,p.s-1),c.price,p.notes)}}
+    if(p.kind==='bargain'){if(b.dataset.dec==='yes'){D.log.push(`🎒 Bớt cho ${c.name} giá học sinh −20%`);settle(c,Math.min(5,p.s+1),p.offer,p.notes)}else{say(c,'Dạ…',1200);settle(c,Math.max(1,p.s-1),c.price,p.notes)}}
     else if(b.dataset.dec==='yes'){S.debts.push({name:c.name,amt:c.price,d:S.day});D.log.push(`${c.name} ghi nợ ${fmt(c.price)}.`);settle(c,p.s,0,p.notes,'ghi sổ nợ')}
     else{D.queue=D.queue.filter(x=>x!==c);D.left++;review(c,1,['không cho nợ']);say(c,'Khó vậy…',1400);leave(c,'leave',0);layoutQ();toast(`${c.name} bỏ về, ly bị bỏ phí`);renderTicket()}return}
   if(b.dataset.refuse)refuseCust(+b.dataset.refuse)});
@@ -2760,14 +2763,18 @@ function serveCup(c,ix,cup,by){const o=c.items[ix];
 /* nhật ký cuối ngày: các dòng lặp lại cùng loại gộp thành một dòng có số đếm (chỉ 1 lần thì giữ câu gốc) */
 const LOG_GROUPS=[[/^🗣️ .* kể: /,n=>`🗣️ Bà tám kể ${n} chuyện trong xóm`],[/vào bênh tiệm dưới review/,n=>`💛 Khách quen bênh tiệm ${n} lần`],
   [/thành khách quen/,n=>`✨ ${n} khách thành khách quen`],[/anh em xe ôm ghé tiệm/,n=>`🛵 Chú xe ôm rủ anh em ghé ${n} lần`],
-  [/(đi kể cả xóm về tiệm|livestream khen tiệm|đăng story khen tiệm)/,n=>`📣 ${n} khách đi khoe tiệm, mai thêm khách`],[/^🎴 /,n=>`🎴 Thầy bói gieo ${n} quẻ`],
-  [/ ghi nợ \d/,n=>`📒 ${n} khách ghi nợ`],[/ trả .* cho .* · review 5★/,n=>`🤝 Trả lại ${n} món đồ khách để quên`],[/không thấy đâu/,n=>`🤔 ${n} món đồ khách để quên không thấy đâu`],
+  [/(đi kể cả xóm về tiệm|livestream khen tiệm|đăng story khen tiệm)/,n=>`📣 ${n} khách đi khoe tiệm, mai thêm khách`],[/^🎴 /,(n,ls)=>`🎴 Thầy bói gieo ${n} quẻ · ${cntOf(ls,[['Đại cát',/Đại cát/],['Bình an',/Bình an/],['Hung',/Hung/]])}`],
+  [/ ghi nợ \d/,(n,ls)=>{const t=ls.reduce((a,l)=>{const v=(l.match(/ghi nợ ([\d.]+)đ/)||[])[1];return a+(v?+v.replace(/\./g,''):0)},0);return `📒 ${n} khách ghi nợ${t?' · '+fk(t):''}`}],
+  [/^🪙 /,(n,ls)=>`🪙 Bet thủ tung xu ${n} lần · ${[['150%',/trả 150%/],['50%',/trả 50%/]].map(([k,re])=>[k,ls.filter(l=>re.test(l)).length]).filter(x=>x[1]).map(([k,v])=>`${k} ×${v}`).join(', ')}`],[/^🎒 /,n=>`🎒 ${n} học sinh trả giá học sinh −20%`],[/ trả .* cho .* · review 5★/,n=>`🤝 Trả lại ${n} món đồ khách để quên`],[/không thấy đâu/,n=>`🤔 ${n} món đồ khách để quên không thấy đâu`],
   [/quay lại lấy /,n=>`👜 ${n} khách quay lại lấy đồ để quên`],[/^🤫 Ỉm /,n=>`🤫 Ỉm ${n} món đồ khách để quên`],[/không còn là khách quen/,n=>`💔 ${n} khách quen không ghé nữa`]];
-function condenseLog(log){const out=[],at={},cnt={};
-  log.forEach(l=>{const g=LOG_GROUPS.findIndex(([re])=>re.test(l));if(g<0){out.push(l);return}if(at[g]==null){at[g]=out.length;out.push(l);cnt[g]=1}else cnt[g]++});
-  for(const g in at)if(cnt[g]>1)out[at[g]]=LOG_GROUPS[g][1](cnt[g]);
+const cntOf=(ls,K)=>K.map(([k,re])=>[k,ls.filter(l=>re.test(l)).length]).filter(x=>x[1]).map(([k,v])=>`${v} ${k}`).join(', ');
+/* dòng gộp là {t: câu tóm tắt, ls: các dòng gốc}, ở màn tổng kết chạm để mở xem từng dòng (logLi) */
+function condenseLog(log){const out=[],at={},grp={};
+  log.forEach(l=>{const g=LOG_GROUPS.findIndex(([re])=>re.test(l));if(g<0){out.push(l);return}if(at[g]==null){at[g]=out.length;out.push(l);grp[g]=[l]}else grp[g].push(l)});
+  for(const g in at)if(grp[g].length>1)out[at[g]]={t:LOG_GROUPS[g][1](grp[g].length,grp[g]),ls:grp[g]};
   /* dòng quan trọng (bị phạt, thiếu tiền lương, nhiệm vụ, đối thủ, mất tiền) lên đầu để không bị che sau nút xem thêm */
-  const imp=l=>/^(🚨|⚠|🎯|⚔️|🎉|😓)|Không đủ tiền|quỵt|phạt/.test(l);return [...out.filter(imp),...out.filter(l=>!imp(l))]}
+  const imp=l=>/^(🚨|⚠|🎯|⚔️|🎉|😓)|Không đủ tiền|quỵt|phạt/.test(l.t||l);return [...out.filter(imp),...out.filter(l=>!imp(l))]}
+const logLi=l=>{if(!l.ls)return `<li>${l}</li>`;const ic=(l.t.match(/^\S+ /)||[''])[0];return `<li class="lgx"><details><summary>${l.t}</summary><ul>${l.ls.map(x=>`<li>${ic&&x.startsWith(ic)?x.slice(ic.length):x}</li>`).join('')}</ul></details></li>`};
 function endDay(){
   rushMusic(false);const day=S.day,log=[...D.log],notice=[];let wages=0;if(D.rushLost)log.push(`⏰ Giờ cao điểm: ${D.rushLost} khách thấy hàng dài nên đi tiệm khác.`);
   for(const s of [...S.staff]){
@@ -2802,8 +2809,8 @@ function endDay(){
    <div><b style="color:var(--gold)">${avg}★</b><span>⭐ Trung bình</span></div><div><b>+${nf}</b><span>🌟 Review 5★</span></div><div id="sumVeT" hidden><b style="color:var(--good)"></b><span>🎟️ Vé số trúng</span></div>
    ${D.caught+D.dodged||D.lost?`<div><b>${D.caught+D.dodged}</b><span>Kẻ quỵt bị bắt</span></div><div><b style="color:${D.lost?'var(--bad)':'inherit'}">${fmt(D.lost)}</b><span>Mất vì bị quỵt</span></div>`:''}`;
   /* tiệm lớn có thể vài trăm khách: gom dòng cùng loại thành một dòng có số đếm, chỉ hiện 8 dòng đầu, bấm để xem hết */
-  {const L=condenseLog(log.length?log:['Một ngày bình yên.']),M=8;$('#sumLog').innerHTML=L.slice(0,M).map(l=>`<li>${l}</li>`).join('')+(L.length>M?`<li class="more"><button class="btn sm ghost" id="sumMore">＋ ${L.length-M} dòng khác</button></li>`:'');
-   if(L.length>M)$('#sumMore').onclick=()=>{$('#sumLog').innerHTML=L.map(l=>`<li>${l}</li>`).join('')}}
+  {const L=condenseLog(log.length?log:['Một ngày bình yên.']),M=8;$('#sumLog').innerHTML=L.slice(0,M).map(logLi).join('')+(L.length>M?`<li class="more"><button class="btn sm ghost" id="sumMore">＋ ${L.length-M} dòng khác</button></li>`:'');
+   if(L.length>M)$('#sumMore').onclick=()=>{$('#sumLog').innerHTML=L.map(logLi).join('')}}
   S.ledger=S.ledger||[];S.ledger.push({loanIn:S.loanInToday||0,loanOut:S.loanOutToday||0,d:day,sales:Object.entries(D.sales).map(([k,v])=>({r:+k,name:v.name,n:v.n,rev:Math.round(v.rev),cost:Math.round(v.cost)})),tips:D.tips,other:D.other,ev:D.evIn||0,debt:debtIn,spent:{...(S.spentCat||{})},wages,served:D.served,total:D.total,avg:D.stars.length?D.stars.reduce((a,b)=>a+b,0)/D.stars.length:0,lost:D.lost,money:S.money});if(S.ledger.length>60)S.ledger.shift();S.life=lifeAdd(S.life||newLife(),S.ledger[S.ledger.length-1]);if(!S.life.from)S.life.from=day;{const up=shopUp(S);if(up)notice.push({t:`Tiệm đã mở rộng thành ${shopLv().n}! Giờ chứa tối đa ${shopLv().cap} khách/ngày và thuê được ${shopLv().staff} nhân viên.`})}
   D=null;cup=null;pouring=null;sealing=null;tkKey='';{const was=new Set(TABS.filter(([k])=>tabOpen(k)).map(([k])=>k));S.day++;const nt=TABS.filter(([k])=>!was.has(k)&&tabOpen(k));if(nt.length){notice.push({t:`🔓 Mở tab mới: ${nt.map(([,l])=>l).join(', ')}`});S.newTabs=[...(S.newTabs||[]),...nt.map(([k])=>k)]}}if(S.day===5&&!S.foams.length)notice.push({t:'🔓 Kem phủ đã có ở tab Kho'});checkAch();S.spent=0;S.spentCat={};S.loanInToday=0;S.loanOutToday=0;S.notice=notice;save();hud('Đóng cửa');$('#hDay').firstChild.textContent=`Ngày ${day}`;show('summary')}
 $('#hMoney').onclick=()=>{if(D)return toast('Xem tài chính sau khi đóng cửa nhé');if(!$('#summary').hidden)return;if(!tabOpen('taichinh'))return toast(`Tab Tài chính mở từ ngày ${TAB_DAY.taichinh}`);tab='taichinh';resetArm=false;$('#tbody').scrollTop=0;renderPrep()};
