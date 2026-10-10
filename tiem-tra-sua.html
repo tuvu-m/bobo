@@ -143,6 +143,7 @@ html,body{touch-action:pan-x pan-y}
 .pill.hotp{border-color:var(--accent);color:var(--accent)}
 .pill.bad{border-color:var(--bad);color:var(--bad);background:#fde6e3}
 .pairs{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:11.5px;color:var(--muted);margin:2px 0}
+.bookx{margin:0 0 8px;padding:6px 10px;border:1.5px solid var(--line);border-radius:12px;background:var(--paper)}.bookx summary{cursor:pointer;font-weight:800;font-size:13px}.bookx[open] summary{margin-bottom:4px}
 .pill.cur{border-color:var(--ink);background:var(--tile)}
 .refuse{margin:-8px -8px -8px 0;font-size:11px;font-weight:700;color:var(--bad);text-decoration:underline;padding:8px}
 .tk .q{font-size:12.5px;font-style:italic;line-height:1.35}
@@ -236,7 +237,7 @@ html,body{touch-action:pan-x pan-y}
 .shoppic{float:right;width:96px;height:72px;object-fit:contain;margin:0 0 4px 8px}
 .shopname{display:flex;align-items:center;gap:8px;margin:0 0 8px}.shopname input{flex:1;min-width:0;width:auto;font:inherit;font-size:16px;font-weight:800;color:var(--ink);background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px 10px}
 .shopbox{display:flow-root;background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin:0 0 10px}.shopbox.ready{border-color:var(--accent);background:#fff1f4}
-.upbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.upbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}.req{font-size:12px;font-weight:700;margin-top:4px;color:var(--muted)}.licbox{margin:8px 0 2px;padding:8px 10px;border-radius:12px;background:#fff;border:1.5px dashed var(--accent)}.req.ok{color:var(--good)}.req.no{color:var(--bad)}
 .prog{display:grid;grid-template-columns:minmax(0,46%) 1fr;gap:8px;align-items:center;font-size:12px;margin-top:4px}
 .prog i{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:block}.prog i b{display:block;height:100%;background:var(--good)}
 .kchip[aria-pressed="true"]{border-color:var(--counter);background:var(--counter-2)}.kdot{width:9px;height:9px;border-radius:50%;border:1px solid rgba(122,86,70,.4)}
@@ -312,6 +313,7 @@ button.mcard{font:inherit;color:inherit;cursor:pointer;padding:5px 4px 6px}butto
 .mcard.on{border-color:var(--counter);background:#fff}.mcard.sel{box-shadow:0 0 0 2px var(--accent)}
 .mcard .mon{position:absolute;top:4px;left:4px;font-style:normal;font-size:11px;font-weight:800;color:#fff;background:var(--counter);border-radius:999px;padding:0 5px;line-height:16px}
 .mcard .mgr{position:absolute;top:4px;right:4px;font-style:normal;font-size:11px;font-weight:800;color:var(--accent);border:1.5px solid currentColor;border-radius:999px;min-width:17px;line-height:14px;padding:0 3px}
+.mcard .mgr.gs{color:#c98a12;background:#fff4d6}
 .mcard .mhot{position:absolute;top:24px;right:5px}.mcard .mhot svg{width:13px;height:13px}.mmore{display:block;margin:8px auto 0}
 .medit{grid-column:1/-1}.medit .rcard{border-color:var(--accent)}
 .mhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 6px}.mhead .full{color:var(--accent)}
@@ -571,9 +573,20 @@ function syncBasics(){S.recipes=S.recipes||[];basicsList().forEach(b=>{if(S.reci
 const sameSet=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
 function compatLabel(avg,n){if(n<2)return 'Vị cơ bản';return avg>=2?'Rất hợp':avg>=1?'Hợp':avg>=-.5?'Tạm được':avg>-1.5?'Hơi lạ':'Không hợp, dễ trượt kiểm định'}
 const hearts=s=>s>=3?'♥♥♥':s===2?'♥♥':s===1?'♥':s===0?'·':s===-1?'✕':s===-2?'✕✕':'✕✕✕';
-function inspect(r){const ci=comboInfo(recIds(r)),n=ci.ids.length;let m=n<2?2.6:2.6+.35*ci.avg-.12*Math.max(0,n-3)+rnd(-.12,.12);m=Math.round(m*100)/100;
+/* hạng món theo hệ số: C < B (2,8) < A (3,3) < S (3,45) < SS (3,55) < SSS (3,6 và bắt buộc có nguyên liệu hiếm) */
+const gradeOf=(m,rare)=>m>=3.6&&rare?'SSS':m>=3.55?'SS':m>=3.45?'S':m>=3.3?'A':m>=2.8?'B':'C';
+/* sổ công thức: điểm hợp vị của các cặp nguyên liệu đã biết qua kiểm định (S.book, khóa pk) */
+const pk=(a,b)=>a<b?a+'|'+b:b+'|'+a;
+function learnPairs(ids,B){B=B||S.book||(S.book={});comboInfo(ids).pairs.forEach(p=>B[pk(p.a,p.b)]=p.s)}
+/* hạng dự kiến của một tổ hợp từ các cặp đã biết: cặp chưa biết tính từ xấu nhất (−3, có thể trượt) tới tốt nhất (+3) */
+function bookGuess(ids){const ci=comboInfo(ids),n=ci.ids.length,B=S.book||{},P=ci.pairs.map(p=>({...p,k:B[pk(p.a,p.b)]}));
+  if(n<2)return{P,unk:0,lo:'C',hi:'C'};
+  const kn=P.filter(p=>p.k!=null),unk=P.length-kn.length,sum=kn.reduce((a,p)=>a+p.k,0),np=P.length,pen=.12*Math.max(0,n-3),rare=ci.ids.some(isRare);
+  const fail=kn.some(p=>p.k<=-3)||(!unk&&sum/np<=-1.5);
+  return{P,unk,fail,lo:gradeOf(2.6+.35*(sum-3*unk)/np-pen-.12,rare),hi:gradeOf(2.6+.35*(sum+3*unk)/np-pen+.12,rare)}}
+function inspect(r){const ci=comboInfo(recIds(r)),n=ci.ids.length;learnPairs(ci.ids);let m=n<2?2.6:2.6+.35*ci.avg-.12*Math.max(0,n-3)+rnd(-.12,.12);m=Math.round(m*100)/100;
   if(n>1&&(ci.avg<=-1.5||ci.pairs.some(p=>p.s<=-3))){r.status='fail';r.mult=m;return}
-  r.status='ok';r.mult=m;r.grade=m>=3.3?'A':m>=2.8?'B':'C';if(!r.price)r.price=r1k(ci.cost*m)}
+  r.status='ok';r.mult=m;r.grade=gradeOf(m,ci.ids.some(isRare));if(!r.price)r.price=r1k(ci.cost*m)}
 const PICS={};
 function drinkPic(bs,ts,fs,size='M',ss=[]){const key=[bs.join(','),ss.join(','),ts.join(','),fs.join(','),size].join('|');if(PICS[key])return PICS[key];const cv=document.createElement('canvas');cv.width=160;cv.height=220;const C=mk(cv,32,44);C.s=5;const old=K;begin(C);
   EL(16,42.4,10,1.4,'rgba(90,60,40,.15)',null);drawCup(16,41.6,size==='L'?.82:.86,{size,pours:bs.map(k=>({k,amt:1})),syrups:ss,fill:fs.length?.62+.08*Math.min(2,fs.length):.92,tops:ts,foams:fs,ice:fs.length?0:1,sealed:true},false);K=old;return PICS[key]=cv.toDataURL()}
@@ -589,7 +602,8 @@ const TYPES={
   quen:{label:'Khách quen',w:0,pat:1.45,day:99},
   xeom:{label:'Chú xe ôm',w:6,pat:1.15,day:2},chim:{label:'Cảnh sát chìm',w:3,pat:1.1,day:4},sigai:{label:'Đại gia đi cùng bạn gái',w:4,pat:.95,day:3,g:[2,2]},
   shipper:{label:'Shipper lấy đơn',w:6,pat:.75,day:3,g:[2,4]},songao:{label:'Hot girl sống ảo',w:5,pat:1.05,day:2},
-  betthu:{label:'Bet thủ',w:5,pat:1,day:3},thayboi:{label:'Thầy bói',w:3,pat:1.2,day:4},batam:{label:'Bà tám',w:4,pat:1.3,day:3},streamer:{label:'Streamer',w:4,pat:1,day:5},tay:{label:'Tây ba lô',w:4,pat:1.35,day:3}
+  betthu:{label:'Bet thủ',w:5,pat:1,day:3},thayboi:{label:'Thầy bói',w:3,pat:1.2,day:4},batam:{label:'Bà tám',w:4,pat:1.3,day:3},streamer:{label:'Streamer',w:4,pat:1,day:5},tay:{label:'Tây ba lô',w:4,pat:1.35,day:3},
+  thanhtra:{label:'Thanh tra',w:0,pat:1,day:1e9}
 };
 const SPARK=`<svg class="spk" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l1.4 4.6L12 6 7.4 7.4 6 12 4.6 7.4 0 6l4.6-1.4z" fill="#f5c542" stroke="#c99a1a" stroke-width=".5"/></svg>`;
 const PAYS=['Tiền mặt','Quét mã QR','Chuyển khoản'];
@@ -693,6 +707,13 @@ const OUTFITS={
   o_kimono:{n:'Kimono trà đạo',five:20,ch:4,shirt:'#6f86b8',obi:'#f0b24a'}
 };
 /* scene 160x62 */
+/* bằng chứng nhận của thanh tra treo trên tường cạnh cửa sổ: bằng mới nhất ở trước (số = cấp), bằng cũ xếp chồng phía sau */
+function drawCerts(){const L=S.certs||[];if(!L.length)return;const x=101.4,y=23.6,w=7.4,h=6;
+  L.slice(-3,-1).forEach((_,i,a)=>{const o=(a.length-i)*.9;RR(x-o,y-o,w,h,.6,'#f3e6cc',LINE,.3)});
+  RR(x,y,w,h,.7,'#b98a5a',LINE,.4);RR(x+.6,y+.6,w-1.2,h-1.2,.4,'#fffaf0',null);
+  LN(x+1.3,y+1.8,x+w-1.3,y+1.8,'#c9a46a',.35);LN(x+1.3,y+2.8,x+w-2.9,y+2.8,'#dccaa8',.25);LN(x+1.3,y+3.7,x+w-3.3,y+3.7,'#dccaa8',.25);
+  PT([[x+w-2.6,y+h-1],[x+w-3,y+h+.8],[x+w-2.3,y+h+.3]],'#e2617f',null,0);PT([[x+w-1.4,y+h-1],[x+w-1,y+h+.8],[x+w-1.7,y+h+.3]],'#e2617f',null,0);
+  EL(x+w-1.95,y+h-1.75,1.25,1.25,'#f0a83a',LINE,.25);T(String(L.at(-1)+1),x+w-1.95,y+h-1.15,1.5,'#fff','center',800)}
 const DSLOT={
   W1:{x:87,y:12,w:22,h:10,t:'wall',l:'Kệ tường'},W2:{x:144,y:12,w:14,h:20,t:'wall',l:'Tường phải'},
   F1:{x:90,y:24,w:10,h:16,t:'floor',l:'Sàn trái'},F2:{x:124,y:24,w:10,h:16,t:'floor',l:'Sàn phải'},
@@ -786,6 +807,10 @@ function migrate(s){(s.recipes||[]).forEach(r=>{r.name=cleanName(r.name)||'Món 
     s.recipes.forEach(r=>{if(!r.ts||!r.ts.length)return;const c0=cost(recIds(r));let auto=false;try{auto=r.name===autoName(r.bs,r.ts,r.fs,r.ss)}catch(e){}
       r.ts=[];if(r.price&&c0)r.price=Math.max(5000,r1k(r.price*cost(recIds(r))/c0));if(auto)try{r.name=autoName(r.bs,[],r.fs,r.ss)}catch(e){}n++});
     if(n)s.notice=(s.notice||[]).concat([{t:`Topping giờ là món thêm: khách tự chọn topping khi gọi và trả tiền riêng. ${n} công thức có topping đã được bỏ topping ra và giảm giá bán tương ứng.`}])}
+  /* thang hạng mới (S/SS/SSS) và sổ cặp nguyên liệu cho save cũ */
+  if(!s.bookV){s.bookV=1;s.book=s.book||{};(s.recipes||[]).forEach(r=>{if(r.status==='ok'||r.status==='fail')learnPairs(recIds(r),s.book);if(r.status==='ok'&&!r.basic&&typeof r.mult==='number')r.grade=gradeOf(r.mult,recIds(r).some(isRare))})}
+  /* luật giấy phép: save cũ từ cấp 2 trở lên (lên cấp tự động trước đây) được thanh tra hẹn kiểm tra cấp hiện tại trong 3 ngày */
+  if(!s.licV){s.licV=1;if((s.shop||0)>=1&&(s.day||1)>1){s.licDue={lv:s.shop,by:(s.day||1)+3};s.notice=(s.notice||[]).concat([{t:`🧑‍⚖️ Luật mới: tiệm từ cấp 2 cần giấy phép. Thanh tra hẹn kiểm tra ${SHOP[s.shop].n} trong 3 ngày (tab Trang trí). Trượt thì xuống 1 cấp, thi lại lên cấp không mất phí.`}])}}
   /* bản giảm độ khó: báo một lần cho người chơi cũ; món đang bán vượt giới hạn vẫn giữ nguyên */
   if(!s.capV){s.capV=1;if((s.day||1)>1){const n=(s.recipes||[]).filter(r=>r.on).length,c=MENU_CAP[s.shop||0];
     s.notice=(s.notice||[]).concat([{t:`Cập nhật: mỗi ly tối đa ${(s.shop||0)>=2?3:2} topping, mỗi cấp tiệm bán tối đa ${c} món cùng lúc${n>c?` (${n} món đang bán vẫn giữ, muốn thêm món mới thì ngừng bớt)`:''}. Có nút Bày theo thực đơn ở tab Quầy và Điền đủ ở tab Kho.`}])}}
@@ -1004,7 +1029,7 @@ function drawScene(C,t,opt={}){
     if(S.ev==='mua'||S.ev==='nangnong'){c.save();c.beginPath();c.rect(109.5+35*.2,10.6+wh*.08,35*.6,wh*.72);c.clip();weatherFX(109.5+35*.2,10.6+wh*.08,35*.6,wh*.72,t,hr);c.restore()}}
   RR(54,12,30,19,2.4,'#c99a6e',LINE,.6);RR(55.5,13.5,27,16,1.6,'#3f4d47',null);if(SPR.k_bangmenu){const im=SPR.k_bangmenu;c.save();rrPath(55.5,13.5,27,16,1.6);c.clip();c.drawImage(im,im.width*.25,im.height*.3,im.width*.5,im.height*.35,55.5,13.5,27,16);c.restore()}T('MENU',69,16.2,3.2,'#ffd48a','center',800);
   menuNow().slice(0,4).forEach((r,i)=>{const yy=19.6+i*2.9;if(hotCount(r))EL(56.4,yy,.55,.55,'#ff8fab',null);let nm=MENUCUT[r.name];if(nm===undefined){nm=r.name;while(TW(nm,2.3,600)>19&&nm.length>3)nm=nm.slice(0,-1);if(nm!==r.name)nm=nm.trim()+'…';MENUCUT[r.name]=nm}T(nm,57.4,yy,2.3,'#f7f1e6','left',600);T(fk(r.price),81.6,yy,2.3,'#ffd48a','right',700)});
-  drawDecor('W1',t);drawDecor('W2',t);drawDecor('F1',t);drawDecor('F2',t);
+  drawDecor('W1',t);drawDecor('W2',t);drawDecor('F1',t);drawDecor('F2',t);drawCerts();
   if(SPR.k_den){if(C.lampS!==C.s){C.lampS=C.s;C.lamp=offLayer(C,17,16,()=>{const x=K.ctx;x.shadowColor='rgba(255,210,120,.8)';x.shadowBlur=4*K.s;x.drawImage(SPR.k_den,4,4,9,7.6)})}[52,108].forEach(lx=>c.drawImage(C.lamp,lx-8.5,4.5,17,16))}else [52,108].forEach(lx=>{LN(lx,9,lx,13.2,'#8a6a5a',.4);c.beginPath();c.ellipse(lx,15.4,3.4,2.5,0,Math.PI,0);c.closePath();paint('#ffd27a',LINE,.5);EL(lx,15.8,1.1,.6,'#fff7d6',null)});
   if(lvSpr('k_maihien'))c.drawImage(lvSpr('k_maihien'),-3,-1.5,166,10.5);else drawAwning();
   const fp=frontPeople();
@@ -1280,8 +1305,8 @@ function qCard(c,i,st,nx,first){const it=c.items[i],R=regOf(c),sp=R?`${SPARK} ${
   const foot=st.k==='me'?'Bạn đang pha':st.k==='bad'?`${st.s.name} hỏng · Bỏ ly`:st.k==='lz'?`${st.s.name} lướt điện thoại…`:st.k==='sf'?`<span data-qst="${st.s.id}">${st.s.name} · ${ASTEP_L[st.s.w.steps[st.s.w.i]]}</span>`:st.k==='oos'?`Hết ${st.m.map(k=>ITEM(k).sh).join(', ')} · Đổi món`:nx?'Tiếp theo':'Chờ';
   return `<div class="qc ${st.k}${nx?' nx':''}" role="button" tabindex="0" data-qc="${c.id}:${i}" data-k="${qKey(c,i,st,nx,first)}"><i class="qpat"><i data-pat="${c.id}"></i></i>
    <div class="qch"><img src="${qPic(c)}" alt=""><b>${R?R.name:c.name}</b></div>
-   ${sp||c.items.length>1?`<div class="qt${R?' qnk':''}">${c.items.length>1?`<b class="qn">${i+1}/${c.items.length}</b> `:''}${sp.replace(/ · \d+ ly$/,'')}</div>`:''}<div class="qd"><img src="${drinkPicR(it,it.size)}" alt=""><span><b>${it.name}</b><i class="sz">${it.size}</i></span></div>${it.ts.length?`<div class="qtp">+${it.ts.map(k=>it.en&&EN[k]||TOPS[k].sh).join(', ')}</div>`:''}${c.liveEnd?`<div class="qlive">📹 <b data-live="${c.id}"></b></div>`:''}${it.sk&&CUPSKIN[it.sk]?`<div class="qslv" style="--c1:${CUPSKIN[it.sk].c1}">${CUPSKIN[it.sk].sh}</div>`:''}
-   <div class="qs"><span>${foot}</span>${first&&(st.k==='wait'||st.k==='oos')?`<button class="qx${refArm===c.id?' arm':''}" data-qref="${c.id}" aria-label="Từ chối">${refArm===c.id?'Chắc?':'✕'}</button>`:''}</div>${st.k==='sf'||st.k==='lz'?`<i class="pbar"><i data-qp="${st.s.id}"></i></i>`:''}</div>`}
+   ${sp||c.items.length>1?`<div class="qt${R?' qnk':''}">${c.items.length>1&&c.type!=='thanhtra'?`<b class="qn">${i+1}/${c.items.length}</b> `:''}${sp.replace(/ · \d+ ly$/,'')}</div>`:''}<div class="qd"><img src="${drinkPicR(it,it.size)}" alt=""><span><b>${it.name}</b><i class="sz">${it.size}</i></span></div>${it.ts.length?`<div class="qtp">+${it.ts.map(k=>it.en&&EN[k]||TOPS[k].sh).join(', ')}</div>`:''}${c.liveEnd?`<div class="qlive">📹 <b data-live="${c.id}"></b></div>`:''}${it.sk&&CUPSKIN[it.sk]?`<div class="qslv" style="--c1:${CUPSKIN[it.sk].c1}">${CUPSKIN[it.sk].sh}</div>`:''}
+   <div class="qs"><span>${foot}</span>${first&&(st.k==='wait'||st.k==='oos')&&c.type!=='thanhtra'?`<button class="qx${refArm===c.id?' arm':''}" data-qref="${c.id}" aria-label="Từ chối">${refArm===c.id?'Chắc?':'✕'}</button>`:''}</div>${st.k==='sf'||st.k==='lz'?`<i class="pbar"><i data-qp="${st.s.id}"></i></i>`:''}</div>`}
 const qKey=(c,i,st,nx,first)=>[c.id,i,st.k,st.s&&st.s.id,st.m&&st.m.join(),nx,first&&refArm===c.id,c.items[i].name,c.items[i].size,!!c.liveEnd].join(',');
 /* đồng hồ thử thách của streamer: ghi thẳng mỗi khung hình */
 function liveTick(){document.querySelectorAll('[data-live]').forEach(b=>{const c=D&&D.queue.find(x=>x.id==b.dataset.live);if(!c||!c.liveEnd)return;const r=Math.ceil(c.liveEnd-now);setText(b,r>0?r+'s':'Trễ!');b.classList.toggle('late',r<=5)})}
@@ -1379,7 +1404,8 @@ function unlockState(it){if(it.five)return{ok:S.five>=it.five,txt:`⭐ ${Math.mi
 
 /* nút Mở cửa báo luôn còn thiếu gì: đỏ là chưa mở được, cam là mở được nhưng nên xem lại */
 function openBtnState(){const b=$('#openBtn'),em=emergencyNeeded(),m=activeMenu();let t=`Mở cửa ngày ${S.day}`,sub='',cls='';
-  if(em){t='Mở cửa bán trà đá';sub='2.000đ/ly'}
+  if(S.licDue&&S.day>=S.licDue.by){t='🧑‍⚖️ Kiểm tra giấy phép';sub='Thanh tra tới trước khi mở cửa';cls='warn'}
+  else if(em){t='Mở cửa bán trà đá';sub='2.000đ/ly'}
   else if(!m.length){cls='bad';sub='📋 Chưa có món bán'}
   else if(!canOpenNormal()){cls='bad';sub='📦 Hết trà cho thực đơn'}
   else if(cartN()){cls='warn';sub=`🛒 Giỏ chưa nhập · ${fk(cartTot())}`}
@@ -1481,12 +1507,67 @@ function rivalDay(day,log,notice){const R=S.rival;if(!R||day<R.start)return;cons
   R.n++;if(win)R.w++;else R.l++;log.push(`⚔️ ${R.name}: bạn ${avg?avg.toFixed(1):'—'}★, họ ${rd}★ → ${win?'thắng':'thua'} (${R.w}–${R.l}).`);
   if(R.w>=4){notice.push({t:`🎉 “${R.name}” dẹp tiệm! Khách của họ chuyển sang bạn (+8 khách ngày mai).`});S.buzz=Math.min(16,(S.buzz||0)+8);bump('doithu');S.rival=null;S.rivalLast=day}
   else if(R.l>=4||R.n>=7){notice.push({t:`😓 “${R.name}” trụ lại được. Khách giảm 10% thêm 7 ngày.`,bad:1});S.rvPen=day+7;S.rival=null;S.rivalLast=day}}
-/* mở rộng tiệm: đủ điều kiện thì trả phí, chạm 2 lần để xác nhận (resetArm) */
-function shopUpBuy(){const i=S.shop||0,N=SHOP[i+1];if(!N||!shopReady(S))return;
-  if(ownMoney()<N.fee){resetArm=false;return toast(S.money>=N.fee?'Tiền vay chỉ dùng để nhập nguyên liệu':`Thiếu ${fk(N.fee-ownMoney())} để mở rộng tiệm`)}
-  if(resetArm!=='shopup'){resetArm='shopup';sfx('pop');renderPrep();return}
-  resetArm=false;spend('nangcap',N.fee);S.shop=i+1;S.upNote=null;S.notice=(S.notice||[]).filter(n=>!/^⬆️ Đủ điều kiện/.test(n.t));sfx('fanfare');
-  toast(`🎉 ${N.n}! 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[i+1]} món`,3600,2);checkAch();save();renderPrep()}
+/* ---- Bài kiểm tra lên cấp: thanh tra tới tiệm, không nhân viên, không khách, chỉ chủ tiệm và thanh tra.
+   Thanh tra gọi lần lượt EXAM_N ly (ly cuối là món hạng cao của tiệm), mỗi ly có giờ (examTime). Tràn ly, sai không sửa được
+   (thừa đồ, dư đường/đá, quá vạch), bỏ ly hoặc hết giờ là trượt. Mời được khi đủ ⭐ + 💰 (shopReady), có món hạng EXAM_G đang bán
+   (examDish) và đủ tiền phí (trả khi đạt); mỗi ngày mời một lần (S.examDay). Không tốn ngày bán. */
+const EXAM_N=[0,3,5,7,10],EXAM_G=[0,2,3,3,3],GRADE_R={C:1,B:2,A:3,S:4,SS:5,SSS:6},gradeTxt=g=>g>=3?'A':'B trở lên';
+const examDish=lv=>activeMenu().filter(r=>(GRADE_R[r.grade]||0)>=EXAM_G[lv]).sort((a,b)=>(GRADE_R[b.grade]||0)-(GRADE_R[a.grade]||0)||b.mult-a.mult)[0]||null;
+const examTime=(c,o)=>{c.max=c.p=12+6*stepsOf(o).length};
+function examOrder(last){const E=D.exam;for(let i=0;i<15;i++){const o=makeOrder(last?E.dish:undefined);if(!missingOf(o).length)return o}return null}
+/* thi lại lên cấp vừa bị xuống (trượt giấy phép) thì không mất phí (S.freeUp) */
+const upFee=lv=>(S.freeUp||0)>=lv?0:SHOP[lv].fee;
+function startExam(kind){const lic=kind==='lic',lv=lic?(S.shop||0):(S.shop||0)+1,N=SHOP[lv];if(!N||D||lv<1)return;
+  if(lic?!S.licDue:!shopReady(S)||S.licDue)return;
+  if(S.examDay===S.day)return toast('Hôm nay thanh tra đã tới rồi, mai mời lại nha');
+  if(!lic&&ownMoney()<upFee(lv))return toast(`Cần ${fk(upFee(lv))} phí mở rộng (trả khi đạt)`);
+  const dish=examDish(lv);if(!dish){if(lic&&S.day>=S.licDue.by){S.examDay=S.day;return licFail(`chưa có món hạng ${gradeTxt(EXAM_G[lv])}`)}return toast(`Cần một món hạng ${gradeTxt(EXAM_G[lv])} đang bán`)}
+  syncLayout();
+  D={queue:[],walk:[],fx:[],cid:0,spawned:0,total:1,served:0,left:0,rev:0,stars:[],next:1e9,clock:7,pend:[],chase:null,cop:null,caught:0,lost:0,dodged:0,log:[],five0:S.five,tgt:null,err:{},sales:{},tips:0,other:0,emerg:false,ev:null,evPlan:[],evIn:0,evTax:false,away:0,slowT:0,tipB:null,as:null,rate:0,
+    exam:{kind:lic?'lic':'up',lv,n:EXAM_N[lv],ok:0,dish,t0:now+1.2,end:null}};
+  if(missingOf(makeOrder(dish)).length){D=null;return toast(`Thiếu nguyên liệu cho ${dish.name}`)}
+  S.examDay=S.day;save();PAUSED=false;$('#pauseOv').hidden=true;cup=null;pouring=null;sealing=null;show('shop');hud('🧑‍⚖️ Kiểm tra');$('#policeBtn').hidden=true;tkKey='';renderTicket();
+  toast(`🧑‍⚖️ Thanh tra tới${lic?' kiểm tra giấy phép':''}: pha đúng ${EXAM_N[lv]} ly, không hỏng ly nào`,3600,2)}
+function examSpawn(){const E=D.exam,sex=pick(['f','m']),age=pick(['tre','trung']),o=examOrder(E.n===1);if(!o)return examEnd(false,'thiếu nguyên liệu');
+  const c={id:++D.cid,name:'Thanh tra '+pick(GNAME[sex]),age,sex,type:'thanhtra',dis:false,items:[o],o,cur:0,res:[],price:priceOf(o),p:0,max:0,look:makeLook('thuong'),friends:[],pay:'',no:++D.spawned,x:168,tx:168,mood:2,spr:ktFor(sex,age),icon:'📋'};
+  examTime(c,o);D.queue.push(c);layoutQ();sfx('bell');say(c,`Kiểm tra tay nghề: ${E.n} ly, không được hỏng ly nào!`,2800);renderTicket()}
+function examTick(dt){const E=D.exam;
+  if(!E.end&&!D.spawned&&now>=E.t0)examSpawn();
+  const c=D.queue[0];
+  if(c&&!E.end){if(c.in&&!sealing)c.p-=dt;const f=c.p/c.max;c.mood=f>.55?2:f>.25?1:0;
+    if(cup&&cup.cid===c.id&&c.items[cup.ix]){if(cup.broken)return examEnd(false,cup.broken);const m=cupMiss(c.items[cup.ix]);if(m&&m.fatal)return examEnd(false,m.msg.replace(/ \([^)]*\)/g,''))}
+    if(c.p<=0)return examEnd(false,'hết giờ')}
+  [...D.queue,...D.walk].forEach(c=>{const sp=c.run?30:42,d=c.tx-c.x;if(Math.abs(d)>.3)c.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt);else if(!c.in)c.in=1});
+  D.walk=D.walk.filter(c=>c.x<176);
+  bindCup();if(!pouring&&pourSrc)pourSnd(false);if(!E.end)pourTick(dt);
+  if(sealing&&now-sealing.t0>=(sealing.d||.95)){const sl=sealing;sealing=null;playerServe(sl.cid)}
+  const tg=target();if(tg!==D.tgt||(tg&&tg.cur!==D.tgtCur)){D.tgt=tg;D.tgtCur=tg&&tg.cur;renderTicket()}
+  const txt=`🧑‍⚖️ ${E.ok}/${E.n} ly${c&&!E.end?` · ⏱ ${Math.max(0,Math.ceil(c.p))}s`:''}`;setText($('#hSub'),txt);setText($('#hudMini'),txt);setText($('#hMoney'),fmt(S.money));
+  if(E.end&&now>=E.endAt)examFinish()}
+function examServed(c,ix,s,notes){const E=D.exam,o=c.items[ix];o.done=1;o.sj=null;tkKey='';
+  if(s<5)return examEnd(false,notes[0]||'chưa chuẩn');
+  E.ok++;const pay=priceOf(o);S.money+=pay;S.examIn=(S.examIn||0)+pay;E.paid=(E.paid||0)+pay;fx(`✓ ${E.ok}/${E.n} · +${fk(pay)}`,'#4f9a72',c.x+6,28);sfx('coin');
+  if(E.ok>=E.n)return examEnd(true);
+  const last=E.ok===E.n-1,n2=examOrder(last);if(!n2)return examEnd(false,'thiếu nguyên liệu');
+  c.items.push(n2);c.o=n2;c.cur=c.items.length-1;c.price=priceOf(n2);examTime(c,n2);
+  say(c,last?`Ly cuối: món tủ ${n2.name}!`:pick(['Đạt. Ly tiếp theo!','Tốt, làm tiếp nhé.','Chuẩn. Tiếp nào!']),2400);renderTicket();renderQ()}
+function examEnd(pass,why){const E=D&&D.exam;if(!E||E.end)return;E.end=pass?'pass':'fail';E.why=why;E.endAt=now+2.4;
+  stopPour();pouring=null;sealing=null;cup=null;PV=false;syncMode();
+  const c=D.queue[0];if(c){say(c,pass?'Chúc mừng, tiệm đạt chuẩn!':`Chưa đạt: ${why}.`,2400);D.queue=[];leave(c,'leave',pass?2:0);layoutQ()}
+  if(pass){confetti(80,20,40);sfx('fanfare')}else sfx('fail');
+  toast(pass?`🎉 Đạt kiểm tra! ${E.ok}/${E.n} ly${E.paid?' · +'+fk(E.paid):''}`:`❌ Chưa đạt: ${why} · ly ${Math.min(E.n,E.ok+1)}/${E.n}`,2800,2);tkKey='';renderTicket();renderQ()}
+function examFinish(){const E=D.exam,lv=E.lv,N=SHOP[lv];D=null;cup=null;pouring=null;sealing=null;tkKey='';PAUSED=false;$('#pauseOv').hidden=true;
+  S.notice=(S.notice||[]).filter(n=>!/^⬆️ Đủ điều kiện/.test(n.t));
+  const at=`${E.why}, ly ${Math.min(E.n,E.ok+1)}/${E.n}`;
+  if(E.end==='pass')S.certs=[...new Set([...(S.certs||[]),lv])].sort((a,b)=>a-b);
+  if(E.kind==='lic'){if(E.end==='pass'){S.licDue=null;S.notice.unshift({t:`🎉 Đạt kiểm tra, được cấp giấy phép ${N.n}!`})}else return licFail(at)}
+  else if(E.end==='pass'){const fee=upFee(lv);if(fee)spend('nangcap',fee);S.shop=lv;S.upNote=null;if((S.freeUp||0)<=lv)S.freeUp=null;S.notice.unshift({t:`🎉 Tiệm đã mở rộng thành ${N.n}! 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[lv]} món${fee?' · −'+fk(fee):''}`});checkAch()}
+  else S.notice.unshift({t:`❌ Thanh tra: chưa đạt (${at}). Mai mời lại.`,bad:1});
+  save();tab='trangtri';renderPrep()}
+/* trượt kiểm tra giấy phép: xuống 1 cấp, thi lại lên cấp đó không mất phí */
+function licFail(why){const lv=S.shop||0;S.shop=Math.max(0,lv-1);S.licDue=null;S.freeUp=Math.max(S.freeUp||0,lv);S.upNote=null;
+  S.notice=[{t:`❌ Trượt kiểm tra giấy phép (${why}): tiệm xuống ${SHOP[S.shop].n}. Thi lại lên ${SHOP[lv].n} không mất phí.`,bad:1},...(S.notice||[]).filter(n=>!/^⬆️ Đủ điều kiện/.test(n.t))];
+  sfx('fail');save();tab='trangtri';renderPrep()}
 function growCounter(){const n=S.qrows||12,cost=QROW_COST[n];if(n>=QROWS_MAX||!cost)return;if(ownMoney()<cost)return toast(S.money>=cost?'Tiền vay chỉ dùng để nhập nguyên liệu':'Không đủ tiền nới quầy');
   spend('quay',cost);S.qrows=n+2;S.grid.forEach(o=>o.r+=2);for(const k in S.lastPos||{})S.lastPos[k].r+=2;syncLayout();save();toast(`Quầy rộng thêm 2 hàng (6×${S.qrows})`);renderPrep()}
 function storeObj(o){if(!storable(o.id))return toast('Dụng cụ và máy đóng gói luôn để trên quầy');
@@ -1495,12 +1576,18 @@ function storeObj(o){if(!storable(o.id))return toast('Dụng cụ và máy đón
 function shopHTML(){const i=S.shop||0,L=SHOP[i],N=SHOP[i+1],rv=lifeRev(S),bar=(v,m)=>`<i><b style="width:${Math.round(Math.min(1,v/m)*100)}%"></b></i>`;
   const pic=k=>SPRSRC[k]?`<img class="shoppic" src="${SPRSRC[k]}" alt="">`:'';
   const nm=(S.shopName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-  return `<div class="shopbox${N&&shopReady(S)?' ready':''}">${pic('tiem_'+(i+1))}<label class="shopname"><input id="shopName" maxlength="18" value="${nm}" placeholder="Tên tiệm" aria-label="Tên tiệm"></label><div class="h3" style="margin:0 0 2px">${L.n} <span class="meta">· cấp ${i+1}/${SHOP.length}</span></div><div class="meta sstat">👥 <b>${L.cap}</b> · 👩‍🍳 <b>${L.staff}</b> · 📋 <b>${MENU_CAP[i]}</b> món${LV_SPD[i]<1?` · ⚡ <b>×${(1/LV_SPD[i]).toFixed(1).replace('.',',')}</b>`:''}<span class="hint"> ⚡ quầy rộng, máy xịn: nhân viên pha nhanh hơn.</span></div>
-   ${N?`<div class="meta" style="margin-top:6px">⬆ <b style="color:var(--ink)">${N.n}</b> · 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[i+1]}${LV_SPD[i+1]<1?` · ⚡ ×${(1/LV_SPD[i+1]).toFixed(1).replace('.',',')}`:''} · 💰 ${fk(N.fee)}</div>
+  const tried=S.examDay===S.day,reqs=lv=>{const dish=examDish(lv);return `<div class="req ${dish?'ok':'no'}">🏅 Món hạng ${gradeTxt(EXAM_G[lv])} · ${dish?`${esc(dish.name)} ✓`:'chưa có'}</div><div class="req">🧑‍⚖️ Thanh tra · ${EXAM_N[lv]} ly, không hỏng ly nào</div>`};
+  /* save cũ: thanh tra hẹn kiểm tra giấy phép cấp hiện tại */
+  const lic=S.licDue&&i>0?(()=>{const k=S.licDue.by-S.day,dish=examDish(i);return `<div class="licbox"><b>🧑‍⚖️ Kiểm tra giấy phép</b> <span class="meta">· ${k>0?`còn ${k} ngày`:'hôm nay'}</span>${reqs(i)}
+   <div class="upbar"><button class="btn pink" data-exam="lic" ${!dish||tried?'disabled':''}>🧑‍⚖️ Mời thanh tra</button><span class="meta">${tried?'Mai mời lại':`Trượt: xuống ${SHOP[i-1].n}`}</span></div></div>`})():'';
+  const fee=N?upFee(i+1):0,ready=N&&!S.licDue&&shopReady(S)&&examDish(i+1)&&!tried&&ownMoney()>=fee;
+  return `<div class="shopbox${ready||lic?' ready':''}">${pic('tiem_'+(i+1))}<label class="shopname"><input id="shopName" maxlength="18" value="${nm}" placeholder="Tên tiệm" aria-label="Tên tiệm"></label><div class="h3" style="margin:0 0 2px">${L.n} <span class="meta">· cấp ${i+1}/${SHOP.length}</span></div><div class="meta sstat">👥 <b>${L.cap}</b> · 👩‍🍳 <b>${L.staff}</b> · 📋 <b>${MENU_CAP[i]}</b> món${LV_SPD[i]<1?` · ⚡ <b>×${(1/LV_SPD[i]).toFixed(1).replace('.',',')}</b>`:''}<span class="hint"> ⚡ quầy rộng, máy xịn: nhân viên pha nhanh hơn.</span></div>
+   ${(S.certs||[]).length?`<div class="req ok">📜 Bằng: ${S.certs.map(l=>SHOP[l].n).join(', ')}</div>`:''}${lic}${N?`<div class="meta" style="margin-top:6px">⬆ <b style="color:var(--ink)">${N.n}</b> · 👥 ${N.cap} · 👩‍🍳 ${N.staff} · 📋 ${MENU_CAP[i+1]}${LV_SPD[i+1]<1?` · ⚡ ×${(1/LV_SPD[i+1]).toFixed(1).replace('.',',')}`:''} · 💰 ${fee?fk(fee):'miễn phí (thi lại)'}</div>
    <div class="prog"><span>⭐ ${Math.min(S.five,N.five)}/${N.five}</span>${bar(S.five,N.five)}</div>
    <div class="prog"><span>💰 ${fk(Math.min(rv,N.rev))}/${fk(N.rev)}</span>${bar(rv,N.rev)}</div>
-   ${shopReady(S)?`<div class="upbar"><button class="btn pink" data-shopup ${ownMoney()<N.fee?'disabled':''}>${resetArm==='shopup'?'✓ Chạm lần nữa':'⬆ Mở rộng'} · ${fk(N.fee)}</button>${ownMoney()<N.fee?`<span class="meta warn">thiếu ${fk(N.fee-ownMoney())}</span>`:''}</div>`:''}
-   <div class="meta hint" style="margin-top:4px">Đủ cả hai thì bấm Mở rộng và trả phí. Doanh thu tính tổng tiền bán món và tiền tip từ trước tới nay.</div>`:'<div class="meta" style="margin-top:4px">Tiệm đã lớn nhất rồi!</div>'}</div>`}
+   ${reqs(i+1)}
+   ${shopReady(S)&&!S.licDue?(()=>{const dish=examDish(i+1),poor=ownMoney()<fee;return `<div class="upbar"><button class="btn pink" data-exam ${!dish||poor||tried?'disabled':''}>🧑‍⚖️ Mời thanh tra</button><span class="meta${poor&&!tried?' warn':''}">${tried?'Mai mời lại':poor?`thiếu ${fk(fee-ownMoney())}`:fee?`💰 ${fk(fee)} khi đạt`:'miễn phí'}</span></div>`})():''}
+   <div class="meta hint" style="margin-top:4px">Đủ ⭐, 💰 và có món hạng cao đang bán thì mời thanh tra. Không nhân viên, không khách: bạn tự pha đúng hết số ly, tràn ly, thừa đồ, bỏ ly hoặc hết giờ là trượt (mai mời lại). Đạt thì trả phí và tiệm mở rộng. Doanh thu tính tổng tiền bán món và tiền tip từ trước tới nay.</div>`:'<div class="meta" style="margin-top:4px">Tiệm đã lớn nhất rồi!</div>'}</div>`}
 function decoHTML(){
   const chips=Object.entries(DSLOT).map(([k,s])=>`<button data-dsel="${k}" aria-pressed="${decSel===k}">${s.l}</button>`).join('')+`<button data-dsel="outfit" aria-pressed="${decSel==='outfit'}">Đồng phục</button><button data-dsel="cup" aria-pressed="${decSel==='cup'}">Giấy bọc ly</button>`;
   let list='';
@@ -1600,7 +1687,9 @@ function labHTML(){
   return `<div class="lab"><div class="labTop"><img class="labPic" src="${drinkPicR(lab)}" alt="Hình món đang chế"><div style="min-width:0">
      <div class="h3" style="margin:0 0 4px">Xưởng chế món</div>
      <div class="meta">Vốn <b style="color:var(--ink)">${fk(ci.cost)}</b>/ly</div>
-     <div class="meta hint">Độ hợp vị: <b style="color:var(--ink)">chưa rõ</b>, chỉ biết sau khi kiểm định.</div>
+     ${(()=>{const g=bookGuess(ids);if(ids.length<2)return '';return `<div class="meta">${g.fail?'<b style="color:var(--bad)">❌ Sẽ không đạt: có cặp kỵ vị</b>':`📖 Hạng dự kiến <b style="color:var(--ink)">${g.lo===g.hi?g.lo:g.lo+'–'+g.hi}</b>${g.unk?` · ${g.unk} cặp chưa biết`:''}`}</div>
+     <div class="pairs">${g.P.map(p=>`<span>${ITEM(p.a).sh} + ${ITEM(p.b).sh} <b style="color:${p.k==null?'var(--muted)':p.k>0?'var(--accent)':p.k<0?'var(--bad)':'var(--muted)'}">${p.k==null?'?':hearts(p.k)}</b></span>`).join('')}</div>
+     <div class="meta hint">Sổ công thức nhớ điểm từng cặp nguyên liệu sau mỗi lần kiểm định. Cặp chưa biết (?) có thể rất hợp hoặc kỵ vị làm trượt. SSS bắt buộc có nguyên liệu hiếm.</div>`})()}
      ${hc?`<div class="meta" style="color:var(--accent);font-weight:700">${FLAME} ${hc} món hot</div>`:''}
      <div class="meta hint">Chọn được nhiều thứ ở mỗi lớp, tối đa 8 nguyên liệu. Trà pha với sữa sẽ hòa thành màu trà sữa. Topping không nằm trong công thức: khách tự chọn thêm khi gọi món.</div></div></div>
    <div class="meta lb">Trà & sữa</div><div class="seg">${S.drinks.map(k=>chip('lb',k,lab.bs.includes(k),BASES[k].sh)).join('')}</div>
@@ -1608,7 +1697,7 @@ function labHTML(){
    <div class="meta lb">Kem phủ</div><div class="seg">${chip('lf','',!lab.fs.length,'Không')}${S.foams.map(k=>chip('lf',k,lab.fs.includes(k),FOAMS[k].sh)).join('')}</div>
    <div class="meta lb">Tên món</div><input id="labName" maxlength="40" value="${(lab.name||'').replace(/"/g,'&quot;')}" placeholder="${autoName(lab.bs,lab.ts,lab.fs,lab.ss)}" aria-label="Tên món">
    ${dup?`<p class="meta warn" style="margin-top:6px">${dup.basic?`✓ Đã có trong Thực đơn: “${dup.name}”`:`✓ Đã có trong sổ: “${dup.name}”`}</p>`:`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn sm pink" id="labSubmit" ${ownMoney()<50000?'disabled':''}>Kiểm định 50k · sáng mai</button><button class="btn sm ghost" id="labFast" ${ownMoney()<150000?'disabled':''}>⚡ Nhanh 150k</button></div>`}</div>
-   <div class="h3">Sổ công thức</div><p class="meta hint" style="margin:-2px 0 6px">Món đạt kiểm định sẽ sang tab Thực đơn để đặt giá và đưa lên bán.</p><div class="list">${S.recipes.filter(r=>!r.basic).reverse().map(r=>recCard(r,'book')).join('')}</div>`}
+   <div class="h3">Sổ công thức</div><p class="meta hint" style="margin:-2px 0 6px">Món đạt kiểm định sẽ sang tab Thực đơn để đặt giá và đưa lên bán.</p>${(()=>{const E=Object.entries(S.book||{}).sort((a,b)=>b[1]-a[1]);return E.length?`<details class="bookx"><summary>📖 ${E.length} cặp nguyên liệu đã biết</summary><div class="pairs">${E.map(([k,v])=>{const [a,b]=k.split('|');return `<span>${ITEM(a).sh} + ${ITEM(b).sh} <b style="color:${v>0?'var(--accent)':v<0?'var(--bad)':'var(--muted)'}">${hearts(v)}</b></span>`}).join('')}</div></details>`:''})()}<div class="list">${S.recipes.filter(r=>!r.basic).reverse().map(r=>recCard(r,'book')).join('')}</div>`}
 /* thực đơn dạng lưới 3 cột: lọc, sắp xếp; chạm một món để mở khung đặt giá / bán ngay dưới hàng của món đó */
 let menuSort='lai',menuFilter='all',menuSel=null,menuMore=false;const MENU_SHOW=12;
 const MSORT={lai:'Lãi/ly',gia:'Giá bán',moi:'Mới nhất'},MFILT={all:'Tất cả',on:'Đang bán',tu:'Tự chế',cb:'Cơ bản'};
@@ -1622,7 +1711,7 @@ function thucdonHTML(){const menu=activeMenu(),cap=menuCap(),pend=S.recipes.filt
   if(menuSel&&!L.some(r=>r.id===menuSel))menuSel=null;
   /* chỉ hiện 12 món đầu (đã xếp), bấm Xem thêm mới hiện hết */
   const sel=L.findIndex(r=>r.id===menuSel),cut=menuMore?L.length:Math.max(MENU_SHOW,sel+1),V=L.slice(0,cut);
-  const cards=V.map(r=>{const p=recProfit(r);return `<button class="mcard${r.on?' on':''}${menuSel===r.id?' sel':''}" data-msel="${r.id}" aria-expanded="${menuSel===r.id}"><img src="${drinkPicR(r)}" alt=""><b>${r.name}</b><span>${cardPrice(r)}</span>${r.on?`<i class="mon">${r.until?`${r.until-S.day+1}d`:'✓'}</i>`:''}${r.basic?'':`<i class="mgr">${r.grade}</i>`}${hotCount(r)?`<i class="mhot">${FLAME}</i>`:''}</button>`});
+  const cards=V.map(r=>{const p=recProfit(r);return `<button class="mcard${r.on?' on':''}${menuSel===r.id?' sel':''}" data-msel="${r.id}" aria-expanded="${menuSel===r.id}"><img src="${drinkPicR(r)}" alt=""><b>${r.name}</b><span>${cardPrice(r)}</span>${r.on?`<i class="mon">${r.until?`${r.until-S.day+1}d`:'✓'}</i>`:''}${r.basic?'':`<i class="mgr${/^S/.test(r.grade)?' gs':''}">${r.grade}</i>`}${hotCount(r)?`<i class="mhot">${FLAME}</i>`:''}</button>`});
   const i=sel;if(i>=0)cards.splice(Math.min(L.length,Math.floor(i/3)*3+3),0,`<div class="medit">${recCard(L[i],'menu')}</div>`);
   const chips=(o,cur,attr)=>Object.entries(o).map(([k,l])=>`<button data-${attr}="${k}" aria-pressed="${cur===k}">${l}</button>`).join('');
   return `<p class="sub">Chạm một món để đặt giá và đưa lên bán. Số món bán cùng lúc tùy cấp tiệm, mở rộng tiệm để bán thêm. Món tự chế ở tab Công thức. Món cơ bản có sẵn từ nguyên liệu bạn đang có, không cần kiểm định nhưng hệ số giá thấp hơn.</p>
@@ -1812,7 +1901,7 @@ $('#tbody').addEventListener('click',e=>{
   if(d.roff){const r=recById(+d.roff);r.on=false;r.until=null;save();renderPrep();return}
   if(d.rdel){const id=+d.rdel;if(recDel!==id){recDel=id;renderPrep();armTimer(()=>{recDel=null});return}S.recipes=S.recipes.filter(r=>r.id!==id);recDel=null;save();renderPrep();return}
   if(d.renick){const R=(S.regs||[]).find(r=>r.id===+d.renick);if(R){const o=R.nick;for(let i=0;i<6&&R.nick===o;i++)R.nick=genNick(R);save();toast(`Biệt danh mới: ${regName(R)}`);sfx('pop');renderPrep()}return}
-  if(d.shopup!==undefined)return shopUpBuy();
+  if(d.exam!==undefined)return startExam(d.exam||'up');
   if(d.unlock){const id=d.unlock,it=DECOR[id]||OUTFITS[id]||CUPSKIN[id],u=unlockState(it);if(!u.ok)return;if(!it.five)spend('trangtri',it.cost);S.owned.push(id);
     if(DECOR[id]&&decSel!=='outfit'&&DSLOT[decSel].t===DECOR[id].slot){for(const k in S.decor)if(S.decor[k]===id)S.decor[k]=null;S.decor[decSel]=id}if(CUPSKIN[id])syncLayout();toast(CUPSKIN[id]?`Đã mua ${it.name}${inSeason(id)?', đã bày lên quầy':', tới mùa sẽ hiện trên quầy'}`:`Đã mở khóa ${it.n}`)}
   if(d.place!==undefined){const id=d.place||null;if(id)for(const k in S.decor)if(S.decor[k]===id)S.decor[k]=null;S.decor[decSel]=id;if(decSel==='wallpaper'&&!id)S.decor.wallpaper='wp_kem'}
@@ -1850,6 +1939,7 @@ $('#tbody').addEventListener('change',e=>{const t=e.target;if(t.dataset.vol||t.d
 $('#tbody').addEventListener('input',e=>{if(e.target.id==='repTxt')repDraft=e.target.value;if(e.target.id==='codeIn')importTxt=e.target.value;if(e.target.id==='labName')lab.name=e.target.value});
 function emergencyNeeded(){return activeMenu().length>0&&!canOpenNormal()&&S.money<cheapestRestock()}
 $('#openBtn').onclick=()=>{
+  if(S.licDue&&S.day>=S.licDue.by)return startExam('lic');
   if(cartN()&&!openArm){openArm=true;tab='menu';renderPrep();toast(`🛒 Giỏ còn ${fk(cartTot())} chưa nhập. Bấm Mở cửa lần nữa để bỏ qua`,3200);setTimeout(()=>{openArm=false},4500);return}openArm=false;cart={};
   if(emergencyNeeded()){S.notice=[];save();startDay(true);toast('Hôm nay chỉ bán trà đá, trà nóng 2.000đ/ly');return}
   if(!activeMenu().length){tab='thucdon';renderPrep();return toast('Thực đơn đang trống, đưa ít nhất một món lên thực đơn')}
@@ -1909,7 +1999,7 @@ let suppressClick=false;
 
 /* ======================= DAY ======================= */
 let D=null,cup=null,pouring=null;
-const working=()=>S.staff.filter(s=>!s.rest);
+const working=()=>D&&D.exam?[]:S.staff.filter(s=>!s.rest);
 const hasRole=r=>working().filter(s=>s.role===r);
 function priceOf(o){const r=recById(o.r);if(r&&r.id<0)return r.price;const p=(r?r.price:16000)+(o.size==='L'?5000:0)+o.ts.reduce((a,k)=>a+topPrice(k),0)+(o.xf?foamAdd(o.xf):0)+skUp(o);return o.disc?Math.max(1000,r1k(p*(1-o.disc))):p}
 function ratioOf(o){const r=recById(o.r);if(!(r&&r.id>0))return 1;const ts=o.ts||[];const xf=o.xf?foamAdd(o.xf):0;return (r.price+ts.reduce((a,k)=>a+topPrice(k),0)+xf)/Math.max(1000,recValue(r)+ts.reduce((a,k)=>a+topBase(k),0)+xf)}
@@ -2032,8 +2122,11 @@ function leave(c,kind,mood){if(kind==='leave'&&(mood??c.mood)>=1&&Math.random()<
 function fx(text,col,x=90,y=28){D.fx.push({text,col,x,y,t0:now})}
 
 let now=0,lastT=0;
-function tickDay(dt){
+function tickDay(dt){if(D.exam)return examTick(dt);
   D.clock=Math.min(22,D.clock+dt*D.rate);
+  /* 22h đóng cửa như bấm Đóng cửa sớm: không nhận khách mới, chỉ phục vụ nốt khách đang trong hàng (người chơi phàn nàn sau 22h khách vẫn vào đông) */
+  if(D.clock>=22&&!D.closing){D.closing=true;D.evPlan=[];D.evTax=false;const miss=Math.max(0,D.total-D.spawned);D.total=D.spawned;D.door=0;
+    if(miss){D.lateLost=miss;D.log.push(`🌙 22h đóng cửa, ${miss} khách chưa kịp ghé.`)}toast('🌙 22h đóng cửa · phục vụ nốt khách đang chờ',2600,1)}
   D.next-=dt;if(D.next<=0&&!D.closing&&D.spawned<D.total){
     if(D.queue.length<qCap()){spawn(D.nextT||undefined);D.nextT=null;D.door=0;D.next=arrivalGap()/rushMul()*rnd(.7,1.3);renderTicket()}
     /* giờ cao điểm mà hàng đã đầy: mỗi khách tới chỉ quyết một lần, đi tiệm khác hoặc đứng chờ ngoài cửa tới khi có chỗ (D.door) */
@@ -2049,10 +2142,7 @@ function tickDay(dt){
   [...D.queue,...D.walk].forEach(c=>{const sp=c.run?30:42,d=c.tx-c.x;if(Math.abs(d)>.3)c.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt);else if(!c.in)c.in=1});
   D.walk=D.walk.filter(c=>c.x<176);
   bindCup();staffTick(dt);floorTick(dt);if(!pouring&&pourSrc)pourSnd(false);
-  if(pouring&&cup&&!cup.used[pouring]){if(use(pouring))cup.used[pouring]=1;else{toast(`Hết ${BASES[pouring].ing.toLowerCase()}`);pouring=null}}
-  if(pouring&&cup){let a=dt*(D.slowT>now?.27:.42);const lim=pourCap!=null?pourCap:upLv('auto')?TARGET:null;if(lim!=null){a=Math.max(0,Math.min(a,lim-cup.fill));if(!a&&upLv('auto')&&pourCap==null)stopPour()}
-    /* chỉ ghi khi nước thật sự chảy vào ly (đã dừng rót thì không thêm lượt rót rỗng) */
-    if(a>0&&pouring){cup.fill+=a;const lp=cup.pours[cup.pours.length-1];if(lp&&lp.k===pouring)lp.amt+=a;else cup.pours.push({k:pouring,amt:a});if(cup.fill>1.04){cup.fill=1.04;cup.spill=true;stopPour();breakCup('tràn ly')}}}
+  pourTick(dt);
   if(sealing&&now-sealing.t0>=(sealing.d||.95)){const sl=sealing;sealing=null;playerServe(sl.cid)}
   if(D.evTax&&D.clock>=10&&!D.ev&&!D.pend.length&&!D.chase){D.evTax=false;startEvent('thue')}
   if(D.evPlan.length&&D.clock>=D.evPlan[0]&&!D.ev&&!D.pend.length&&!D.chase){D.evPlan.shift();startEvent()}
@@ -2066,6 +2156,13 @@ function tickDay(dt){
   const h=D.clock,hh=Math.floor(h),mm=Math.floor((h-hh)*6)*10;setText($('#hSub'),`${hh}:${String(mm).padStart(2,'0')} · ${D.served} khách${D.closing?' · đóng cửa':''}`);setText($('#hMoney'),fmt(S.money));
   setText($('#hudMini'),`${hh}:${String(mm).padStart(2,'0')} · ${fk(S.money)}${D.closing?' · đóng cửa':rushNow()?' · ⏰ cao điểm':''}`);
   if(D&&D.spawned>=D.total&&!D.queue.length&&!D.chase&&!D.pend.length&&!D.ev&&!D.walk.length&&!D.cop&&!sealing&&!working().some(s=>s.job))endDay()}
+
+/* rót trà/sữa đang giữ bình (dùng chung cho ngày bán và bài kiểm tra) */
+function pourTick(dt){
+  if(pouring&&cup&&!cup.used[pouring]){if(use(pouring))cup.used[pouring]=1;else{toast(`Hết ${BASES[pouring].ing.toLowerCase()}`);pouring=null}}
+  if(pouring&&cup){let a=dt*(D.slowT>now?.27:.42);const lim=pourCap!=null?pourCap:upLv('auto')?TARGET:null;if(lim!=null){a=Math.max(0,Math.min(a,lim-cup.fill));if(!a&&upLv('auto')&&pourCap==null)stopPour()}
+    /* chỉ ghi khi nước thật sự chảy vào ly (đã dừng rót thì không thêm lượt rót rỗng) */
+    if(a>0&&pouring){cup.fill+=a;const lp=cup.pours[cup.pours.length-1];if(lp&&lp.k===pouring)lp.amt+=a;else cup.pours.push({k:pouring,amt:a});if(cup.fill>1.04){cup.fill=1.04;cup.spill=true;stopPour();breakCup('tràn ly')}}}}
 
 /* ---------- staff AI ----------
    Mỗi người lo 1 ly: mỗi Pha chế tự nhận ly kế tiếp chưa ai làm (theo thứ tự khách), pha theo trình tự ASTEPS rồi đóng gói và giao.
@@ -2638,7 +2735,7 @@ function suggest(c,pickId,ix=c.cur){if(sealing&&sealing.cid===c.id)return;const 
   n.disc=SUB_DISC;n.sub=1;delete n.oosSaid;delete n.sj;c.items[ix]=n;if(c.o===o)c.o=n;c.price=c.items.reduce((a,x)=>a+priceOf(x),0);
   c.p=Math.min(c.max,c.p+c.max*.4);bump('sub');say(c,pick(['Ok, đổi cũng được!','Món này cũng ngon ha!','Được, giảm giá là chịu!']),1600);sfx('pop');
   toast(`${c.name} đồng ý đổi sang ${n.name}${pickId==='top'?' (bỏ topping hết hàng)':''}, giảm ${SUB_DISC*100}%`,2800)}
-function typeLabel(c){if(c.type==='chim')return c.revealed?'🕵️ Cảnh sát chìm (lộ diện!)':working().some(s=>s.trait==='tinhy')?'Khách lạ mặt, dáng nghiêm nghị':TYPES.thuong.label;if(c.type==='quen'){const R=regOf(c);return `${SPARK} Khách quen${R?` · lần ghé thứ ${R.visits+1}`:''}`}if(c.items.length>1)return `${TYPES[c.type].label} · ${c.items.length} ly`;if(c.type==='quyt')return c.dis&&!working().some(s=>s.trait==='tinhy')?TYPES.thuong.label:'Khách lạ, trông đáng ngờ';return TYPES[c.type].label}
+function typeLabel(c){if(c.type==='thanhtra'){const E=D&&D.exam;return `🧑‍⚖️ Thanh tra${E?` · ly ${Math.min(E.n,E.ok+1)}/${E.n}`:''}`}if(c.type==='chim')return c.revealed?'🕵️ Cảnh sát chìm (lộ diện!)':working().some(s=>s.trait==='tinhy')?'Khách lạ mặt, dáng nghiêm nghị':TYPES.thuong.label;if(c.type==='quen'){const R=regOf(c);return `${SPARK} Khách quen${R?` · lần ghé thứ ${R.visits+1}`:''}`}if(c.items.length>1)return `${TYPES[c.type].label} · ${c.items.length} ly`;if(c.type==='quyt')return c.dis&&!working().some(s=>s.trait==='tinhy')?TYPES.thuong.label:'Khách lạ, trông đáng ngờ';return TYPES[c.type].label}
 let tkKey='';
 /* phần giữa phiếu còn nội dung bị che: làm mờ đáy, cuộn tới cuối thì bỏ mờ */
 function tkMore(){const m=$('#tk .tkmid');if(!m)return;const f=()=>m.classList.toggle('more',m.scrollTop+m.clientHeight<m.scrollHeight-2);f();m.onscroll=f}
@@ -2728,7 +2825,7 @@ function addSyrup(k){if(!cup)return toast('Chạm Ly M hoặc Ly L trước');if
 function addTop(k){if(!cup)return toast('Chạm Ly M hoặc Ly L trước');if(cup.tops.includes(k))return toast('Ly đã có topping này rồi');if(!use(k))return toast(`Hết ${TOPS[k].name.toLowerCase()}`);cup.tops.push(k);sfx('pop');renderTicket()}
 function addFoam(k){if(!cup)return toast('Chạm Ly M hoặc Ly L trước');if(!cup.pours.length)return toast('Rót trà trước rồi mới phủ kem');if(cup.foams.includes(k))return toast('Ly đã có lớp kem này rồi');if(!use(k))return toast(`Hết ${FOAMS[k].name.toLowerCase()}`);cup.foams.push(k);sfx('pop');renderTicket()}
 function useTool(id){
-  if(id==='trash'){if(!cup)return;const hs=staffOf(cup);if(hs){staffRedo(hs);toast(`Đã bỏ ly, ${hs.name} làm lại`);renderTicket();return}cup=null;pouring=null;toast('Đã bỏ ly');renderTicket();return}
+  if(id==='trash'){if(!cup)return;if(D&&D.exam&&(cup.pours.length||cup.tops.length||cup.syrups.length||cup.sugar||cup.ice))return examEnd(false,'bỏ ly');const hs=staffOf(cup);if(hs){staffRedo(hs);toast(`Đã bỏ ly, ${hs.name} làm lại`);renderTicket();return}cup=null;pouring=null;toast('Đã bỏ ly');renderTicket();return}
   if(!cup)return toast('Chạm Ly M hoặc Ly L trước');
   if(id==='sugar'){if(cup.sugar>=4)return toast('Ngọt tối đa rồi');cup.sugar++;sfx('tick');renderTicket()}
   if(id==='ice'){if(cup.ice>=3)return toast('Đầy đá rồi');cup.ice++;sfx('ice');renderTicket()}}
@@ -2764,6 +2861,7 @@ function serveCup(c,ix,cup,by){const o=c.items[ix];
   const fMiss=o.fs.filter(x=>!cup.foams.includes(x)).length,fExtra=cup.foams.filter(x=>!o.fs.includes(x)).length;if(fMiss+fExtra){s-=Math.min(2,fMiss+fExtra);notes.push(fMiss?'thiếu kem':'sai kem')}
   if(o.sugar&&cup.sugar!==SUGAR[o.sugar]){s--;notes.push('sai đường')}if(o.ice&&cup.ice!==ICE[o.ice][1]){s--;notes.push('sai đá')}
   if(cup.helpers&&cup.helpers.length){c.byName=[...new Set([...(c.byName?c.byName.split(', '):[]),...cup.helpers])].join(', ');if(cup.helpers.some(n=>(S.staff.find(x=>x.name===n)||{}).trait==='nongtinh')&&Math.random()<.12){s--;notes.push('nhân viên cáu');say(c,'Thái độ gì vậy?',1500)}}
+  if(D.exam)return examServed(c,ix,clamp(s,1,5),notes);
   const cup0h=cup.helpers;s=clamp(s,1,5);tkKey='';c.res.push({s,notes});o.done=1;o.sj=null;
   if(c.items.some(x=>!x.done)){fx(`Ly ${c.res.length}: ${s}★`,'#4f9a72',c.x+6,28);if(!by)toast(`Xong ly ${c.res.length}/${c.items.length} (${'★'.repeat(s)})`);renderTicket();return}
   let fs=Math.round(c.res.reduce((a,r)=>a+r.s,0)/c.res.length);const all=[];c.res.forEach(r=>r.notes.forEach(n=>{if(!all.includes(n))all.push(n)}));
@@ -2787,7 +2885,7 @@ function condenseLog(log){const out=[],at={},grp={};
   const imp=l=>/^(🚨|⚠|🎯|⚔️|🎉|😓)|Không đủ tiền|quỵt|phạt/.test(l.t||l);return [...out.filter(imp),...out.filter(l=>!imp(l))]}
 const logLi=l=>{if(!l.ls)return `<li>${l}</li>`;const ic=(l.t.match(/^\S+ /)||[''])[0];return `<li class="lgx"><details><summary>${l.t}</summary><ul>${l.ls.map(x=>`<li>${ic&&x.startsWith(ic)?x.slice(ic.length):x}</li>`).join('')}</ul></details></li>`};
 function endDay(){
-  rushMusic(false);const day=S.day,log=[...D.log],notice=[];let wages=0;if(D.rushLost)log.push(`⏰ Giờ cao điểm: ${D.rushLost} khách thấy hàng dài nên đi tiệm khác.`);
+  rushMusic(false);const day=S.day,log=[...D.log],notice=[];let wages=0;if(S.examIn){D.other+=S.examIn;D.rev+=S.examIn;log.push(`🧑‍⚖️ Thanh tra trả ${fk(S.examIn)} tiền ly`);S.examIn=0}if(D.rushLost)log.push(`⏰ Giờ cao điểm: ${D.rushLost} khách thấy hàng dài nên đi tiệm khác.`);
   for(const s of [...S.staff]){
     delete s.job;delete s.idle;delete s.w;delete s.brkT;delete s.brkReq;
     const E=D.err[s.id];s.last=E?{d:day,cups:E.cups,list:E.list}:null;
@@ -2822,7 +2920,8 @@ function endDay(){
   /* tiệm lớn có thể vài trăm khách: gom dòng cùng loại thành một dòng có số đếm, chỉ hiện 8 dòng đầu, bấm để xem hết */
   {const L=condenseLog(log.length?log:['Một ngày bình yên.']),M=8;$('#sumLog').innerHTML=L.slice(0,M).map(logLi).join('')+(L.length>M?`<li class="more"><button class="btn sm ghost" id="sumMore">＋ ${L.length-M} dòng khác</button></li>`:'');
    if(L.length>M)$('#sumMore').onclick=()=>{$('#sumLog').innerHTML=L.map(logLi).join('')}}
-  S.ledger=S.ledger||[];S.ledger.push({loanIn:S.loanInToday||0,loanOut:S.loanOutToday||0,d:day,sales:Object.entries(D.sales).map(([k,v])=>({r:+k,name:v.name,n:v.n,rev:Math.round(v.rev),cost:Math.round(v.cost)})),tips:D.tips,other:D.other,ev:D.evIn||0,debt:debtIn,spent:{...(S.spentCat||{})},wages,served:D.served,total:D.total,avg:D.stars.length?D.stars.reduce((a,b)=>a+b,0)/D.stars.length:0,lost:D.lost,money:S.money});if(S.ledger.length>60)S.ledger.shift();S.life=lifeAdd(S.life||newLife(),S.ledger[S.ledger.length-1]);if(!S.life.from)S.life.from=day;if(shopReady(S)&&S.upNote!==(S.shop||0)){const N=SHOP[(S.shop||0)+1];S.upNote=S.shop||0;notice.push({t:`⬆️ Đủ điều kiện mở rộng thành ${N.n} · 💰 ${fk(N.fee)} · tab Trang trí`});S.newTabs=[...(S.newTabs||[]).filter(k=>k!=='trangtri'),'trangtri']}
+  S.ledger=S.ledger||[];S.ledger.push({loanIn:S.loanInToday||0,loanOut:S.loanOutToday||0,d:day,sales:Object.entries(D.sales).map(([k,v])=>({r:+k,name:v.name,n:v.n,rev:Math.round(v.rev),cost:Math.round(v.cost)})),tips:D.tips,other:D.other,ev:D.evIn||0,debt:debtIn,spent:{...(S.spentCat||{})},wages,served:D.served,total:D.total,avg:D.stars.length?D.stars.reduce((a,b)=>a+b,0)/D.stars.length:0,lost:D.lost,money:S.money});if(S.ledger.length>60)S.ledger.shift();S.life=lifeAdd(S.life||newLife(),S.ledger[S.ledger.length-1]);if(!S.life.from)S.life.from=day;if(S.licDue){const k=S.licDue.by-(day+1);notice.push({t:k>0?`🧑‍⚖️ Kiểm tra giấy phép ${SHOP[S.shop||0].n}: còn ${k} ngày · tab Trang trí`:'🧑‍⚖️ Hôm nay thanh tra tới kiểm tra giấy phép (bấm Mở cửa)'});S.newTabs=[...(S.newTabs||[]).filter(k=>k!=='trangtri'),'trangtri']}
+  else if(shopReady(S)&&S.upNote!==(S.shop||0)){const N=SHOP[(S.shop||0)+1];S.upNote=S.shop||0;notice.push({t:`⬆️ Đủ điều kiện mời thanh tra kiểm tra lên ${N.n} · tab Trang trí`});S.newTabs=[...(S.newTabs||[]).filter(k=>k!=='trangtri'),'trangtri']}
   D=null;cup=null;pouring=null;sealing=null;tkKey='';{const was=new Set(TABS.filter(([k])=>tabOpen(k)).map(([k])=>k));S.day++;const nt=TABS.filter(([k])=>!was.has(k)&&tabOpen(k));if(nt.length){notice.push({t:`🔓 Mở tab mới: ${nt.map(([,l])=>l).join(', ')}`});S.newTabs=[...(S.newTabs||[]),...nt.map(([k])=>k)]}}if(S.day===5&&!S.foams.length)notice.push({t:'🔓 Kem phủ đã có ở tab Kho'});checkAch();S.spent=0;S.spentCat={};S.loanInToday=0;S.loanOutToday=0;S.notice=notice;save();hud('Đóng cửa');$('#hDay').firstChild.textContent=`Ngày ${day}`;show('summary')}
 $('#hMoney').onclick=()=>{if(D)return toast('Xem tài chính sau khi đóng cửa nhé');if(!$('#summary').hidden)return;if(!tabOpen('taichinh'))return toast(`Tab Tài chính mở từ ngày ${TAB_DAY.taichinh}`);tab='taichinh';resetArm=false;$('#tbody').scrollTop=0;renderPrep()};
 $('#hStar').onclick=()=>{if(D)return toast('Xem đánh giá sau khi đóng cửa nhé');if(!$('#summary').hidden)return;if(!tabOpen('rv'))return toast(`Tab Đánh giá mở từ ngày ${TAB_DAY.rv}`);tab='rv';resetArm=false;$('#tbody').scrollTop=0;renderPrep()};
@@ -2838,12 +2937,14 @@ let PAUSED=false,closeArm=false;
 function pauseGame(){if(!D||PAUSED||$('#shop').hidden)return;PAUSED=true;stopPour();closeArm=false;renderPause();$('#pauseOv').hidden=false}
 function resumeGame(){if(!PAUSED)return;PAUSED=false;$('#pauseOv').hidden=true;lastT=performance.now()/1000}
 function renderPause(){if(!D)return;const h=D.clock,hh=Math.floor(h),mm=String(Math.floor((h-hh)*6)*10).padStart(2,'0');
+  if(D.exam){const E=D.exam;$('#pauseInfo').textContent=`🧑‍⚖️ Kiểm tra · ${E.ok}/${E.n} ly`;$('#closeBtn').hidden=!!E.end;$('#closeBtn').textContent=closeArm?'Bấm lần nữa để bỏ thi':'Bỏ thi';$('#closeInfo').textContent='Bỏ thi là trượt, mai mời lại.';
+    $('#pSnd').textContent=SND?'🔔 Bật':'🔔 Tắt';$('#pBgm').textContent=BGM?'🎵 Bật':'🎵 Tắt';$('#pTrk').textContent='⏭ '+(TRACK==='file'&&MYM.name?MYM.name:TRACKS[TRACK]);$('#pTrk').hidden=!BGM;$('#pVol').innerHTML=volRow('m','🎵','Âm lượng nhạc')+volRow('s','🔔','Âm lượng âm thanh');return}
   $('#pauseInfo').textContent=`${hh}:${mm} · đã phục vụ ${D.served}/${D.total} khách · thu ${fmt(D.rev)}`;
   $('#closeBtn').hidden=!!D.closing||D.emerg;$('#closeBtn').textContent=closeArm?'Bấm lần nữa để đóng cửa sớm':'Đóng cửa sớm';
   $('#closeInfo').textContent=D.closing?'Đã đóng cửa, đang phục vụ nốt khách.':D.emerg?'':'Không nhận khách mới, phục vụ nốt khách đang chờ.';
   $('#pSnd').textContent=SND?'🔔 Bật':'🔔 Tắt';$('#pBgm').textContent=BGM?'🎵 Bật':'🎵 Tắt';$('#pTrk').textContent='⏭ '+(TRACK==='file'&&MYM.name?MYM.name:TRACKS[TRACK]);$('#pTrk').hidden=!BGM;$('#pVol').innerHTML=volRow('m','🎵','Âm lượng nhạc')+volRow('s','🔔','Âm lượng âm thanh')}
 /* đóng cửa sớm: hết khách mới; khách đang chờ mà món hết hàng thì về, không để review xấu */
-function closeEarly(){if(!D||D.closing)return;if(D.ev&&D.ev.e.id!=='oos')resolveEvent(false,true);D.closing=true;D.evPlan=[];D.evTax=false;const miss=Math.max(0,D.total-D.spawned);D.total=D.spawned;
+function closeEarly(){if(D&&D.exam)return examEnd(false,'bỏ thi');if(!D||D.closing)return;if(D.ev&&D.ev.e.id!=='oos')resolveEvent(false,true);D.closing=true;D.evPlan=[];D.evTax=false;const miss=Math.max(0,D.total-D.spawned);D.total=D.spawned;
   const tg=target();let sent=0;
   D.queue.filter(c=>!c.dec&&!(c===tg&&cup&&cup.pours.length)&&missingOf(c.items[c.cur]).length).forEach(c=>{D.queue=D.queue.filter(x=>x!==c);D.left++;say(c,'Thôi để bữa khác nha!',1600);leave(c,'leave',1);sent++});
   layoutQ();tkKey='';renderTicket();const h=D.clock,hh=Math.floor(h),mm=String(Math.floor((h-hh)*6)*10).padStart(2,'0');
@@ -3197,7 +3298,9 @@ function defLine(R,rv,c,notes,good){const ra=R.age||ageOf(R.name),ca=c.age||ageO
 /* bình luận dạo dưới review tốt: 6%, tối đa 2 lần/ngày, không đổi sao */
 function regCheer(rv,c){if(!rv||rv.s<4||!D||(D.cmtN||0)>=2||Math.random()>=.06)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length)return;
   const R=pick(L),t=defLine(R,rv,c,[],1);rv.def={n:regName(R),t,good:1};D.cmtN=(D.cmtN||0)+1;bump('cheer');setTimeout(()=>{if(D)toast(`💬 ${regName(R)}: “${t}”`,4000)},1700)}
-function regDefend(rv,c,notes){if(rv&&rv.s>=4)return regCheer(rv,c);if(!rv||rv.s>2||!D||(D.defN||0)>=2||Math.random()>=.15)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length)return;
+/* khách quen bênh tiệm: review 1–2★ 35%, 3★ 15%, mỗi khách quen cộng thêm 5% (tối đa 75%), tối đa DEF_MAX lần mỗi ngày */
+const DEF_MAX=6,defP=s=>Math.min(.75,(s<=2?.35:.15)+.05*(S.regs||[]).length);
+function regDefend(rv,c,notes){if(rv&&rv.s>=4)return regCheer(rv,c);if(!rv||rv.s>3||!D||(D.defN||0)>=DEF_MAX)return;const L=(S.regs||[]).filter(R=>R.id!==c.reg);if(!L.length||Math.random()>=defP(rv.s))return;
   const R=pick(L),t=defLine(R,rv,c,notes||[]);rv.def={n:regName(R),t};D.defN=(D.defN||0)+1;bump('def');
   const W=S.ratings.find(x=>x.id===rv.id);if(W)W.w/=2;D.log.push(`💛 ${regName(R)} vào bênh tiệm dưới review ${rv.s}★ của ${rv.name}.`);
   setTimeout(()=>{if(D)toast(`💛 ${regName(R)}: “${t}”`,4800,1)},1700);checkAch()}
