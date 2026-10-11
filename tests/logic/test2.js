@@ -59,8 +59,8 @@ vm.runInContext(src + `
   const sk0=(S.spentCat||{}).sukien||0;evGain(5000,'x');evPay(10000);ok(S.money===m0+5000-10000&&D.evIn===5000&&S.spentCat.sukien-sk0===10000,'thu 5k, chi 10k ghi đúng sổ');
 
   // 6. khách quen: tạo, ghé lại, bo, bỏ đi
-  S.regs=[];for(let i=0;i<400&&S.regs.length<REG_MAX;i++){startDay();spawn();const c=D.queue[0];if(c.type==='quyt'||c.items.length>1)continue;settle(c,5,null,[])}
-  ok(S.regs.length===REG_MAX,'khách 5★ dần thành khách quen, tối đa '+REG_MAX);
+  S.regs=[];for(let i=0;i<400&&S.regs.length<regMax();i++){startDay();spawn();const c=D.queue[0];if(c.type==='quyt'||c.items.length>1)continue;settle(c,5,null,[])}
+  ok(S.regs.length===regMax()&&regMax()===REG_CAP[S.shop||0],"khách 5★ dần thành khách quen, tối đa "+regMax()+" ở cấp "+((S.shop||0)+1));
   ok(new Set(S.regs.map(r=>r.name)).size===S.regs.length,'không trùng tên khách quen');
   S.day=6;let rc=null;for(let i=0;i<300&&!rc;i++){startDay();spawn();rc=D.queue.find(c=>c.reg)}
   ok(rc&&rc.type==='quen'&&S.regs.some(r=>r.id===rc.reg&&regName(r)===rc.name),'khách quen ghé lại đúng tên');

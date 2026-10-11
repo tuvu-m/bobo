@@ -1911,7 +1911,7 @@ function rvHTML(){const all=S.reviews,F=RVF[rvFilt]||RVF.all,cnt=k=>all.filter(R
   const chips=`<div class="seg rvf">${Object.entries(RVF).filter(([k])=>k==='all'||cnt(k)).map(([k,[l]])=>`<button data-rvf="${k}" aria-pressed="${rvFilt===k}">${l} <small>${cnt(k)}</small></button>`).join('')}</div>`;
   const list=all.filter(F[1]).slice(-80).reverse().map(r=>`<div class="rv${r.type==='reviewer'?' big':''}"><span class="st">${'★'.repeat(r.s)}${'☆'.repeat(5-r.s)}</span> <b>${r.name}</b> <span class="tg${r.type==='quen'?' quen':''}">${r.tag||TYPES[r.type].label}</span> <span class="meta">· ngày ${r.d}${r.n>1?` · ${r.n} ly`:''}${r.by?` · ${r.by} pha`:''}</span><div>${r.t}</div>${r.def?`<div class="thr def"><b>${r.def.good?'💬':'💛'} ${esc(r.def.n)}:</b> ${esc(r.def.t)}</div>`:''}${repHTML(r)}</div>`).join('');
   return `<div class="pop"><b>${popularity().toFixed(1)}★</b><span class="meta">${S.five} review 5★<span class="hint"> · Sao càng cao càng đông khách. Review của food reviewer tính gấp 3.</span></span></div>
-   ${achHTML()}<div class="h3" style="margin:6px 0 6px">${SPARK} Khách quen (${(S.regs||[]).length}/${REG_MAX})</div>
+   ${achHTML()}<div class="h3" style="margin:6px 0 6px">${SPARK} Khách quen (${(S.regs||[]).length}/${regMax()})</div>
    ${(S.regs||[]).length?`<div class="regs">${S.regs.map(r=>`<button class="regc" data-renick="${r.id}" aria-label="Đổi biệt danh ${regName(r)}"><b>${regName(r)}</b>${r.nick===(r.favName||'').toLowerCase()?'':' · '+r.favName} · ${r.visits} lần ghé</button>`).join('')}</div>`:'<p class="meta" style="margin:0 0 10px">Chưa có khách quen.<span class="hint"> Khách được 5★ đôi khi thành khách quen: hay ghé lại, chịu chờ, bo thêm. Phục vụ tệ hai lần liền thì họ thôi ghé.</span></p>'}
    ${all.length?chips:''}${list||`<p class="meta">${all.length?'Không có đánh giá nào ở mục này.':'Chưa có đánh giá nào.'}</p>`}`}
 function luuHTML(){
@@ -2106,7 +2106,8 @@ function makeOrder(rr){const r=rr||pickRecipe();
 /* giá thêm kem phủ khi khách tự gọi thêm */
 const foamAdd=k=>Math.max(6000,r1k(FOAMS[k].c*2));
 /* khách quen: khách cho 5★ đôi khi thành khách quen; mỗi ngày có thể ghé lại một lần, hay gọi món ruột */
-const REG_MAX=8;
+/* số khách quen tối đa theo cấp tiệm (trước đây 8 cho mọi cấp, người chơi muốn nhiều hơn) */
+const REG_CAP=[10,20,30,40,50],regMax=()=>REG_CAP[Math.min(REG_CAP.length-1,S.shop||0)];
 /* biệt danh vui cho khách quen (R.nick): theo thói quen gọi món, món ruột hoặc một nét riêng; tên gọi đầy đủ qua regName ("Chị Mai dù") */
 const NICK={adj:['mập','gầy','ốm','cao','lùn','còi','bự','tửng','lầy','nhây','bựa','ngố','khờ','hâm','lì','đen','hiền','dữ','chảnh','sến','điệu','ngầu','lém','lanh','chậm'],
   all:['kính cận','tóc xoăn','má lúm','răng khểnh','răng hô','mắt híp','tai nghe','nói nhiều','cười to','hay quên ví','đi sớm','tám chuyện','xe đạp','Vespa','áo hồng','mê mèo','điện thoại'],
@@ -2131,7 +2132,7 @@ function favOrder(R){const r=recById(R.fav);return r&&r.on&&r.status==='ok'&&r.b
 function regAfter(c,s){const R=regOf(c);
   if(R){R.visits++;if(s<=2){R.bad=(R.bad||0)+1;if(R.bad>=2){S.regs=S.regs.filter(x=>x!==R);D.log.push(`${regName(R)} buồn tiệm nên không còn là khách quen nữa.`);return ` · ${regName(R)} không còn là khách quen`}}else if(s>=4)R.bad=0;return ''}
   S.regs=S.regs||[];
-  if(s===5&&c.items.length===1&&c.type!=='quyt'&&c.o.r>0&&S.regs.length<REG_MAX&&!S.regs.some(r=>r.name===c.name)&&Math.random()<.3){
+  if(s===5&&c.items.length===1&&c.type!=='quyt'&&c.o.r>0&&S.regs.length<regMax()&&!S.regs.some(r=>r.name===c.name)&&Math.random()<.3){
     const R={id:S.uid++,name:c.name,type:c.type,age:c.age,sex:c.sex,spr:c.spr,look:c.look,fav:c.o.r,favName:c.o.name,visits:1,bad:0,since:S.day,last:S.day};R.nick=genNick(R,c.o);S.regs.push(R);
     D.log.push(`${c.name} mê tiệm quá, thành khách quen “${regName(R)}”!`);setTimeout(()=>{if(D)fx('Khách quen mới!','#c98a00',c.x+6,18)},500);return ` · khách quen mới “${regName(R)}”!`}
   return ''}
@@ -3494,8 +3495,8 @@ const COLL=[
     L:()=>Object.entries(GEMS).map(([k,G])=>({t:`${G.i} ${G.n} · ${G.g}`,ok:(S.gems||[]).some(g=>g.k===k)}))},
   {id:'mon',i:'⭐',n:'Món hạng A',N:()=>6,v:()=>S.recipes.filter(r=>r.status==='ok'&&(GRADE_R[gradeShown(r)]||0)>=3).length,how:'Chế món 3–4 nguyên liệu hợp vị ở 🧪 Công thức',
     L:()=>{const A=S.recipes.filter(r=>r.status==='ok'&&(GRADE_R[gradeShown(r)]||0)>=3);return [...A.map(r=>({t:`${r.name} · ${gradeShown(r)}`,ok:1})),...[...Array(Math.max(0,6-A.length))].map(()=>({t:'Món hạng A',ok:0}))]}},
-  {id:'quen',i:'💛',n:'Khách quen',N:()=>REG_MAX,v:()=>(S.regs||[]).length,how:'Khách cho 5★ đôi khi thành khách quen',
-    L:()=>{const R=S.regs||[];return [...R.map(r=>({t:regName(r),ok:1})),...[...Array(Math.max(0,REG_MAX-R.length))].map(()=>({t:'Khách quen',ok:0}))]}},
+  {id:'quen',i:'💛',n:'Khách quen',N:()=>50,v:()=>(S.regs||[]).length,how:'Khách cho 5★ đôi khi thành khách quen · đủ 50 người khi tiệm cấp 5',
+    L:()=>{const R=S.regs||[];return [...R.map(r=>({t:regName(r),ok:1})),...[...Array(Math.max(0,50-R.length))].map(()=>({t:'Khách quen',ok:0}))]}},
   {id:'own',i:'🧑‍⚖️',n:'Ly cho thanh tra',N:()=>50,v:()=>(S.stat&&S.stat.inspCup)||0,how:'Pha đúng 5★ cho thanh tra (đột xuất hoặc lúc thi lên cấp)'},
   {id:'ly',i:'🧻',n:'Giấy bọc ly',N:()=>Object.keys(CUPSKIN).length,v:()=>Object.keys(CUPSKIN).filter(k=>S.owned.includes(k)).length,how:'Mua ở 🎀 Trang trí › Giấy bọc ly',
     L:()=>Object.entries(CUPSKIN).map(([id,k])=>({t:k.n,ok:S.owned.includes(id),d:S.owned.includes(id)?'':unlockState(k).txt}))},
