@@ -234,6 +234,7 @@ html,body{touch-action:pan-x pan-y}
 .repbox .reprow{width:100%}.reprow{display:flex;gap:6px;margin-top:6px}.reprow input{flex:1;min-width:0;width:auto;font:inherit;font-size:16px;font-weight:600;color:var(--ink);background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px 10px}
 .ed{font-size:11px;font-weight:800;padding:0 6px;border-radius:999px;white-space:nowrap}.ed.up{background:#e6f4ec;color:#3d8a63}.ed.dn{background:#fde6e3;color:var(--bad)}
 .colls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 12px}.coll{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:12px;background:var(--paper)}.coll>span{font-size:18px}.cupi{display:block;height:26px}.coll b{display:block;font-size:12px;line-height:1.2}.coll small{font-size:11px;font-weight:800;color:var(--muted)}.cbar{display:block;height:5px;margin-top:3px;border-radius:99px;background:#efe3d6;overflow:hidden}.cbar i{display:block;height:100%;background:#e8b93a}.coll.done{border-color:#e8b93a;background:#fff8e0}button.coll{font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer}.coll[aria-expanded="true"]{border-color:var(--counter);box-shadow:0 0 0 2px var(--counter-2)}.colld{grid-column:1/-1;padding:8px 10px;border:2px solid var(--counter);border-radius:12px;background:#fff}.collL{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.collL span{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:#eef8f2;color:#3f8f66}.collL span.no{background:#f4ede6;color:var(--muted)}.collL i{font-style:normal;font-weight:600;font-size:11px;margin-left:4px;opacity:.85}
+.ytop{display:flex;flex-direction:column;gap:6px}.ytr{display:grid;grid-template-columns:16px 30px minmax(0,1fr) auto auto;align-items:center;gap:8px;font-size:13px;font-weight:700}.ytr img{width:30px;height:30px;object-fit:contain}.ytr>b{color:var(--muted)}.ytr em{font-style:normal;color:var(--accent);font-weight:800}.ytr small{color:var(--muted);font-weight:700;min-width:38px;text-align:right}
 .badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}
 .bdg{background:var(--paper);border:2px solid #f5d572;border-radius:12px;padding:6px 4px;text-align:center;font-size:11px;line-height:1.25}
 .bdg span{display:block;font-size:22px;line-height:1.2}.bdg b{display:block;font-size:11.5px;margin:2px 0}.bdg small{color:var(--muted);font-size:11px}
@@ -685,15 +686,16 @@ const DECOR={
 /* giấy bọc ly theo mùa: mua một lần ở tab Trang trí; tới mùa (theo tháng thật) thì xấp giấy bọc hiện trên quầy, pha xong chạm để bọc ly.
    Giao bằng ly mùa thì khách trả thêm `up` mỗi ly; học sinh, chú xe ôm chê ly mắc (−1★).
    Hình giấy bọc sleeve_l_<id>/sleeve_m_<id> (cùng khung với ly_l/ly_m) và sleeve_i_<id> (xấp giấy trên quầy); thiếu hình thì vẽ bằng code (drawSleeve) */
+/* mùa giấy bọc (tháng trong game): mỗi loại 4 tháng, lệch nhau nên tháng nào cũng có 2–3 loại cùng mùa (nếu đã mua); trước đây mỗi tháng thường chỉ 1 loại */
 const CUPSKIN={
-  cs_tet:{n:'Ly Tết',five:30,up:8000,c1:'#d4302a',c2:'#ffd25a',m:'mai',mo:[1,2]},
-  cs_valentine:{n:'Ly Valentine',cost:180000,up:6000,c1:'#ef6f95',c2:'#fff',m:'heart',mo:[2]},
-  cs_hong:{n:'Ly hoa anh đào',cost:120000,up:4000,c1:'#f7c3d3',c2:'#fff8fb',m:'petal',mo:[3,4,5]},
-  cs_he:{n:'Ly mùa hè',cost:150000,up:4000,c1:'#8fd3ee',c2:'#ffd34d',m:'sun',mo:[6,7,8]},
-  cs_trungthu:{n:'Ly Trung thu',cost:200000,up:6000,c1:'#34558f',c2:'#ffd25a',m:'moon',mo:[9]},
-  cs_halloween:{n:'Ly Halloween',cost:200000,up:6000,c1:'#4e3163',c2:'#ff9a3c',m:'pumpkin',mo:[10]},
-  cs_thu:{n:'Ly mùa thu',cost:150000,up:4000,c1:'#c9743a',c2:'#ffe2a8',m:'leaf',mo:[11]},
-  cs_noel:{n:'Ly Giáng sinh',cost:200000,up:6000,c1:'#2f8a58',c2:'#e2453c',m:'snow',mo:[12]}};
+  cs_tet:{n:'Ly Tết',five:30,up:8000,c1:'#d4302a',c2:'#ffd25a',m:'mai',mo:[12,1,2,3]},
+  cs_valentine:{n:'Ly Valentine',cost:180000,up:6000,c1:'#ef6f95',c2:'#fff',m:'heart',mo:[2,3,4,5]},
+  cs_hong:{n:'Ly hoa anh đào',cost:120000,up:4000,c1:'#f7c3d3',c2:'#fff8fb',m:'petal',mo:[3,4,5,6]},
+  cs_he:{n:'Ly mùa hè',cost:150000,up:4000,c1:'#8fd3ee',c2:'#ffd34d',m:'sun',mo:[5,6,7,8]},
+  cs_trungthu:{n:'Ly Trung thu',cost:200000,up:6000,c1:'#34558f',c2:'#ffd25a',m:'moon',mo:[7,8,9,10]},
+  cs_halloween:{n:'Ly Halloween',cost:200000,up:6000,c1:'#4e3163',c2:'#ff9a3c',m:'pumpkin',mo:[8,9,10,11]},
+  cs_thu:{n:'Ly mùa thu',cost:150000,up:4000,c1:'#c9743a',c2:'#ffe2a8',m:'leaf',mo:[9,10,11,12]},
+  cs_noel:{n:'Ly Giáng sinh',cost:200000,up:6000,c1:'#2f8a58',c2:'#e2453c',m:'snow',mo:[11,12,1,2]}};
 for(const k in CUPSKIN){const c_=CUPSKIN[k];c_.sh='Bọc '+c_.n.replace(/^Ly /,'');c_.name='Giấy bọc '+c_.n.replace(/^Ly /,'').toLowerCase();c_.col=c_.c1}
 /* tháng trong game: MONTH_D ngày bán là một tháng (một năm 60 ngày) để giấy bọc ly đổi mùa nhanh; trước đây theo tháng thật nên phải chờ cả năm */
 const MONTH_D=5,gameMonth=()=>Math.floor(((S.day||1)-1)/MONTH_D)%12+1;
@@ -1892,10 +1894,13 @@ function finHTML(){const LG_=S.ledger||[];
   const rows=LG_.slice(-7).reverse().map(e=>{const i=ledIn(e),o=ledOut(e),pr=i-o;return `<tr><td>Ngày ${e.d}</td><td>${fk(i)}</td><td>${fk(o)}</td><td class="${pr>=0?'pos':'neg'}">${pr>=0?'+':'−'}${fk(Math.abs(pr))}</td><td>${e.served}/${e.total}</td></tr>`}).join('');
   const dish=Object.entries(A.dish).sort((a,b)=>(b[1].rev-b[1].cost)-(a[1].rev-a[1].cost)).map(([k,a])=>{const r=recById(+k),pr=a.rev-a.cost;return `<tr><td class="dn">${r?`<img src="${drinkPicR(r)}" alt="">`:''}<span>${r?r.name:a.name}</span></td><td>${a.n}</td><td>${fk(a.rev)}</td><td>${fk(a.cost)}</td><td class="${pr>=0?'pos':'neg'}">${pr>=0?'+':'−'}${fk(Math.abs(pr))}</td></tr>`}).join('');
   const span=all?`từ ngày ${(S.life&&S.life.from)||LG_[0].d} đến nay (${A.days} ngày bán)`:'7 ngày gần nhất';
+  /* bán chạy hôm qua (ngày bán gần nhất): 3 món nhiều ly nhất */
+  const Y=LG_[LG_.length-1],top=(Y.sales||[]).slice().sort((a,b)=>b.n-a.n||b.rev-a.rev).slice(0,3);
+  const yHTML=top.length?`<div class="h3">🔥 Bán chạy hôm qua · Ngày ${Y.d}</div><div class="fbox ytop">${top.map((x,i)=>{const r=recById(x.r);return `<div class="ytr"><b>${i+1}</b>${r?`<img src="${drinkPicR(r)}" alt="">`:'<i></i>'}<span>${r?r.name:x.name}</span><em>×${x.n}</em><small>${fk(x.rev)}</small></div>`}).join('')}</div>`:'';
   return bankHTML()+`<div class="seg" style="margin:12px 0 8px"><button data-fp="7" aria-pressed="${!all}">7 ngày</button><button data-fp="all" aria-pressed="${all}">Toàn thời gian</button></div>
    <p class="sub">Số liệu ${span}. Giá vốn món tính theo nguyên liệu bỏ vào ly; tiền nhập hàng tính riêng trong chi phí.${all?' Chi tiêu trước khi có báo cáo tài chính không được tính.':''}</p>
    <div class="sum"><div><b>${fmt(S.money)}</b><span>Vốn hiện tại</span></div><div><b class="${net>=0?'pos':'neg'}">${sg(net)}</b><span>Lãi / lỗ ${all?'toàn thời gian':'7 ngày'}</span></div><div><b>${A.served}</b><span>Khách đã phục vụ</span></div><div><b>${A.served?fmt(r1k(inT/A.served)):'—'}</b><span>Thu trung bình / khách</span></div></div>
-   <div class="h3">${all?'Lãi lỗ cộng dồn':'Lãi lỗ theo ngày'}</div><div class="fbox">${chart}</div>
+   ${yHTML}<div class="h3">${all?'Lãi lỗ cộng dồn':'Lãi lỗ theo ngày'}</div><div class="fbox">${chart}</div>
    <div class="h3">Báo cáo lãi lỗ (P&amp;L)</div><div class="fbox">${pl}</div>
    ${all?'':`<div class="h3">Từng ngày</div><div class="fbox"><table class="ftab"><thead><tr><th>Ngày</th><th>Thu</th><th>Chi</th><th>Lãi</th><th>Khách</th></tr></thead><tbody>${rows}</tbody></table></div>`}
    <div class="h3">Hiệu quả từng món</div><div class="fbox">${dish?`<table class="ftab"><thead><tr><th>Món</th><th>Ly</th><th>Thu</th><th>Vốn</th><th>Lãi</th></tr></thead><tbody>${dish}</tbody></table>`:'<p class="meta">Chưa bán món nào.</p>'}</div>`+debtHTML()}

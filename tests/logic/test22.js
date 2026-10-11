@@ -33,7 +33,8 @@ vm.runInContext(src + `
   const fill=(c,i)=>{const it=c.items[i];const k=newCup(it.size);Object.assign(k,{cid:c.id,ix:i,pours:it.bs.map(x=>({k:x,amt:TARGET/it.bs.length})),fill:TARGET,syrups:[...(it.ss||[])],tops:[...it.ts],foams:[...(it.fs||[])],sugar:it.sugar?SUGAR[it.sugar]:0,ice:it.ice?ICE[it.ice][1]:0,skin:it.sk||null,gem:it.gem||null});return k};
   // 1. tháng trong game
   const mo=d=>{S.day=d;return gameMonth()};ok(mo(1)===1&&mo(5)===1&&mo(6)===2&&mo(56)===12&&mo(61)===1,'5 ngày bán = 1 tháng, 60 ngày một năm');
-  S.owned.push('cs_tet');S.day=3;const t1=inSeason('cs_tet');S.day=13;const t2=inSeason('cs_tet');S.day=63;const t3=inSeason('cs_tet');ok(t1&&!t2&&t3,'Ly Tết (tháng 1–2) có mùa ngày 1–10, hết mùa ngày 11, quay lại ngày 61');
+  S.owned.push('cs_tet');S.day=3;const t1=inSeason('cs_tet');S.day=18;const t2=inSeason('cs_tet');S.day=57;const t3=inSeason('cs_tet');ok(t1&&!t2&&t3,'Ly Tết (tháng 12–3) có mùa ngày 1–15, hết mùa ngày 16, quay lại ngày 56');
+  const per=[...Array(12)].map((_,m)=>Object.keys(CUPSKIN).filter(id=>CUPSKIN[id].mo.includes(m+1)).length);ok(per.every(n=>n>=2&&n<=3),'tháng nào cũng có 2–3 loại giấy bọc cùng mùa ('+per.join(',')+')');
   // 2. lên lịch: từ cấp 2, khoảng 15% mỗi ngày
   hire(1);S.shop=0;let c=setup({bs:['hongtra']});const R0=M.random;M.random=()=>.1;startDay();ok(!D.insp,'cấp 1: không có thanh tra đột xuất');
   S.shop=1;startDay();ok(!!D.insp&&D.insp.at>=9&&D.insp.at<=17,'cấp 2: có lịch thanh tra lúc '+(D.insp&&D.insp.at.toFixed(1))+'h');M.random=R;
