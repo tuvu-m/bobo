@@ -23,7 +23,7 @@ nf=0; for f in "$R"/test*.js; do if ! grep -q "ALL PASSED" "$f"; then echo "❌ 
 echo "test logic: $(ls "$R" | wc -l | tr -d ' ') bài, $nf bài lỗi"
 # test giao diện: Chrome tắt tiếng (nhiều Chrome cùng phát âm thanh thì chậm nhau gấp 10 lần), 6 bài cùng lúc
 export NODE_OPTIONS="--require \"$T/pw/pwpatch.js\"" PW_ARGS="--mute-audio" R H T
-ALL="sub fun pause reply gridtest nick sleeve newchars lost qnames askset staff8 sumlate qscroll2 qpick walkin logexp gemshot stalegrab verify_ux exam kho coll insp"
+ALL="sub fun pause reply gridtest nick sleeve newchars lost qnames askset staff8 sumlate qscroll2 qpick walkin logexp gemshot stalegrab verify_ux exam kho coll insp rival"
 if [ "$1" = full ]; then PW=$ALL; elif [ $# -gt 0 ]; then PW="$*"; else PW=$(python3 "$T/pick_pw.py"); fi
 if [ -n "$PW" ]; then
   echo "test giao diện: $PW"

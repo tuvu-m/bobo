@@ -200,3 +200,11 @@ Chỉ muốn một hình dùng chung thì vẽ một cúp không biểu tượng
 ```
 Cute cozy hand-painted game item icon sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, warm golden highlights. Show 7 small golden trophy cups in one row, front view, all the same size and the same simple chunky shape: a round two-handled cup on a short stem and a small square wooden base, with one big clear emblem in the middle of the cup. Fully separated with generous empty space. No text, no letters, no numbers, no logo, no ground shadow. Emblems from left to right: a rolled certificate scroll with a red wax seal; a sparkling blue diamond; a five-pointed star; a pink heart; a tiny crown; a bubble tea cup wrapped in a floral paper sleeve; a medal with a pink ribbon. Transparent background PNG.
 ```
+
+## Prompt 16 · Cúp thứ 8: Đối thủ đã hạ
+
+Cùng kiểu với 7 cúp ở Prompt 15, tên file `cup_rival`. Biểu tượng: hai ống hút trà sữa bắt chéo như hai thanh kiếm. Đã vẽ xong và đưa vào game.
+
+```
+Cute cozy hand-painted game item icon for a mobile bubble tea shop game, matching a set of golden trophy icons. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, warm golden highlights. One small golden trophy cup, front view: a round two-handled cup on a short stem and a small square wooden base, with one big clear emblem in the middle of the cup: two thick bubble tea straws crossed like two swords, with a few tapioca pearls. No text, no letters, no numbers, no logo, no ground shadow. Transparent background PNG.
+```

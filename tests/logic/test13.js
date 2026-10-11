@@ -43,12 +43,24 @@ vm.runInContext(src + `;toast=m=>toasts.push(m);renderPrep=()=>{};
   // 4. tiệm đối thủ
   S.rival=null;S.rivalLast=0;S.day=20;S.rvDay=0;M.random=()=>.1;rivalTick();M.random=R;ok(S.rival&&S.rival.start===20&&/mở đối diện/.test(S.notice.at(-1).t),'ngày 20: tiệm đối thủ mở ('+S.rival.name+' 😊'+Math.round(S.rival.t*100)+'%)');
   const n0=(()=>{const r=S.rival;S.rival=null;const x=dayRaw();S.rival=r;return x})(),n1=dayRaw();ok(n1<n0,'có đối thủ: khách giảm ('+n0+' → '+n1+')');
-  for(let d=0;d<4;d++){open(S.day);for(let i=0;i<4;i++)settle(cust(),5,null,[]);close()}
-  ok(!S.rival&&S.rivalLast>0&&S.buzz>=8,'thắng 4 ngày (mọi khách 5★, 100% hài lòng): đối thủ dẹp tiệm, +8 khách hôm sau');
+  let nd=0;for(;nd<6&&S.rival;nd++){open(S.day);for(let i=0;i<4;i++)settle(cust(),5,null,[]);close()}
+  ok(!S.rival&&nd>=4&&S.rivalLast>0&&S.buzz>=8,'mọi khách 5★ (100% hài lòng): '+nd+' ngày là hết máu, đối thủ dẹp tiệm, +8 khách hôm sau');
   {S.rival={name:'X',t:.85,start:S.day,w:0,l:0,n:0};const t0=rvTarget(S.rival);S.rival.n=3;ok(rvTarget(S.rival)>t0,'đối thủ mạnh dần mỗi ngày đấu ('+Math.round(t0*100)+'% → '+Math.round(rvTarget(S.rival)*100)+'%)');S.rival.tac='kol';ok(rvTarget(S.rival)>t0+.03,'chiêu KOL: điểm họ cao hơn');S.rival=null}
-  {S.rival={name:'X',t:.85,start:S.day,w:0,l:0,n:0,tac:'giam',tacDay:S.day};const n0=(()=>{const r=S.rival;S.rival=null;open(S.day);const x=D.total;close();S.rival=r;return x})();open(S.day);const n1=D.total;close();ok(n1<n0||n0<=4,'chiêu giảm giá: hôm đó mất bớt khách ('+n0+' → '+n1+')');S.rival=null}
-  S.rival=null;S.rivalLast=0;S.day=40;S.rvDay=0;S.buzz=0;M.random=()=>.1;rivalTick();M.random=R;for(let d=0;d<4;d++){open(S.day);for(let i=0;i<4;i++)settle(cust(),2,null,[]);close()}
-  ok(!S.rival&&S.rvPen>=S.day,'thua 4 ngày: đối thủ ở lại, khách giảm 10% thêm 7 ngày');
+  {S.rival={name:'X',t:.85,start:S.day,w:0,l:0,n:0,tac:'giam',tacDay:S.day};const n0=(()=>{const r=S.rival;S.rival=null;open(S.day);const x=D.total;close();S.rival=r;return x})();S.rival.tac='giam';S.rival.tacDay=S.day;open(S.day);const n1=D.total;close();ok(n1<n0||n0<=4,'chiêu giảm giá: hôm đó mất bớt khách ('+n0+' → '+n1+')');S.rival=null}
+  S.rival=null;S.rivalLast=0;S.day=40;S.rvDay=0;S.buzz=0;M.random=()=>.1;rivalTick();M.random=R;
+  {open(S.day);for(let i=0;i<4;i++)settle(cust(),2,null,[]);close();const R1=S.rival;ok(R1&&R1.hp===100&&R1.pull===.05&&rvMul()<.85,'thua một ngày: họ hồi máu (đầy 100), kéo thêm 5% khách của bạn');}
+  for(let d=0;d<13;d++){open(S.day);for(let i=0;i<4;i++)settle(cust(),2,null,[]);close()}
+  ok(!S.rival&&S.rvPen>=S.day,'hết 14 ngày mà họ còn máu: đối thủ ở lại, khách giảm 10% thêm 7 ngày');
+  // máu: thắng sát nút mất ít máu, thắng đậm mất nhiều
+  S.rival={name:'X',t:.87,start:S.day,w:0,l:0,n:0,hp:100,pull:0};open(S.day);for(let i=0;i<20;i++)settle(cust(),i<19?5:2,null,[]);close();const hp1=S.rival.hp;
+  S.rival.hp=100;open(S.day);for(let i=0;i<20;i++)settle(cust(),5,null,[]);close();const hp2=S.rival.hp;ok(hp1<100&&hp2<hp1,'thắng đậm mất nhiều máu hơn (95% hài lòng: ❤️'+hp1+', 100%: ❤️'+hp2+')');
+  // chiêu của bạn: cộng thẳng % hài lòng hôm đó, chiêu đắt cộng nhiều hơn; giá theo cấp tiệm
+  {const run=my=>{S.rival={name:'X',t:.87,start:S.day,w:0,l:0,n:0,hp:100,pull:0,tac:null,tacDay:S.day};if(my)S.rival.my={d:S.day,k:my};open(S.day);S.rival.tac=null;S.rival.tacDay=S.day;for(let i=0;i<20;i++)settle(cust(),i<18?5:2,null,[]);const rr=M.random;M.random=()=>.5;close();M.random=rr;return S.rival?S.rival.hp:0};
+   const a=run(null),b=run('km'),c=run('kol');ok(c<b&&b<a,'mua chiêu: không chiêu còn ❤️'+a+', Khuyến mãi +3% ❤️'+b+', Thuê KOL +10% ❤️'+c);}
+  {const sh=S.shop;S.shop=0;const c0=rvCost('kol');S.shop=4;const c4=rvCost('kol');S.shop=sh;ok(c0===2500000&&c4===40000000,'giá chiêu theo cấp tiệm: Thuê KOL '+fk(c0)+' ở cấp 1, '+fk(c4)+' ở cấp 5');}
+  // gom bộ sưu tập + huy hiệu khi hạ đối thủ không thua ngày nào
+  S.rival={name:RIVALN[0],t:.87,start:S.day,w:0,l:0,n:0,hp:20,pull:0};S.rvBeat=[];open(S.day);for(let i=0;i<10;i++)settle(cust(),5,null,[]);close();
+  ok(!S.rival&&S.rvBeat.includes(RIVALN[0])&&S.ach.rv1&&S.ach.rv0,'hạ đối thủ: tên vào bộ Đối thủ đã hạ, có huy hiệu Hạ đối thủ và Không thua ngày nào');
   S.rival=null;S.rivalLast=S.day;S.rvDay=0;M.random=()=>.1;rivalTick();M.random=R;ok(!S.rival,'vừa xong một đối thủ: 14 ngày sau mới có đối thủ mới');
 })();`, ctx);
 console.log(fails ? fails + ' FAILED' : 'ALL PASSED'); process.exit(fails ? 1 : 0);

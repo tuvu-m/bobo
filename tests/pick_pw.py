@@ -35,6 +35,7 @@ MAP = {
   'kho': r'kchip|khoBox|krow|kdrag|storeObj|placeAt|seasonCups',
   'coll': r'COLL|coll|drawTrophies|decoHTML',
   'insp': r'insp|INSP|thanhtra',
+  'rival': r'rival|RV_|rivalHTML|rvc|hpbar',
 }
 # vòng lặp chính của ngày bán: sửa ở đây thì chạy nhóm test chơi thật
 CORE = r'tickDay|frame0|serveCup|settle\(|served\(|spawn\(|staffDone|staffBroke|staffRedo|syncMode|playerServe'
