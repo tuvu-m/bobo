@@ -208,3 +208,15 @@ Cùng kiểu với 7 cúp ở Prompt 15, tên file `cup_rival`. Biểu tượng:
 ```
 Cute cozy hand-painted game item icon for a mobile bubble tea shop game, matching a set of golden trophy icons. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, warm golden highlights. One small golden trophy cup, front view: a round two-handled cup on a short stem and a small square wooden base, with one big clear emblem in the middle of the cup: two thick bubble tea straws crossed like two swords, with a few tapioca pearls. No text, no letters, no numbers, no logo, no ground shadow. Transparent background PNG.
 ```
+
+## Prompt 17 · Vẽ lại 9 cúp, mỗi cúp một màu
+
+Đã vẽ xong và đưa vào game (thay cho Prompt 15 và 16). Mỗi cúp một màu để dễ phân biệt và không lẫn vào nền hoàng hôn ngoài cửa sổ; thêm cúp thứ 9 cho bộ Món nổi tiếng. Xếp 3 hàng × 3, cắt theo khung, tên file theo thứ tự: `cup_bang` (xanh da trời, cuộn giấy chứng nhận), `cup_gem` (tím oải hương, kim cương), `cup_mon` (vàng kim, ngôi sao), `cup_quen` (hồng phấn, trái tim), `cup_own` (đỏ ruby, vương miện), `cup_ly` (xanh bạc hà, ly bọc giấy hoa), `cup_rival` (bạc, hai ống hút bắt chéo), `cup_ach` (cam san hô, huy chương), `cup_famous` (xanh ngọc, sổ công thức mở).
+
+```
+Cute cozy hand-painted game item icon sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, glossy metallic highlights. Show 9 small trophy cups in 3 rows of 3, front view, all exactly the same size and the same simple chunky shape: a round two-handled cup on a short stem and a small square wooden base, with one big clear emblem in the middle of the cup. Each trophy is a different soft metallic color. Fully separated with generous empty space. No text, no letters, no numbers, no logo, no ground shadow.
+Row 1: sky blue trophy with a rolled certificate scroll with a red wax seal; lavender purple trophy with a sparkling diamond; golden trophy with a five-pointed star.
+Row 2: rose pink trophy with a heart; ruby red trophy with a tiny crown; mint green trophy with a bubble tea cup wrapped in a floral paper sleeve.
+Row 3: silver trophy with two thick bubble tea straws crossed like swords and a few tapioca pearls; coral orange trophy with a medal on a pink ribbon; turquoise trophy with an open recipe book with a small leaf bookmark.
+Transparent background PNG.
+```

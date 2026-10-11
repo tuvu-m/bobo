@@ -13,7 +13,7 @@ const r=await p.evaluate(()=>{const T=[];const t0=toast;toast=(m,...a)=>{T.push(
   const a=shot(),coll0=S.coll;S.coll={};const z=shot();S.coll=coll0;let diff=0;for(let i=0;i<a.length;i+=4)diff+=Math.abs(a[i]-z[i])>20;
   S.stat.inspCup=0;renderPrep();const keep=document.querySelectorAll('.coll.done').length;
   return{before,done0,done,toast:T.find(m=>/🏆/.test(m))||'',diff,keep}});
-ok(r.before===8&&r.done0===0,`tab Trang trí có Sổ sưu tập 8 bộ (${r.before}), save mới chưa bộ nào đủ`);
+ok(r.before===9&&r.done0===0,`tab Trang trí có Sổ sưu tập 9 bộ (${r.before}), save mới chưa bộ nào đủ`);
 ok(r.done.length===2&&/Ly cho thanh tra/.test(r.done.join())&&/Giấy bọc ly/.test(r.done.join()),'đủ bộ: tô vàng ('+r.done.join(' | ')+')');
 ok(/🏆 Đủ bộ/.test(r.toast),'có thông báo: '+r.toast);
 ok(r.diff>200,`cúp vàng hiện trên bậu cửa sổ (${r.diff} điểm ảnh khác)`);
