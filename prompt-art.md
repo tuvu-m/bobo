@@ -178,3 +178,25 @@ Vẽ riêng phần đồ rắc, nhìn thẳng từ phía trước như đang n�
 ```
 Cute cozy hand-painted game asset sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline where needed. Show 6 separate garnish toppings as they would sit on top of a drink, seen from the front at a slight angle, each a wide shallow cluster about 4 times as wide as it is tall, fully separated with generous empty space. No cup, no drink, no text, no letters, no shadow. Row 1: a sprinkle of edible rainbow glitter flakes and tiny star sparkles in gold, pink and pale cyan; a few scattered dried pink rose petals; crinkled shiny flakes of 24K gold leaf. Row 2: soft translucent ivory strands of edible bird's nest; a few thin deep red-orange saffron threads; a dusting of shimmering white pearl powder with a soft lilac sheen. Transparent background PNG.
 ```
+
+## Prompt 15 · Cúp vàng của Sổ sưu tập
+
+Mỗi bộ trong Sổ sưu tập đủ thì một cúp vàng đứng trên bậu cửa sổ trong tiệm. Cúp rất nhỏ trong cảnh (cao khoảng 20px trên điện thoại), nên vẽ dáng đơn giản, khối rõ, biểu tượng to ở giữa thân cúp. Chưa có ảnh thì game tự vẽ cúp bằng code.
+
+| Bộ | Tên file | Biểu tượng trên cúp |
+|---|---|---|
+| Bằng thanh tra | `cup_bang` | cuộn giấy chứng nhận có dấu đỏ |
+| Đồ siêu hiếm | `cup_gem` | viên kim cương |
+| Món hạng A | `cup_mon` | ngôi sao |
+| Khách quen | `cup_quen` | trái tim |
+| Ly chủ tiệm | `cup_own` | vương miện nhỏ |
+| Giấy bọc ly | `cup_ly` | ly trà sữa bọc giấy hoa |
+| Huy hiệu | `cup_ach` | huy chương có ruy băng |
+
+Chỉ muốn một hình dùng chung thì vẽ một cúp không biểu tượng, đặt tên `cup_vang`.
+
+Đã vẽ xong và đưa vào game (cắt theo khoảng trống giữa các cúp, cao 120px, webp).
+
+```
+Cute cozy hand-painted game item icon sheet for a mobile bubble tea shop game. Soft pastel palette, gouache and colored-pencil texture, thin warm brown outline, gentle soft shading, warm golden highlights. Show 7 small golden trophy cups in one row, front view, all the same size and the same simple chunky shape: a round two-handled cup on a short stem and a small square wooden base, with one big clear emblem in the middle of the cup. Fully separated with generous empty space. No text, no letters, no numbers, no logo, no ground shadow. Emblems from left to right: a rolled certificate scroll with a red wax seal; a sparkling blue diamond; a five-pointed star; a pink heart; a tiny crown; a bubble tea cup wrapped in a floral paper sleeve; a medal with a pink ribbon. Transparent background PNG.
+```

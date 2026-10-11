@@ -1,9 +1,13 @@
-# Chọn test giao diện liên quan tới phần vừa sửa: đọc git diff của file game (so với commit gần nhất),
+# Chọn test giao diện liên quan tới phần vừa sửa: đọc diff của file game so với lần test đạt gần nhất,
 # bỏ dữ liệu ảnh base64, rồi so với từ khoá của từng test. In ra tên các test cần chạy.
 import re, subprocess, sys
 import os
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-diff = sys.stdin.read() if sys.argv[1:] == ['-'] else subprocess.run(['git', '-C', REPO, 'diff', '-U0', 'HEAD', '--', 'tiem-tra-sua.html'], capture_output=True, text=True).stdout
+# so với bản đã test đạt gần nhất (t.sh lưu ở out/last_ok.html), chưa có thì so với commit gần nhất
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'last_ok.html')
+if sys.argv[1:] == ['-']: diff = sys.stdin.read()
+elif os.path.exists(BASE): diff = subprocess.run(['git', 'diff', '--no-index', '-U0', BASE, os.path.join(REPO, 'tiem-tra-sua.html')], capture_output=True, text=True).stdout
+else: diff = subprocess.run(['git', '-C', REPO, 'diff', '-U0', 'HEAD', '--', 'tiem-tra-sua.html'], capture_output=True, text=True).stdout
 lines = [l[1:] for l in diff.split('\n') if l[:1] and l[:1] in '+-' and not l.startswith(('+++', '---'))]
 txt = re.sub(r'data:[a-z]+/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+', '', '\n'.join(lines))
 txt = re.sub(r'"[A-Za-z0-9+/=]{200,}"', '', txt)  # chuỗi base64 trong SPRSRC
@@ -28,6 +32,9 @@ MAP = {
   'stalegrab': r'staffGrab|qHold|HOLD_MAX|staffPick|renderQ',
   'gemshot': r'GEM|gemOf|gemPut|gemRow|gemImg|drawGemTop|gradeShown',
   'exam': r'exam|Exam|EXAM|licDue|licFail|certs|drawCerts|startExam|upFee',
+  'kho': r'kchip|khoBox|krow|kdrag|storeObj|placeAt|seasonCups',
+  'coll': r'COLL|coll|drawTrophies|decoHTML',
+  'insp': r'insp|INSP|thanhtra',
 }
 # vòng lặp chính của ngày bán: sửa ở đây thì chạy nhóm test chơi thật
 CORE = r'tickDay|frame0|serveCup|settle\(|served\(|spawn\(|staffDone|staffBroke|staffRedo|syncMode|playerServe'

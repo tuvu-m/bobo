@@ -13,7 +13,7 @@ const r=await p.evaluate(()=>new Promise(res=>{const el=document.querySelector('
   // cho mọi nhân viên rảnh rồi giữ hàng thẻ như đang vuốt
   S.staff.forEach(s=>{if(s.w){const c=D.queue.find(x=>x.id===s.w.cid);if(c&&c.items[s.w.ix])c.items[s.w.ix].sj=null;s.w=null;s.job=null}});
   D.evPlan=[];qHold=0;renderQ();qHold=performance.now()+5000;
-  setTimeout(()=>{const s=S.staff.find(x=>x.w);if(!s)return res({none:1});const k=s.w.cid+':'+s.w.ix,card=el.querySelector(`[data-qc="${k}"]`);
+  setTimeout(()=>{const s=S.staff.find(x=>x.w&&!x.w.broken);if(!s)return res({none:1});const k=s.w.cid+':'+s.w.ix,card=el.querySelector(`[data-qc="${k}"]`);
     const info={stale:card&&card.classList.contains("wait"),k,cls:card&&card.className,at:(now-s.w.at).toFixed(2)};console.log(JSON.stringify(info));const wc=s.w.cup;const cc=D.queue.find(x=>x.id===s.w.cid),st0=qState(cc,s.w.ix);info.st=st0.k;info.cup=!!cup;info.away=D.away>now;info.tk=document.querySelector("#shop").className;D.away=0;card.click();res({...info,mine:cup===wc,PV,sw:!!s.w})},2400)}));
 console.log(JSON.stringify(r));ok(!r.none,'đang vuốt 1,5 giây: nhân viên vẫn nhận ly');
 ok(r.stale,'thẻ chưa dựng lại, vẫn ghi Chờ');

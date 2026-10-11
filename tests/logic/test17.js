@@ -56,7 +56,7 @@ vm.runInContext(src + `;toast=m=>toasts.push(m);renderPrep=()=>{};
   open();ASK_P=0;c=cust('betthu');r0=D.rev;M.random=()=>.2;make();M.random=R0;ok(!D.pend.length&&D.rev-r0===r1k(c.price*.5)&&/tự tung/.test(toasts.at(-1)),'không hỏi: Bet thủ tự tung, hên trả 50%: '+toasts.at(-1));
   open();ASK_P=0;c=cust('betthu');r0=D.rev;M.random=()=>.8;make();M.random=R0;ok(D.rev-r0===r1k(c.price*1.5),'Bet thủ xui: trả 150%');
   open();ASK_P=0;c=cust('thayboi');make();ok(!D.pend.length&&D.log.some(l=>/Thầy gieo quẻ/.test(l)),'không hỏi: thầy bói tự gieo quẻ');
-  open();ASK_P=0;c=cust('batam');ok(!D.pend.length&&c.tam===1&&D.away>now&&D.away-now<=2.01&&/^🗣️ /.test(toasts.at(-1)),'không hỏi: bà tám tự kể, bạn chỉ mất 2 giây');
+  open();ASK_P=0;c=cust('batam');ok(!D.pend.length&&c.tam===1&&!(D.away>now)&&!/^🗣️ /.test(toasts.at(-1)||'')&&/^🗣️ /.test(D.log.at(-1)),'không hỏi: bà tám tự kể (bong bóng + nhật ký), không bắt bạn ra ngoài, không thông báo che màn');
   open();ASK_P=0;c=cust('hocsinh');r0=D.rev;const tp0=D.tips;make();ok(!D.pend.length&&D.rev-r0-(D.tips-tp0)===r1k(c.price*.8),'không hỏi: học sinh tự trả giá học sinh 80%');
   open();ASK_P=1;D.clock=12;ok(!canAsk(),'giờ cao điểm: không hỏi, khách tự quyết');D.clock=8;for(let i=0;i<4;i++){spawn('thuong')}ok(!canAsk(),'4 khách đang chờ: không hỏi');D.queue=[];ok(canAsk(),'vắng khách, tỉ lệ 100%: hỏi');
   ok(ACH.some(a=>a.id==='coin5')&&ACH.some(a=>a.id==='live1'),'huy hiệu mới: Thánh đoán, Lên sóng');

@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Test sau mỗi lần sửa game:
-#   tests/t.sh               cú pháp + mọi test logic (vài giây) + test giao diện liên quan tới phần vừa sửa (so với commit gần nhất)
+#   tests/t.sh               cú pháp + mọi test logic (vài giây) + test giao diện liên quan tới phần vừa sửa (so với lần test đạt gần nhất)
 #   tests/t.sh qpick walkin  cú pháp + test logic + đúng mấy test giao diện đó
 #   tests/t.sh full          toàn bộ (trước khi push, khoảng 3 phút)
 # Lần đầu: cd tests && npm install. Test giao diện dùng Chrome đã cài trên máy.
@@ -23,12 +23,14 @@ nf=0; for f in "$R"/test*.js; do if ! grep -q "ALL PASSED" "$f"; then echo "❌ 
 echo "test logic: $(ls "$R" | wc -l | tr -d ' ') bài, $nf bài lỗi"
 # test giao diện: Chrome tắt tiếng (nhiều Chrome cùng phát âm thanh thì chậm nhau gấp 10 lần), 6 bài cùng lúc
 export NODE_OPTIONS="--require \"$T/pw/pwpatch.js\"" PW_ARGS="--mute-audio" R H T
-ALL="sub fun pause reply gridtest nick sleeve newchars lost qnames askset staff8 sumlate qscroll2 qpick walkin logexp gemshot stalegrab verify_ux exam"
+ALL="sub fun pause reply gridtest nick sleeve newchars lost qnames askset staff8 sumlate qscroll2 qpick walkin logexp gemshot stalegrab verify_ux exam kho coll insp"
 if [ "$1" = full ]; then PW=$ALL; elif [ $# -gt 0 ]; then PW="$*"; else PW=$(python3 "$T/pick_pw.py"); fi
 if [ -n "$PW" ]; then
   echo "test giao diện: $PW"
-  print -l ${=PW} | xargs -P 6 -I{} zsh -c 'node "$T/pw/{}.js" "$H" shots 2>&1 | grep -E "FAIL|PASSED|lỗi JS" | tr "\n" " " > "$R/pw_{}"'
-  for f in "$R"/pw_*; do n=${f:t}; n=${n#pw_}; if [ ! -s "$f" ] || grep -q "FAIL\|lỗi JS: [^k]" "$f"; then echo "❌ $n: $(cut -c1-300 "$f")"; nf=$((nf+1)); else echo "✓ $n"; fi; done
+  print -l ${=PW} | xargs -P 6 -I{} zsh -c 'a=$(date +%s); node "$T/pw/{}.js" "$H" shots 2>&1 | grep -E "FAIL|PASSED|lỗi JS" | tr "\n" " " > "$R/pw_{}"; echo $(( $(date +%s)-a )) > "$R/tm_{}"'
+  for f in "$R"/pw_*; do n=${f:t}; n=${n#pw_}; if [ ! -s "$f" ] || grep -q "FAIL\|lỗi JS: [^k]" "$f"; then echo "❌ $n ($(cat "$R/tm_$n")s): $(cut -c1-300 "$f")"; nf=$((nf+1)); else echo "✓ $n ($(cat "$R/tm_$n")s)"; fi; done
 else echo "test giao diện: không có bài nào liên quan"; fi
+# đạt hết (chế độ tự chọn hoặc full) thì lưu bản game này làm mốc: lần sau chỉ test phần sửa thêm
+[ $nf -eq 0 ] && { [ $# -eq 0 ] || [ "$1" = full ]; } && cp "$H" "$T/out/last_ok.html"
 echo "⏱ $(( $(date +%s)-S0 ))s · ${nf} bài lỗi"
 [ $nf -eq 0 ]
